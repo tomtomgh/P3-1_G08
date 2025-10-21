@@ -26,17 +26,32 @@ records = []
 for file in sorted(glob.glob(LOG_PATTERN)):
     user_hint = re.search(r'User(\d+)', file)
     default_user = user_hint.group(1) if user_hint else None
+    print(f"🔍 Reading {file} ...")
     with open(file, 'r', encoding='utf-8') as f:
         for line in f:
             m = pattern.search(line)
-            if m:
-                user = m.group('user_id') or default_user
-                records.append({
-                    'time': m.group('time'),
-                    'user': int(user),
-                    'param': m.group('param').strip(),
-                    'value': float(m.group('value'))
-                })
+            if not m:
+                continue
+
+            # Determine user (from log line or filename)
+            user = m.group('user_id') or default_user
+
+            # Clean up value string to remove stray periods or whitespace
+            val_str = m.group('value').strip().rstrip('.')
+
+            try:
+                value = float(val_str)
+            except ValueError:
+                print(f"⚠️ Skipping invalid numeric value '{val_str}' in line: {line.strip()}")
+                continue
+
+            # Add the parsed record
+            records.append({
+                'time': m.group('time'),
+                'user': int(user),
+                'param': m.group('param').strip(),
+                'value': value
+            })
 
 df = pd.DataFrame(records)
 if df.empty:
