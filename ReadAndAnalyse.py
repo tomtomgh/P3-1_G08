@@ -4,135 +4,160 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from itertools import combinations
+import os
+from matplotlib.widgets import Slider, Button
 
 # ========== CONFIG ==========
-LOG_PATTERN = "User*.log"         # all log files
-TIME_RESOLUTION = 0.1             # seconds between samples in reconstructed timeline
-WINDOW_FOR_SIMULTANEOUS = 1.0     # seconds for "simultaneous" parameter changes
+LOG_PATTERN = "User*.log"
+TIME_RESOLUTION = 0.1
+WINDOW_FOR_SIMULTANEOUS = 1.0
 OUTPUT_CSV = "parameter_changes_summary.csv"
+GRAPH_SAVE_DIR = "/Users/tomdaugherty/Documents/GitHub/P3-1_G08/graphs"
+os.makedirs(GRAPH_SAVE_DIR, exist_ok=True)
 
 # ========== STEP 1: PARSE LOG FILES ==========
 pattern = re.compile(
-    r'(?P<time>\d{2}:\d{2}:\d{2}\.\d+).*?(?:User\s*(?P<user_id>\d+))?\s*sets\s+(?P<param>[a-zA-Z ]+)\s+to\s+(?P<value>[-\d\.]+)',
+    r'(?P<time>\d{2}:\d{2}:\d{2}\.\d+).*?'
+    r'(?:User\s*(?P<user_id>\d+))?\s*sets\s+'
+    r'(?P<param>[a-zA-Z ]+?)\s+to\s+(?P<value>[-+]?\d*\.?\d+)',
     re.IGNORECASE
 )
 
 def time_to_seconds(t):
     h, m, s = t.split(':')
-    return int(h) * 3600 + int(m) * 60 + float(s)
+    return int(h)*3600 + int(m)*60 + float(s)
 
 records = []
-
 for file in sorted(glob.glob(LOG_PATTERN)):
-    user_hint = re.search(r'User(\d+)', file)
-    default_user = user_hint.group(1) if user_hint else None
+    default_user = re.search(r'User(\d+)', file).group(1)
     print(f"🔍 Reading {file} ...")
     with open(file, 'r', encoding='utf-8') as f:
         for line in f:
             m = pattern.search(line)
             if not m:
                 continue
-
-            # Determine user (from log line or filename)
-            user = m.group('user_id') or default_user
-
-            # Clean up value string to remove stray periods or whitespace
             val_str = m.group('value').strip().rstrip('.')
-
             try:
                 value = float(val_str)
             except ValueError:
-                print(f"⚠️ Skipping invalid numeric value '{val_str}' in line: {line.strip()}")
                 continue
-
-            # Add the parsed record
+            user = m.group('user_id') or default_user
             records.append({
                 'time': m.group('time'),
                 'user': int(user),
-                'param': m.group('param').strip(),
+                'param': m.group('param').strip().lower(),
                 'value': value
             })
 
 df = pd.DataFrame(records)
 if df.empty:
-    raise ValueError("❌ No parameter change data found. Check your log files or regex.")
-
+    raise ValueError("❌ No parameter change data found.")
 df['time_sec'] = df['time'].apply(time_to_seconds)
-df = df.sort_values(by=['time_sec', 'user', 'param']).reset_index(drop=True)
-df.to_csv(OUTPUT_CSV, index=False)
-print(f"✅ Parsed {len(df)} parameter changes from {len(df['user'].unique())} users → saved to {OUTPUT_CSV}")
+df = df.sort_values(by=['time_sec','user','param']).reset_index(drop=True)
+df.to_csv(OUTPUT_CSV,index=False)
+print(f"\n✅ Parsed {len(df)} parameter changes from {len(df['user'].unique())} users → saved to {OUTPUT_CSV}")
+print("📋 Parameters detected:", df['param'].unique())
 
 # ========== STEP 2: BUILD TIME SERIES ==========
 users = sorted(df['user'].unique())
 params = sorted(df['param'].unique())
 t_min, t_max = df['time_sec'].min(), df['time_sec'].max()
 timeline = np.arange(t_min, t_max, TIME_RESOLUTION)
+series = {p:{u:np.full_like(timeline, np.nan, dtype=float) for u in users} for p in params}
 
-series = {param: {u: np.full_like(timeline, np.nan, dtype=float) for u in users} for param in params}
-
-for param in params:
+for p in params:
     for u in users:
-        user_data = df[(df['user'] == u) & (df['param'] == param)].sort_values('time_sec')
-        val = np.nan
-        idx = 0
-        for i, t in enumerate(timeline):
-            while idx < len(user_data) and t >= user_data.iloc[idx]['time_sec']:
-                val = user_data.iloc[idx]['value']
-                idx += 1
-            series[param][u][i] = val
+        d = df[(df['user']==u)&(df['param']==p)].sort_values('time_sec')
+        val = np.nan; idx = 0
+        for i,t in enumerate(timeline):
+            while idx < len(d) and t >= d.iloc[idx]['time_sec']:
+                val = d.iloc[idx]['value']; idx += 1
+            series[p][u][i] = val
 
-# ========== STEP 3: SYNCHRONY METRICS ==========
-def cross_corr(a, b):
-    mask = ~np.isnan(a) & ~np.isnan(b)
-    if np.sum(mask) < 5:  # not enough overlap
-        return np.nan
-    a, b = a[mask], b[mask]
-    a -= np.mean(a)
-    b -= np.mean(b)
-    corr = np.correlate(a, b, mode='full') / (np.std(a) * np.std(b) * len(a))
-    return np.nanmax(corr)
+# ========== STEP 3: VISUALISATION WITH SCROLLING ==========
+visible_count = 2  # how many graphs to show at once
+total_params = len(params)
 
-synchrony_summary = []
+fig, axes = plt.subplots(visible_count, 1, figsize=(10, 6), sharex=True)
+plt.subplots_adjust(right=0.85, bottom=0.15)
 
-for param in params:
-    print(f"\n🔍 Analysing parameter: {param}")
-    # Cross-correlation matrix
-    corrs = []
-    for u1, u2 in combinations(users, 2):
-        corr_val = cross_corr(series[param][u1], series[param][u2])
-        corrs.append(corr_val)
-        synchrony_summary.append({'param': param, 'user_pair': f"{u1}-{u2}", 'cross_corr': corr_val})
-        print(f"   Users {u1} & {u2}: correlation = {corr_val:.3f}" if corr_val is not np.nan else f"   Users {u1} & {u2}: no data")
+# Function to plot the visible subset
+def draw_visible(start_index):
+    for ax in axes:
+        ax.clear()
+    subset = params[start_index:start_index + visible_count]
+    for ax, p in zip(axes, subset):
+        for u in users:
+            ax.plot(timeline, series[p][u], label=f"User {u}")
+        ax.set_ylabel(p)
+        ax.set_title(p.capitalize())
+        ax.grid(True)
+    axes[-1].set_xlabel("Time (s)")
+    axes[0].legend(loc='upper right')
+    for ax in axes:
+        ax.set_xlim(t_min, t_min + 50)
+    fig.canvas.draw_idle()
 
-# ========== STEP 4: TEMPORAL CLUSTERING (who changes together) ==========
-print("\n🕒 Checking simultaneous parameter changes...")
-for param in params:
-    changes = df[df['param'] == param]
-    for t in np.arange(changes['time_sec'].min(), changes['time_sec'].max(), WINDOW_FOR_SIMULTANEOUS):
-        simultaneous = changes[(changes['time_sec'] >= t) & (changes['time_sec'] < t + WINDOW_FOR_SIMULTANEOUS)]
-        if len(simultaneous['user'].unique()) > 1:
-            users_involved = list(simultaneous['user'].unique())
-            print(f"   Around {t:.1f}s: {len(users_involved)} users changed {param} ({users_involved})")
+# Initial draw
+current_top_param = [0]
+draw_visible(current_top_param[0])
 
-# ========== STEP 5: CONVERGENCE (final value similarity) ==========
-df_end = df.sort_values('time_sec').groupby(['user', 'param']).tail(1)
-spread = df_end.groupby('param')['value'].std().round(3)
-print("\n📉 Final value spread (lower = more synchronised):")
-print(spread)
+# Time slider (shared across all visible plots)
+ax_slider_time = plt.axes([0.9, 0.15, 0.03, 0.7])
+slider_time = Slider(ax_slider_time, 'Time', t_min, t_max-50, valinit=t_min, orientation='vertical')
 
-# ========== STEP 6: VISUALISATION ==========
-for param in params:
-    plt.figure(figsize=(10,5))
+def update_time(val):
+    start = slider_time.val
+    for ax in axes:
+        ax.set_xlim(start, start + 50)
+    fig.canvas.draw_idle()
+
+slider_time.on_changed(update_time)
+
+# Parameter scroll slider (to scroll up/down between graphs)
+ax_slider_param = plt.axes([0.4, 0.05, 0.3, 0.03])
+slider_param = Slider(ax_slider_param, 'Scroll', 0, max(0, total_params - visible_count), 
+                      valinit=0, valstep=1)
+
+def update_param(val):
+    current_top_param[0] = int(slider_param.val)
+    draw_visible(current_top_param[0])
+slider_param.on_changed(update_param)
+
+# Button to toggle full/zoom view
+ax_button = plt.axes([0.88, 0.05, 0.08, 0.05])
+button = Button(ax_button, 'Full View', color='lightgray', hovercolor='0.85')
+full_view = [False]
+
+def toggle_full(event):
+    full_view[0] = not full_view[0]
+    if full_view[0]:
+        for ax in axes: ax.set_xlim(t_min, t_max)
+        button.label.set_text("Zoom View")
+    else:
+        start = slider_time.val
+        for ax in axes: ax.set_xlim(start, start + 50)
+        button.label.set_text("Full View")
+    fig.canvas.draw_idle()
+button.on_clicked(toggle_full)
+
+plt.tight_layout(rect=[0,0.08,0.85,1])
+plt.show()
+
+# ========== STEP 4: SAVE IMAGES ==========
+# Save combined and per-parameter
+combined_path = os.path.join(GRAPH_SAVE_DIR, "scrollable_combined_view.png")
+fig.savefig(combined_path, dpi=200)
+print(f"💾 Saved scrollable combined view → {combined_path}")
+
+for p in params:
+    fig_single, ax = plt.subplots(figsize=(8,5))
     for u in users:
-        plt.plot(timeline, series[param][u], label=f"User {u}")
-    plt.title(f"{param.capitalize()} over Time")
-    plt.xlabel("Time (s)")
-    plt.ylabel(param)
-    plt.legend()
-    plt.grid(True)
-    plt.tight_layout()
-    plt.show()
-
-# ========== STEP 7: SAVE SUMMARY ==========
-pd.DataFrame(synchrony_summary).to_csv("synchrony_summary.csv", index=False)
-print("\n✅ Synchrony analysis complete! Results saved to synchrony_summary.csv")
+        ax.plot(timeline, series[p][u], label=f"User {u}")
+    ax.set_title(f"{p.capitalize()} over Time")
+    ax.set_xlabel("Time (s)"); ax.set_ylabel(p)
+    ax.legend(); ax.grid(True)
+    fig_single.tight_layout()
+    fig_single.savefig(os.path.join(GRAPH_SAVE_DIR, f"{p}_plot.png"), dpi=200)
+    plt.close(fig_single)
+print(f"🖼️ Individual parameter plots saved to {GRAPH_SAVE_DIR}")
