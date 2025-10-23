@@ -362,6 +362,8 @@ ax_stats.axis('off')
 selected_users = {u: True for u in users}
 selected_params = {p: True for p in params}
 current_top_param = [0]
+full_view = [False]  # Initialize full_view state before draw_visible()
+time_window_start = [t_min]  # Initialize time window start position
 
 # Function to update stats display
 def update_stats_display():
@@ -369,13 +371,13 @@ def update_stats_display():
     ax_stats.axis('off')
     
     # Create stats text
-    stats_text = "📊 USER STATISTICS\n" + "─" * 100 + "\n\n"
+    stats_text = "USER STATISTICS\n" + "─" * 100 + "\n\n"
     
     for user in sorted(users):
         stats = user_stats[user]
         
         # Create a compact summary for each user
-        stats_text += f"👤 User {user}: "
+        stats_text += f"User {user}: "
         stats_text += f"{stats['total_changes']} changes  |  "
         stats_text += f"{stats['changes_per_minute']:.1f} chg/min  |  "
         
@@ -390,18 +392,18 @@ def update_stats_display():
     # Add comparative rankings
     stats_text += "\n" + "─" * 100 + "\n"
     most_active = max(users, key=lambda u: user_stats[u]['total_changes'])
-    stats_text += f"🥇 Most Active: User {most_active}  |  "
+    stats_text += f"[*] Most Active: User {most_active}  |  "
     
     if 'frequency' in params:
         freq_dom = {u: user_stats[u]['time_in_control'].get('frequency', 0) for u in users}
         most_dom = max(freq_dom, key=freq_dom.get)
-        stats_text += f"👑 Most Dominant: User {most_dom}  |  "
+        stats_text += f"[#] Most Dominant: User {most_dom}  |  "
     
     most_resp = max(users, key=lambda u: user_stats[u]['changes_per_minute'])
-    stats_text += f"⚡ Most Responsive: User {most_resp}"
+    stats_text += f"[!] Most Responsive: User {most_resp}"
     
     # Display engagement bar chart
-    stats_text += "\n\n📊 Engagement Distribution:\n"
+    stats_text += "\n\nEngagement Distribution:\n"
     total_changes_all = sum(user_stats[u]['total_changes'] for u in users)
     for user in sorted(users):
         pct = (user_stats[user]['total_changes'] / total_changes_all * 100) if total_changes_all > 0 else 0
@@ -516,7 +518,7 @@ def draw_visible():
                             ax.add_patch(ellipse)
                             
                             # Add annotation
-                            ax.annotate('⚔️ Fighting!', 
+                            ax.annotate('FIGHTING!', 
                                       xy=(center_time, y_max + y_span * 0.3),
                                       fontsize=9, 
                                       color='red', 
@@ -542,8 +544,15 @@ def draw_visible():
     if subset:
         axes[-1].set_xlabel("Time (s)", fontsize=10)
     
-    for ax in axes:
-        ax.set_xlim(t_min, t_min + 50)
+    # Apply zoom state without changing it
+    if full_view[0]:
+        for ax in axes:
+            ax.set_xlim(t_min, t_max)
+    else:
+        # Use time_window_start which is always available
+        start = time_window_start[0]
+        for ax in axes:
+            ax.set_xlim(start, start + 50)
     
     # Update stats display
     update_stats_display()
@@ -584,14 +593,16 @@ param_check.on_clicked(param_toggle)
 draw_visible()
 
 # Time slider (horizontal at the bottom, shared across all visible plots)
-ax_slider_time = plt.axes([0.08, 0.05, 0.6, 0.02])
+ax_slider_time = plt.axes([0.08, 0.05, 0.55, 0.02])
 slider_time = Slider(ax_slider_time, 'Time Window', t_min, t_max-50, valinit=t_min, orientation='horizontal')
 
 def update_time(val):
-    start = slider_time.val
-    for ax in axes:
-        ax.set_xlim(start, start + 50)
-    fig.canvas.draw_idle()
+    if not full_view[0]:  # Only update if not in full view mode
+        time_window_start[0] = slider_time.val
+        start = time_window_start[0]
+        for ax in axes:
+            ax.set_xlim(start, start + 50)
+        fig.canvas.draw_idle()
 
 slider_time.on_changed(update_time)
 
@@ -606,20 +617,29 @@ def update_param_scroll(val):
 
 slider_param.on_changed(update_param_scroll)
 
-# Button to toggle full/zoom view
-ax_button = plt.axes([0.70, 0.05, 0.08, 0.02])
+# Button to toggle full/zoom view (moved to avoid overlap)
+ax_button = plt.axes([0.65, 0.05, 0.10, 0.02])
 button = Button(ax_button, 'Full View', color='lightgray', hovercolor='0.85')
-full_view = [False]
 
 def toggle_full(event):
     full_view[0] = not full_view[0]
     if full_view[0]:
-        for ax in axes: ax.set_xlim(t_min, t_max)
-        button.label.set_text("Zoom")
+        for ax in axes: 
+            ax.set_xlim(t_min, t_max)
+        button.label.set_text("Zoom View")
+        # Disable and grey out the time slider
+        slider_time.set_active(False)
+        slider_time.poly.set_facecolor('0.85')  # Grey color
+        slider_time.poly.set_alpha(0.5)
     else:
-        start = slider_time.val
-        for ax in axes: ax.set_xlim(start, start + 50)
+        start = time_window_start[0]
+        for ax in axes: 
+            ax.set_xlim(start, start + 50)
         button.label.set_text("Full View")
+        # Re-enable the time slider
+        slider_time.set_active(True)
+        slider_time.poly.set_facecolor('lightblue')  # Active color
+        slider_time.poly.set_alpha(1.0)
     fig.canvas.draw_idle()
 
 button.on_clicked(toggle_full)
