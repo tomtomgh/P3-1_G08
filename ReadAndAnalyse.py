@@ -15,6 +15,11 @@ OUTPUT_CSV = "parameter_changes_summary.csv"
 GRAPH_SAVE_DIR = "./graphs"
 os.makedirs(GRAPH_SAVE_DIR, exist_ok=True)
 
+# Fighting detection parameters
+FIGHTING_TIME_WINDOW = 5.0  # Time window to look for rapid changes (seconds)
+FIGHTING_MIN_CHANGES = 4    # Minimum number of changes to consider as fighting
+FIGHTING_MIN_USERS = 2      # Minimum number of different users involved
+
 # ========== STEP 1: PARSE LOG FILES ==========
 pattern = re.compile(
     r'(?P<time>\d{2}:\d{2}:\d{2}\.\d+).*?'
@@ -92,14 +97,104 @@ for p in params:
         merged_series[p][i] = val
         user_at_time[p][i] = last_user if not np.isnan(val) else -1
 
+# ========== STEP 2.5: DETECT FIGHTING ON SHARED PARAMETERS ==========
+def detect_fighting(param_name, time_window=FIGHTING_TIME_WINDOW, 
+                    min_changes=FIGHTING_MIN_CHANGES, min_users=FIGHTING_MIN_USERS):
+    """
+    Detect 'fighting' behavior where multiple users rapidly change a shared parameter.
+    
+    Returns a list of fighting intervals: [(start_time, end_time, user_list, change_count), ...]
+    """
+    # Get all changes for this parameter
+    param_changes = df[df['param'] == param_name].sort_values('time_sec').copy()
+    
+    if len(param_changes) < min_changes:
+        return []
+    
+    fighting_intervals = []
+    i = 0
+    
+    while i < len(param_changes):
+        # Look ahead within the time window
+        window_end_time = param_changes.iloc[i]['time_sec'] + time_window
+        j = i
+        
+        # Find all changes within this time window
+        while j < len(param_changes) and param_changes.iloc[j]['time_sec'] <= window_end_time:
+            j += 1
+        
+        # Analyze this window
+        window_changes = param_changes.iloc[i:j]
+        num_changes = len(window_changes)
+        unique_users = window_changes['user'].unique()
+        num_users = len(unique_users)
+        
+        # Check if this qualifies as fighting
+        if num_changes >= min_changes and num_users >= min_users:
+            # Calculate "fighting intensity" - how many times users alternate
+            user_switches = 0
+            for k in range(1, len(window_changes)):
+                if window_changes.iloc[k]['user'] != window_changes.iloc[k-1]['user']:
+                    user_switches += 1
+            
+            # Only mark as fighting if there are actual back-and-forth changes
+            if user_switches >= min_users:
+                start_time = window_changes.iloc[0]['time_sec']
+                end_time = window_changes.iloc[-1]['time_sec']
+                
+                fighting_intervals.append({
+                    'start_time': start_time,
+                    'end_time': end_time,
+                    'users': list(unique_users),
+                    'num_changes': num_changes,
+                    'user_switches': user_switches
+                })
+                
+                # Skip ahead to avoid overlapping intervals
+                i = j
+                continue
+        
+        i += 1
+    
+    # Merge overlapping or close intervals
+    if not fighting_intervals:
+        return []
+    
+    merged = []
+    current = fighting_intervals[0].copy()
+    
+    for interval in fighting_intervals[1:]:
+        # If intervals are close (within 2 seconds), merge them
+        if interval['start_time'] - current['end_time'] <= 2.0:
+            current['end_time'] = interval['end_time']
+            current['users'] = list(set(current['users'] + interval['users']))
+            current['num_changes'] += interval['num_changes']
+            current['user_switches'] += interval['user_switches']
+        else:
+            merged.append(current)
+            current = interval.copy()
+    
+    merged.append(current)
+    return merged
+
+# Detect fighting for frequency parameter
+fighting_zones = {}
+if 'frequency' in params:
+    fighting_zones['frequency'] = detect_fighting('frequency')
+    if fighting_zones['frequency']:
+        print(f"\n⚔️  FIGHTING DETECTED on 'frequency' parameter!")
+        for i, zone in enumerate(fighting_zones['frequency'], 1):
+            print(f"   Zone {i}: {zone['start_time']:.1f}s - {zone['end_time']:.1f}s")
+            print(f"           Users involved: {zone['users']}, Changes: {zone['num_changes']}, Switches: {zone['user_switches']}")
+
 # ========== STEP 3: VISUALISATION WITH SCROLLING AND FILTERS ==========
 visible_count = 2  # how many graphs to show at once
 total_params = len(params)
 
-# Create figure with room for checkboxes
+# Create figure with room for checkboxes and bottom sliders
 fig = plt.figure(figsize=(14, 8))
 gs = fig.add_gridspec(visible_count, 2, width_ratios=[3, 1], 
-                     left=0.08, right=0.85, bottom=0.15, top=0.95,
+                     left=0.08, right=0.85, bottom=0.18, top=0.95,
                      wspace=0.3, hspace=0.3)
 
 # Create axes for plots
@@ -175,6 +270,51 @@ def draw_visible():
             by_label = dict(zip(labels, handles))
             ax.legend(by_label.values(), by_label.keys(), loc='upper right', fontsize=9)
             ax.set_title(f"{p.capitalize()} (Shared Parameter)", fontsize=11, fontweight='bold')
+            
+            # Highlight fighting zones if they exist for this parameter
+            if p in fighting_zones and fighting_zones[p]:
+                from matplotlib.patches import Rectangle, Ellipse
+                for zone in fighting_zones[p]:
+                    # Calculate the center and dimensions of the fighting zone
+                    center_time = (zone['start_time'] + zone['end_time']) / 2
+                    time_span = zone['end_time'] - zone['start_time']
+                    
+                    # Get y-axis limits to size the highlight appropriately
+                    y_data = merged_data[~np.isnan(merged_data)]
+                    if len(y_data) > 0:
+                        # Find values in the fighting zone
+                        mask = (timeline >= zone['start_time']) & (timeline <= zone['end_time'])
+                        zone_values = merged_data[mask]
+                        zone_values = zone_values[~np.isnan(zone_values)]
+                        
+                        if len(zone_values) > 0:
+                            y_min, y_max = zone_values.min(), zone_values.max()
+                            y_center = (y_min + y_max) / 2
+                            y_span = max(y_max - y_min, (y_data.max() - y_data.min()) * 0.15)
+                            
+                            # Draw an ellipse around the fighting zone
+                            ellipse = Ellipse((center_time, y_center), 
+                                            width=time_span * 1.3, 
+                                            height=y_span * 1.5,
+                                            fill=False, 
+                                            edgecolor='red', 
+                                            linewidth=2.5, 
+                                            linestyle='--',
+                                            alpha=0.7,
+                                            zorder=10)
+                            ax.add_patch(ellipse)
+                            
+                            # Add annotation
+                            ax.annotate('⚔️ Fighting!', 
+                                      xy=(center_time, y_max + y_span * 0.3),
+                                      fontsize=9, 
+                                      color='red', 
+                                      fontweight='bold',
+                                      ha='center',
+                                      bbox=dict(boxstyle='round,pad=0.3', 
+                                              facecolor='yellow', 
+                                              alpha=0.7, 
+                                              edgecolor='red'))
         else:
             # For user-specific parameters, draw separate lines for each user
             for u in active_users:
@@ -229,9 +369,9 @@ param_check.on_clicked(param_toggle)
 # Initial draw
 draw_visible()
 
-# Time slider (shared across all visible plots)
-ax_slider_time = plt.axes([0.88, 0.15, 0.02, 0.7])
-slider_time = Slider(ax_slider_time, 'Time', t_min, t_max-50, valinit=t_min, orientation='vertical')
+# Time slider (horizontal at the bottom, shared across all visible plots)
+ax_slider_time = plt.axes([0.08, 0.08, 0.6, 0.03])
+slider_time = Slider(ax_slider_time, 'Time Window', t_min, t_max-50, valinit=t_min, orientation='horizontal')
 
 def update_time(val):
     start = slider_time.val
@@ -242,7 +382,7 @@ def update_time(val):
 slider_time.on_changed(update_time)
 
 # Parameter scroll slider (to scroll up/down between graphs)
-ax_slider_param = plt.axes([0.3, 0.05, 0.3, 0.03])
+ax_slider_param = plt.axes([0.08, 0.03, 0.3, 0.02])
 slider_param = Slider(ax_slider_param, 'Scroll Params', 0, max(0, len([p for p in params if selected_params[p]]) - visible_count), 
                       valinit=0, valstep=1)
 
@@ -253,7 +393,7 @@ def update_param_scroll(val):
 slider_param.on_changed(update_param_scroll)
 
 # Button to toggle full/zoom view
-ax_button = plt.axes([0.92, 0.05, 0.06, 0.05])
+ax_button = plt.axes([0.70, 0.08, 0.08, 0.03])
 button = Button(ax_button, 'Full View', color='lightgray', hovercolor='0.85')
 full_view = [False]
 
