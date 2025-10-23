@@ -187,23 +187,234 @@ if 'frequency' in params:
             print(f"   Zone {i}: {zone['start_time']:.1f}s - {zone['end_time']:.1f}s")
             print(f"           Users involved: {zone['users']}, Changes: {zone['num_changes']}, Switches: {zone['user_switches']}")
 
+# ========== STEP 2.6: ANALYZE USER DOMINANCE AND ACTIVITY ==========
+def analyze_user_activity():
+    """
+    Analyze user dominance, activity, and involvement in the system.
+    
+    Returns statistics including:
+    - Total changes per user
+    - Changes per parameter per user
+    - Time in control (for shared parameters like frequency)
+    - Activity rate (changes per minute)
+    - Inactivity periods
+    """
+    total_duration = t_max - t_min
+    
+    user_stats = {}
+    
+    for user in users:
+        user_df = df[df['user'] == user]
+        
+        # Basic activity metrics
+        total_changes = len(user_df)
+        changes_per_minute = (total_changes / total_duration) * 60 if total_duration > 0 else 0
+        
+        # Changes per parameter
+        param_changes = {}
+        for param in params:
+            param_changes[param] = len(user_df[user_df['param'] == param])
+        
+        # Time in control for shared parameters (e.g., frequency)
+        time_in_control = {}
+        for param in params:
+            if param in ['frequency']:  # Shared parameters
+                # Count how many timeline points this user "owns"
+                control_points = np.sum(user_at_time[param] == user)
+                time_controlled = control_points * TIME_RESOLUTION
+                time_in_control[param] = time_controlled
+        
+        # Calculate inactivity periods (gaps between changes)
+        if len(user_df) > 1:
+            sorted_times = user_df['time_sec'].sort_values().values
+            gaps = np.diff(sorted_times)
+            max_gap = gaps.max() if len(gaps) > 0 else 0
+            avg_gap = gaps.mean() if len(gaps) > 0 else 0
+            num_long_gaps = np.sum(gaps > 10)  # Gaps longer than 10 seconds
+        else:
+            max_gap = 0
+            avg_gap = 0
+            num_long_gaps = 0
+        
+        # First and last action times
+        if len(user_df) > 0:
+            first_action = user_df['time_sec'].min()
+            last_action = user_df['time_sec'].max()
+            active_duration = last_action - first_action
+        else:
+            first_action = 0
+            last_action = 0
+            active_duration = 0
+        
+        user_stats[user] = {
+            'total_changes': total_changes,
+            'changes_per_minute': changes_per_minute,
+            'param_changes': param_changes,
+            'time_in_control': time_in_control,
+            'max_inactivity_gap': max_gap,
+            'avg_gap_between_changes': avg_gap,
+            'long_inactivity_periods': num_long_gaps,
+            'first_action_time': first_action,
+            'last_action_time': last_action,
+            'active_duration': active_duration,
+            'activity_percentage': (active_duration / total_duration * 100) if total_duration > 0 else 0
+        }
+    
+    return user_stats, total_duration
+
+# Calculate and display user statistics
+print("\n" + "="*80)
+print("📊 USER ACTIVITY & DOMINANCE STATISTICS")
+print("="*80)
+
+user_stats, total_duration = analyze_user_activity()
+
+# Overall summary
+print(f"\n📅 Total Session Duration: {total_duration:.1f} seconds ({total_duration/60:.1f} minutes)")
+print(f"📋 Parameters Tracked: {', '.join([p.capitalize() for p in params])}")
+
+# Per-user statistics
+for user in sorted(users):
+    stats = user_stats[user]
+    print(f"\n{'='*80}")
+    print(f"👤 USER {user} - Activity Report")
+    print(f"{'='*80}")
+    
+    # Basic activity
+    print(f"  📈 Total Changes Made: {stats['total_changes']}")
+    print(f"  ⚡ Activity Rate: {stats['changes_per_minute']:.2f} changes/minute")
+    print(f"  ⏱️  Active Duration: {stats['active_duration']:.1f}s ({stats['active_duration']/60:.1f} min)")
+    print(f"  📊 Activity Percentage: {stats['activity_percentage']:.1f}%")
+    
+    # Parameter-specific activity
+    print(f"\n  📋 Changes by Parameter:")
+    for param in sorted(params):
+        count = stats['param_changes'][param]
+        percentage = (count / stats['total_changes'] * 100) if stats['total_changes'] > 0 else 0
+        print(f"     • {param.capitalize()}: {count} changes ({percentage:.1f}%)")
+    
+    # Dominance on shared parameters
+    if stats['time_in_control']:
+        print(f"\n  👑 Dominance on Shared Parameters:")
+        for param, time_controlled in stats['time_in_control'].items():
+            percentage = (time_controlled / total_duration * 100) if total_duration > 0 else 0
+            print(f"     • {param.capitalize()}: {time_controlled:.1f}s ({percentage:.1f}% of total time)")
+    
+    # Inactivity analysis
+    print(f"\n  💤 Inactivity Analysis:")
+    print(f"     • Average gap between changes: {stats['avg_gap_between_changes']:.2f}s")
+    print(f"     • Longest inactivity period: {stats['max_inactivity_gap']:.1f}s")
+    print(f"     • Number of long gaps (>10s): {stats['long_inactivity_periods']}")
+    
+    # Timing
+    print(f"\n  ⏰ Session Timing:")
+    print(f"     • First action at: {stats['first_action_time']:.1f}s")
+    print(f"     • Last action at: {stats['last_action_time']:.1f}s")
+
+# Comparative analysis
+print(f"\n{'='*80}")
+print(f"🏆 COMPARATIVE ANALYSIS")
+print(f"{'='*80}")
+
+# Most active user
+most_active_user = max(users, key=lambda u: user_stats[u]['total_changes'])
+print(f"  🥇 Most Active User: User {most_active_user} ({user_stats[most_active_user]['total_changes']} changes)")
+
+# Most dominant on shared parameters
+if 'frequency' in params:
+    freq_dominance = {u: user_stats[u]['time_in_control'].get('frequency', 0) for u in users}
+    most_dominant = max(freq_dominance, key=freq_dominance.get)
+    print(f"  👑 Most Dominant (Frequency): User {most_dominant} ({freq_dominance[most_dominant]:.1f}s, {freq_dominance[most_dominant]/total_duration*100:.1f}%)")
+
+# Most responsive (highest changes per minute)
+most_responsive = max(users, key=lambda u: user_stats[u]['changes_per_minute'])
+print(f"  ⚡ Most Responsive: User {most_responsive} ({user_stats[most_responsive]['changes_per_minute']:.2f} changes/min)")
+
+# Calculate engagement distribution
+total_changes_all = sum(user_stats[u]['total_changes'] for u in users)
+print(f"\n  📊 Engagement Distribution:")
+for user in sorted(users):
+    percentage = (user_stats[user]['total_changes'] / total_changes_all * 100) if total_changes_all > 0 else 0
+    bar = '█' * int(percentage / 2)
+    print(f"     User {user}: {bar} {percentage:.1f}%")
+
+print(f"\n{'='*80}\n")
+
 # ========== STEP 3: VISUALISATION WITH SCROLLING AND FILTERS ==========
 visible_count = 2  # how many graphs to show at once
 total_params = len(params)
 
-# Create figure with room for checkboxes and bottom sliders
-fig = plt.figure(figsize=(14, 8))
-gs = fig.add_gridspec(visible_count, 2, width_ratios=[3, 1], 
-                     left=0.08, right=0.85, bottom=0.18, top=0.95,
-                     wspace=0.3, hspace=0.3)
+# Create figure with room for checkboxes, stats panel, and bottom sliders
+fig = plt.figure(figsize=(16, 10))
+gs = fig.add_gridspec(visible_count + 1, 2, width_ratios=[3, 1], 
+                     height_ratios=[1] * visible_count + [0.8],
+                     left=0.08, right=0.88, bottom=0.15, top=0.95,
+                     wspace=0.3, hspace=0.4)
 
 # Create axes for plots
 axes = [fig.add_subplot(gs[i, 0]) for i in range(visible_count)]
+
+# Create stats display panel at the bottom
+ax_stats = fig.add_subplot(gs[visible_count, :])
+ax_stats.axis('off')
 
 # Selection state
 selected_users = {u: True for u in users}
 selected_params = {p: True for p in params}
 current_top_param = [0]
+
+# Function to update stats display
+def update_stats_display():
+    ax_stats.clear()
+    ax_stats.axis('off')
+    
+    # Create stats text
+    stats_text = "📊 USER STATISTICS\n" + "─" * 100 + "\n\n"
+    
+    for user in sorted(users):
+        stats = user_stats[user]
+        
+        # Create a compact summary for each user
+        stats_text += f"👤 User {user}: "
+        stats_text += f"{stats['total_changes']} changes  |  "
+        stats_text += f"{stats['changes_per_minute']:.1f} chg/min  |  "
+        
+        # Dominance on frequency
+        if 'frequency' in stats['time_in_control']:
+            freq_pct = (stats['time_in_control']['frequency'] / total_duration * 100)
+            stats_text += f"Freq dominance: {freq_pct:.1f}%  |  "
+        
+        stats_text += f"Max gap: {stats['max_inactivity_gap']:.1f}s"
+        stats_text += "\n"
+    
+    # Add comparative rankings
+    stats_text += "\n" + "─" * 100 + "\n"
+    most_active = max(users, key=lambda u: user_stats[u]['total_changes'])
+    stats_text += f"🥇 Most Active: User {most_active}  |  "
+    
+    if 'frequency' in params:
+        freq_dom = {u: user_stats[u]['time_in_control'].get('frequency', 0) for u in users}
+        most_dom = max(freq_dom, key=freq_dom.get)
+        stats_text += f"👑 Most Dominant: User {most_dom}  |  "
+    
+    most_resp = max(users, key=lambda u: user_stats[u]['changes_per_minute'])
+    stats_text += f"⚡ Most Responsive: User {most_resp}"
+    
+    # Display engagement bar chart
+    stats_text += "\n\n📊 Engagement Distribution:\n"
+    total_changes_all = sum(user_stats[u]['total_changes'] for u in users)
+    for user in sorted(users):
+        pct = (user_stats[user]['total_changes'] / total_changes_all * 100) if total_changes_all > 0 else 0
+        bar_length = int(pct / 2)
+        bar = '█' * bar_length + '░' * (50 - bar_length)
+        stats_text += f"  User {user}: {bar} {pct:.1f}%\n"
+    
+    ax_stats.text(0.02, 0.98, stats_text, 
+                 transform=ax_stats.transAxes,
+                 verticalalignment='top',
+                 fontfamily='monospace',
+                 fontsize=8,
+                 bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.3))
 
 # Function to plot the visible subset
 def draw_visible():
@@ -334,6 +545,9 @@ def draw_visible():
     for ax in axes:
         ax.set_xlim(t_min, t_min + 50)
     
+    # Update stats display
+    update_stats_display()
+    
     fig.canvas.draw_idle()
 
 # User selection checkboxes
@@ -370,7 +584,7 @@ param_check.on_clicked(param_toggle)
 draw_visible()
 
 # Time slider (horizontal at the bottom, shared across all visible plots)
-ax_slider_time = plt.axes([0.08, 0.08, 0.6, 0.03])
+ax_slider_time = plt.axes([0.08, 0.05, 0.6, 0.02])
 slider_time = Slider(ax_slider_time, 'Time Window', t_min, t_max-50, valinit=t_min, orientation='horizontal')
 
 def update_time(val):
@@ -382,7 +596,7 @@ def update_time(val):
 slider_time.on_changed(update_time)
 
 # Parameter scroll slider (to scroll up/down between graphs)
-ax_slider_param = plt.axes([0.08, 0.03, 0.3, 0.02])
+ax_slider_param = plt.axes([0.08, 0.02, 0.3, 0.015])
 slider_param = Slider(ax_slider_param, 'Scroll Params', 0, max(0, len([p for p in params if selected_params[p]]) - visible_count), 
                       valinit=0, valstep=1)
 
@@ -393,7 +607,7 @@ def update_param_scroll(val):
 slider_param.on_changed(update_param_scroll)
 
 # Button to toggle full/zoom view
-ax_button = plt.axes([0.70, 0.08, 0.08, 0.03])
+ax_button = plt.axes([0.70, 0.05, 0.08, 0.02])
 button = Button(ax_button, 'Full View', color='lightgray', hovercolor='0.85')
 full_view = [False]
 
