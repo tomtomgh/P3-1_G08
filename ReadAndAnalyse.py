@@ -12,7 +12,7 @@ LOG_PATTERN = "User*.log"
 TIME_RESOLUTION = 0.1
 WINDOW_FOR_SIMULTANEOUS = 1.0
 OUTPUT_CSV = "parameter_changes_summary.csv"
-GRAPH_SAVE_DIR = "/Users/tomdaugherty/Documents/GitHub/P3-1_G08/graphs"
+GRAPH_SAVE_DIR = "./graphs"
 os.makedirs(GRAPH_SAVE_DIR, exist_ok=True)
 
 # ========== STEP 1: PARSE LOG FILES ==========
