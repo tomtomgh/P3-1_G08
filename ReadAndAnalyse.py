@@ -5,7 +5,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from itertools import combinations
 import os
-from matplotlib.widgets import Slider, Button
+from matplotlib.widgets import Slider, Button, CheckButtons
 
 # ========== CONFIG ==========
 LOG_PATTERN = "User*.log"
@@ -74,36 +74,97 @@ for p in params:
                 val = d.iloc[idx]['value']; idx += 1
             series[p][u][i] = val
 
-# ========== STEP 3: VISUALISATION WITH SCROLLING ==========
+# ========== STEP 3: VISUALISATION WITH SCROLLING AND FILTERS ==========
 visible_count = 2  # how many graphs to show at once
 total_params = len(params)
 
-fig, axes = plt.subplots(visible_count, 1, figsize=(10, 6), sharex=True)
-plt.subplots_adjust(right=0.85, bottom=0.15)
+# Create figure with room for checkboxes
+fig = plt.figure(figsize=(14, 8))
+gs = fig.add_gridspec(visible_count, 2, width_ratios=[3, 1], 
+                     left=0.08, right=0.85, bottom=0.15, top=0.95,
+                     wspace=0.3, hspace=0.3)
+
+# Create axes for plots
+axes = [fig.add_subplot(gs[i, 0]) for i in range(visible_count)]
+
+# Selection state
+selected_users = {u: True for u in users}
+selected_params = {p: True for p in params}
+current_top_param = [0]
 
 # Function to plot the visible subset
-def draw_visible(start_index):
+def draw_visible():
+    # Get selected items
+    active_users = [u for u in users if selected_users[u]]
+    active_params = [p for p in params if selected_params[p]]
+    
+    if not active_users or not active_params:
+        for ax in axes:
+            ax.clear()
+            ax.text(0.5, 0.5, 'No data selected', ha='center', va='center', transform=ax.transAxes)
+        fig.canvas.draw_idle()
+        return
+    
     for ax in axes:
         ax.clear()
-    subset = params[start_index:start_index + visible_count]
+    
+    # Get visible parameters based on scroll position
+    visible_params = [p for p in active_params if selected_params[p]]
+    start_idx = min(current_top_param[0], max(0, len(visible_params) - visible_count))
+    current_top_param[0] = start_idx
+    subset = visible_params[start_idx:start_idx + visible_count]
+    
     for ax, p in zip(axes, subset):
-        for u in users:
-            ax.plot(timeline, series[p][u], label=f"User {u}")
-        ax.set_ylabel(p)
-        ax.set_title(p.capitalize())
-        ax.grid(True)
-    axes[-1].set_xlabel("Time (s)")
-    axes[0].legend(loc='upper right')
+        for u in active_users:
+            ax.plot(timeline, series[p][u], label=f"User {u}", linewidth=2)
+        ax.set_ylabel(p, fontsize=10)
+        ax.set_title(p.capitalize(), fontsize=11, fontweight='bold')
+        ax.grid(True, alpha=0.3)
+        ax.legend(loc='upper right', fontsize=9)
+    
+    if subset:
+        axes[-1].set_xlabel("Time (s)", fontsize=10)
+    
     for ax in axes:
         ax.set_xlim(t_min, t_min + 50)
+    
     fig.canvas.draw_idle()
 
+# User selection checkboxes
+ax_user_check = fig.add_subplot(gs[0, 1])
+ax_user_check.set_title("Select Users", fontsize=10, fontweight='bold')
+user_labels = [f"User {u}" for u in users]
+user_check = CheckButtons(ax_user_check, user_labels, [True] * len(users))
+
+def user_toggle(label):
+    user_id = int(label.split()[-1])
+    selected_users[user_id] = not selected_users[user_id]
+    draw_visible()
+
+user_check.on_clicked(user_toggle)
+
+# Parameter selection checkboxes
+ax_param_check = fig.add_subplot(gs[1, 1])
+ax_param_check.set_title("Select Parameters", fontsize=10, fontweight='bold')
+param_labels = [p.capitalize() for p in params]
+# Adjust to show scrollable list if too many parameters
+max_visible_params = min(len(params), 10)
+display_params = params[:max_visible_params]
+display_labels = [p.capitalize() for p in display_params]
+param_check = CheckButtons(ax_param_check, display_labels, [True] * len(display_params))
+
+def param_toggle(label):
+    param_name = label.lower()
+    selected_params[param_name] = not selected_params[param_name]
+    draw_visible()
+
+param_check.on_clicked(param_toggle)
+
 # Initial draw
-current_top_param = [0]
-draw_visible(current_top_param[0])
+draw_visible()
 
 # Time slider (shared across all visible plots)
-ax_slider_time = plt.axes([0.9, 0.15, 0.03, 0.7])
+ax_slider_time = plt.axes([0.88, 0.15, 0.02, 0.7])
 slider_time = Slider(ax_slider_time, 'Time', t_min, t_max-50, valinit=t_min, orientation='vertical')
 
 def update_time(val):
@@ -115,17 +176,18 @@ def update_time(val):
 slider_time.on_changed(update_time)
 
 # Parameter scroll slider (to scroll up/down between graphs)
-ax_slider_param = plt.axes([0.4, 0.05, 0.3, 0.03])
-slider_param = Slider(ax_slider_param, 'Scroll', 0, max(0, total_params - visible_count), 
+ax_slider_param = plt.axes([0.3, 0.05, 0.3, 0.03])
+slider_param = Slider(ax_slider_param, 'Scroll Params', 0, max(0, len([p for p in params if selected_params[p]]) - visible_count), 
                       valinit=0, valstep=1)
 
-def update_param(val):
+def update_param_scroll(val):
     current_top_param[0] = int(slider_param.val)
-    draw_visible(current_top_param[0])
-slider_param.on_changed(update_param)
+    draw_visible()
+
+slider_param.on_changed(update_param_scroll)
 
 # Button to toggle full/zoom view
-ax_button = plt.axes([0.88, 0.05, 0.08, 0.05])
+ax_button = plt.axes([0.92, 0.05, 0.06, 0.05])
 button = Button(ax_button, 'Full View', color='lightgray', hovercolor='0.85')
 full_view = [False]
 
@@ -133,31 +195,38 @@ def toggle_full(event):
     full_view[0] = not full_view[0]
     if full_view[0]:
         for ax in axes: ax.set_xlim(t_min, t_max)
-        button.label.set_text("Zoom View")
+        button.label.set_text("Zoom")
     else:
         start = slider_time.val
         for ax in axes: ax.set_xlim(start, start + 50)
         button.label.set_text("Full View")
     fig.canvas.draw_idle()
+
 button.on_clicked(toggle_full)
 
-plt.tight_layout(rect=[0,0.08,0.85,1])
 plt.show()
 
 # ========== STEP 4: SAVE IMAGES ==========
-# Save combined and per-parameter
-combined_path = os.path.join(GRAPH_SAVE_DIR, "scrollable_combined_view.png")
-fig.savefig(combined_path, dpi=200)
-print(f"💾 Saved scrollable combined view → {combined_path}")
+# Save images with current selections
+print("\n💾 Saving visualizations...")
 
+# Save the interactive view
+combined_path = os.path.join(GRAPH_SAVE_DIR, "interactive_view.png")
+fig.savefig(combined_path, dpi=200, bbox_inches='tight')
+print(f"💾 Saved interactive view → {combined_path}")
+
+# Save individual parameter plots for all users
 for p in params:
-    fig_single, ax = plt.subplots(figsize=(8,5))
+    fig_single, ax = plt.subplots(figsize=(10, 6))
     for u in users:
-        ax.plot(timeline, series[p][u], label=f"User {u}")
-    ax.set_title(f"{p.capitalize()} over Time")
-    ax.set_xlabel("Time (s)"); ax.set_ylabel(p)
-    ax.legend(); ax.grid(True)
+        ax.plot(timeline, series[p][u], label=f"User {u}", linewidth=2)
+    ax.set_title(f"{p.capitalize()} over Time", fontsize=14, fontweight='bold')
+    ax.set_xlabel("Time (s)", fontsize=12)
+    ax.set_ylabel(p, fontsize=12)
+    ax.legend(fontsize=10)
+    ax.grid(True, alpha=0.3)
     fig_single.tight_layout()
     fig_single.savefig(os.path.join(GRAPH_SAVE_DIR, f"{p}_plot.png"), dpi=200)
     plt.close(fig_single)
+
 print(f"🖼️ Individual parameter plots saved to {GRAPH_SAVE_DIR}")
