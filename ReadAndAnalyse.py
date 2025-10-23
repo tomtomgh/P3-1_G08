@@ -65,7 +65,15 @@ t_min, t_max = df['time_sec'].min(), df['time_sec'].max()
 timeline = np.arange(t_min, t_max, TIME_RESOLUTION)
 series = {p:{u:np.full_like(timeline, np.nan, dtype=float) for u in users} for p in params}
 
+# Track which user changed each parameter at each time (for shared parameters like frequency)
+user_at_time = {p:np.full_like(timeline, -1, dtype=int) for p in params}
+# Merged series for shared parameters (all users' changes combined)
+merged_series = {p:np.full_like(timeline, np.nan, dtype=float) for p in params}
+
 for p in params:
+    # Get all changes for this parameter across all users, sorted by time
+    all_changes = df[df['param']==p].sort_values('time_sec')
+    
     for u in users:
         d = df[(df['user']==u)&(df['param']==p)].sort_values('time_sec')
         val = np.nan; idx = 0
@@ -73,6 +81,16 @@ for p in params:
             while idx < len(d) and t >= d.iloc[idx]['time_sec']:
                 val = d.iloc[idx]['value']; idx += 1
             series[p][u][i] = val
+    
+    # Build merged series and track which user made each change (for shared parameters)
+    val = np.nan; idx = 0; last_user = -1
+    for i,t in enumerate(timeline):
+        while idx < len(all_changes) and t >= all_changes.iloc[idx]['time_sec']:
+            val = all_changes.iloc[idx]['value']
+            last_user = all_changes.iloc[idx]['user']
+            idx += 1
+        merged_series[p][i] = val
+        user_at_time[p][i] = last_user if not np.isnan(val) else -1
 
 # ========== STEP 3: VISUALISATION WITH SCROLLING AND FILTERS ==========
 visible_count = 2  # how many graphs to show at once
@@ -114,13 +132,61 @@ def draw_visible():
     current_top_param[0] = start_idx
     subset = visible_params[start_idx:start_idx + visible_count]
     
+    # Define colors for each user
+    user_colors = plt.cm.tab10(np.linspace(0, 1, len(users)))
+    color_map = {u: user_colors[i] for i, u in enumerate(users)}
+    
     for ax, p in zip(axes, subset):
-        for u in active_users:
-            ax.plot(timeline, series[p][u], label=f"User {u}", linewidth=2)
+        # Check if this is a shared parameter - just check by name
+        is_shared = p in ['frequency']  # Add more shared parameters here if needed
+        
+        if is_shared:
+            # For shared parameters, draw segments colored by which user made the change
+            # Use the merged series that combines all users' changes
+            merged_data = merged_series[p]
+            
+            # Plot segments with different colors based on who changed it
+            i = 0
+            added_labels = set()
+            while i < len(timeline):
+                if np.isnan(merged_data[i]):
+                    i += 1
+                    continue
+                
+                # Find the extent of this segment with the same user
+                current_user = user_at_time[p][i]
+                j = i
+                while j < len(timeline) and user_at_time[p][j] == current_user and not np.isnan(merged_data[j]):
+                    j += 1
+                
+                # Plot this segment only if the user is selected
+                if current_user in active_users and current_user >= 0:
+                    label = f"User {current_user}" if current_user not in added_labels else ""
+                    ax.plot(timeline[i:j], merged_data[i:j], 
+                           color=color_map[current_user], 
+                           linewidth=2.5,
+                           label=label)
+                    added_labels.add(current_user)
+                
+                i = j
+            
+            # Remove duplicate labels in legend
+            handles, labels = ax.get_legend_handles_labels()
+            by_label = dict(zip(labels, handles))
+            ax.legend(by_label.values(), by_label.keys(), loc='upper right', fontsize=9)
+            ax.set_title(f"{p.capitalize()} (Shared Parameter)", fontsize=11, fontweight='bold')
+        else:
+            # For user-specific parameters, draw separate lines for each user
+            for u in active_users:
+                ax.plot(timeline, series[p][u], 
+                       color=color_map[u],
+                       label=f"User {u}", 
+                       linewidth=2)
+            ax.legend(loc='upper right', fontsize=9)
+            ax.set_title(p.capitalize(), fontsize=11, fontweight='bold')
+        
         ax.set_ylabel(p, fontsize=10)
-        ax.set_title(p.capitalize(), fontsize=11, fontweight='bold')
         ax.grid(True, alpha=0.3)
-        ax.legend(loc='upper right', fontsize=9)
     
     if subset:
         axes[-1].set_xlabel("Time (s)", fontsize=10)
