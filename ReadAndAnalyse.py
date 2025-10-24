@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from itertools import combinations
 import os
 from matplotlib.widgets import Slider, Button, CheckButtons
+from matplotlib.widgets import RadioButtons
 
 # ========== CONFIG ==========
 LOG_PATTERN = "User*.log"
@@ -269,6 +270,63 @@ print("="*80)
 
 user_stats, total_duration = analyze_user_activity()
 
+# ========== STEP 2.7: CAREFULNESS (INCREMENTAL vs BIG JUMPS) ==========
+def analyze_carefulness(user_id, df, params):
+    """
+    Analyze how 'careful' a user's parameter changes are.
+    Returns a dict of per-parameter carefulness metrics.
+    """
+    carefulness = {}
+    for param in params:
+        param_df = df[(df['user'] == user_id) & (df['param'] == param)].sort_values('time_sec')
+        if len(param_df) < 2:
+            carefulness[param] = {
+                'avg_step': np.nan,
+                'max_step': np.nan,
+                'careful_ratio': np.nan,
+                'behavior_type': 'Insufficient data'
+            }
+            continue
+
+        values = param_df['value'].values
+        diffs = np.abs(np.diff(values))
+        if np.all(diffs == 0):
+            behavior_type = 'Careful (no variation)'
+            avg_step = max_step = careful_ratio = 0
+        else:
+            avg_step = np.mean(diffs)
+            max_step = np.max(diffs)
+
+            # "Small change" threshold = 10% of observed range for that parameter (fallback 1 if range=0)
+            param_range = np.ptp(values)
+            threshold = 0.1 * (param_range if param_range > 0 else 1)
+            small_steps = np.sum(diffs <= threshold)
+            careful_ratio = small_steps / len(diffs) * 100
+
+            behavior_type = 'Careful' if careful_ratio > 70 else 'Reckless'
+
+        carefulness[param] = {
+            'avg_step': avg_step,
+            'max_step': max_step,
+            'careful_ratio': careful_ratio,
+            'behavior_type': behavior_type
+        }
+
+    return carefulness
+
+print("\n🤖 CONTROL CAREFULNESS ANALYSIS")
+print("="*80)
+for u in sorted(users):
+    cstats = analyze_carefulness(u, df, params)
+    user_stats[u]['carefulness'] = cstats
+    for p in sorted(params):
+        c = cstats[p]
+        if np.isnan(c['avg_step']):
+            print(f"User {u:<2} | {p:<12} | Insufficient data")
+        else:
+            print(f"User {u:<2} | {p:<12} | Avg Δ={c['avg_step']:.3f} | Max Δ={c['max_step']:.3f} | "
+                  f"Careful Steps={c['careful_ratio']:.1f}% | Behavior={c['behavior_type']}")
+
 # Overall summary
 print(f"\n📅 Total Session Duration: {total_duration:.1f} seconds ({total_duration/60:.1f} minutes)")
 print(f"📋 Parameters Tracked: {', '.join([p.capitalize() for p in params])}")
@@ -311,6 +369,16 @@ for user in sorted(users):
     print(f"     • First action at: {stats['first_action_time']:.1f}s")
     print(f"     • Last action at: {stats['last_action_time']:.1f}s")
 
+    # Carefulness per parameter
+    print(f"\n  🤖 Control Carefulness:")
+    for param in sorted(params):
+        c = stats['carefulness'][param]
+        if np.isnan(c['avg_step']):
+            print(f"     • {param.capitalize()}: Insufficient data")
+        else:
+            print(f"     • {param.capitalize()}: Avg Δ={c['avg_step']:.3f}, Max Δ={c['max_step']:.3f}, "
+                  f"Careful Steps={c['careful_ratio']:.1f}%, Behavior={c['behavior_type']}")
+
 # Comparative analysis
 print(f"\n{'='*80}")
 print(f"🏆 COMPARATIVE ANALYSIS")
@@ -337,6 +405,19 @@ for user in sorted(users):
     percentage = (user_stats[user]['total_changes'] / total_changes_all * 100) if total_changes_all > 0 else 0
     bar = '█' * int(percentage / 2)
     print(f"     User {user}: {bar} {percentage:.1f}%")
+
+# Careful vs Reckless summary
+print(f"\n  🤖 Carefulness Summary:")
+for user in sorted(users):
+    behaviors = [v['behavior_type'] for v in user_stats[user]['carefulness'].values()
+                 if v['behavior_type'] not in ['Insufficient data']]
+    if not behaviors:
+        print(f"     User {user}: Insufficient data")
+        continue
+    careful_count = sum(b == 'Careful' or 'no variation' in b for b in behaviors)
+    ratio = careful_count / len(behaviors) * 100
+    label = "🟢 Careful" if ratio >= 70 else "🔴 Reckless"
+    print(f"     User {user}: {label} ({ratio:.1f}% careful changes)")
 
 print(f"\n{'='*80}\n")
 
@@ -643,6 +724,188 @@ def toggle_full(event):
     fig.canvas.draw_idle()
 
 button.on_clicked(toggle_full)
+
+# ========== STEP 3.5: PAGE NAVIGATION (Graphs <-> Carefulness Dashboard) ==========
+
+from matplotlib.widgets import RadioButtons
+from matplotlib.patches import Rectangle
+
+current_page = [0]  # 0 = Graphs, 1 = Carefulness
+ui_state = {'user_check': None, 'param_check': None, 'radio_ax': None, 'radio_widget': None}
+
+# Dedicated axes for carefulness dashboard
+ax_care = fig.add_axes([0.08, 0.15, 0.8, 0.75])
+ax_care.axis('off')
+ax_care.set_visible(False)
+
+def draw_carefulness(uid=None):
+    """Draw the carefulness report for all users or a single one."""
+    ax_care.clear()
+    ax_care.axis('off')
+    text = "CONTROL CAREFULNESS ANALYSIS\n" + "─" * 90 + "\n\n"
+
+    users_to_show = [uid] if uid is not None else sorted(users)
+    for user in users_to_show:
+        stats = user_stats[user]
+        text += f"User {user}\n"
+        for param, c in stats['carefulness'].items():
+            if np.isnan(c['avg_step']):
+                text += f"  • {param.capitalize():<12} No data\n"
+            else:
+                color = 'green' if c['behavior_type'] == 'Careful' else 'red'
+                text += (f"  • {param.capitalize():<12}"
+                         f" Avg Δ={c['avg_step']:.3f} | Max Δ={c['max_step']:.3f} | "
+                         f"Careful Steps={c['careful_ratio']:.1f}% | "
+                         f"{c['behavior_type']}\n")
+        text += "\n"
+
+    text += "─" * 90 + "\nSUMMARY\n"
+    for user in sorted(users):
+        behaviors = [v['behavior_type'] for v in user_stats[user]['carefulness'].values()
+                     if v['behavior_type'] not in ['Insufficient data']]
+        if not behaviors:
+            continue
+        careful_count = sum(b == 'Careful' or 'no variation' in b for b in behaviors)
+        ratio = careful_count / len(behaviors) * 100
+        label = "Careful" if ratio >= 70 else "Reckless"
+        text += f"  User {user}: {label:<8} ({ratio:.1f}% careful changes)\n"
+
+    ax_care.text(0.02, 0.98, text,
+                 transform=ax_care.transAxes,
+                 verticalalignment='top',
+                 fontfamily='monospace',
+                 fontsize=9,
+                 bbox=dict(boxstyle='round', facecolor='ivory', alpha=0.9))
+    fig.canvas.draw_idle()
+
+
+def recreate_checkboxes():
+    """Rebuild user and parameter checkboxes with visible labels."""
+    # Remove old widgets if they exist
+    if ui_state.get('user_check'):
+        del ui_state['user_check']
+    if ui_state.get('param_check'):
+        del ui_state['param_check']
+
+    # Fully clear the axes and make them visible again
+    ax_user_check.clear()
+    ax_param_check.clear()
+    ax_user_check.set_visible(True)
+    ax_param_check.set_visible(True)
+
+    # Titles
+    ax_user_check.set_title("Select Users", fontsize=10, fontweight='bold')
+    ax_param_check.set_title("Select Parameters", fontsize=10, fontweight='bold')
+
+    # Create new checkboxes
+    user_labels = [f"User {u}" for u in users]
+    param_labels = [p.capitalize() for p in params]
+
+    user_check = CheckButtons(ax_user_check, user_labels, [selected_users[u] for u in users])
+    param_check = CheckButtons(ax_param_check, param_labels, [selected_params[p] for p in params])
+
+    # Bind callbacks
+    def user_toggle(label):
+        uid = int(label.split()[-1])
+        selected_users[uid] = not selected_users[uid]
+        draw_visible()
+
+    def param_toggle(label):
+        pname = label.lower()
+        selected_params[pname] = not selected_params[pname]
+        draw_visible()
+
+    user_check.on_clicked(user_toggle)
+    param_check.on_clicked(param_toggle)
+
+    ui_state['user_check'] = user_check
+    ui_state['param_check'] = param_check
+
+    # Force re-render (critical for label visibility)
+    fig.canvas.draw_idle()
+
+
+def show_page(page_index):
+    """Switch between the main graph dashboard and the carefulness analysis page."""
+    current_page[0] = page_index
+
+    if page_index == 0:
+        # === MAIN GRAPH DASHBOARD ===
+        ax_care.set_visible(False)
+        for ax in axes:
+            ax.set_visible(True)
+        for ctl in [ax_stats, ax_slider_time, ax_slider_param]:
+            ctl.set_visible(True)
+
+        # Remove old radio buttons
+        if ui_state['radio_ax'] is not None:
+            ui_state['radio_ax'].remove()
+            ui_state['radio_ax'] = None
+            ui_state['radio_widget'] = None
+
+        # Recreate the checkboxes freshly
+        recreate_checkboxes()
+
+    elif page_index == 1:
+        # === CAREFULNESS DASHBOARD ===
+        for ax in axes:
+            ax.set_visible(False)
+        for ctl in [ax_user_check, ax_param_check, ax_stats, ax_slider_time, ax_slider_param]:
+            ctl.set_visible(False)
+
+        # Clear checkboxes (so they don't leave “×” artifacts)
+        ax_user_check.clear()
+        ax_param_check.clear()
+        ax_user_check.set_visible(False)
+        ax_param_check.set_visible(False)
+
+        # Show carefulness panel
+        ax_care.set_visible(True)
+        draw_carefulness()
+
+        # Create radio selector for users
+        ui_state['radio_ax'] = plt.axes([0.90, 0.45, 0.08, 0.2])
+        labels = ['All'] + [f"User {u}" for u in users]
+        ui_state['radio_widget'] = RadioButtons(ui_state['radio_ax'], labels)
+
+        def on_user_select(label):
+            if label == 'All':
+                draw_carefulness()
+            else:
+                uid = int(label.split()[-1])
+                draw_carefulness(uid)
+
+        ui_state['radio_widget'].on_clicked(on_user_select)
+
+    # Force refresh of layout and widgets
+    fig.canvas.draw_idle()
+
+
+
+# --- Navigation buttons ---
+ax_prev = plt.axes([0.77, 0.02, 0.10, 0.03])
+ax_next = plt.axes([0.89, 0.02, 0.10, 0.03])
+btn_prev = Button(ax_prev, '⬅ Back', color='lightgray', hovercolor='0.85')
+btn_next = Button(ax_next, '➡ Next Page', color='lightgray', hovercolor='0.85')
+
+def go_next(event):
+    if current_page[0] == 0:
+        show_page(1)
+        btn_next.label.set_text('⬅ Graphs')
+    else:
+        show_page(0)
+        btn_next.label.set_text('➡ Next Page')
+
+def go_prev(event):
+    show_page(0)
+    btn_next.label.set_text('➡ Next Page')
+
+btn_next.on_clicked(go_next)
+btn_prev.on_clicked(go_prev)
+
+# start on graphs
+show_page(0)
+
 
 plt.show()
 
