@@ -7,6 +7,7 @@ from itertools import combinations
 import os
 from matplotlib.widgets import Slider, Button, CheckButtons
 from matplotlib.widgets import RadioButtons
+from TrialErrorAnalysis import TrialErrorAnalysis, TrialErrorConfig
 
 # ========== CONFIG ==========
 LOG_PATTERN = "User*.log"
@@ -270,6 +271,46 @@ print("="*80)
 
 user_stats, total_duration = analyze_user_activity()
 
+# ========= Trial and Error analysis ============
+tea_cfg = TrialErrorConfig(
+    time_window_simul=WINDOW_FOR_SIMULTANEOUS,
+    backtrack_window=5
+)
+tea = TrialErrorAnalysis(df[['user', 'time_sec', 'param', 'value']], tea_cfg)
+
+trial_metrics  = tea.compute_per_user_metrics()
+trial_scored   = tea.composite_trial_error_score(trial_metrics)
+trial_transits = tea.compute_transition_tables(stacked=True)
+
+trial_metrics.to_csv("trial_error_metrics.csv", index=False)
+trial_scored.to_csv("trial_error_scored.csv", index=False)
+trial_transits.to_csv("trial_error_user_transits.csv", index=False)
+
+# --- Lookups for the Activity Report ---
+trial_metrics_by_user = trial_metrics.set_index('user').to_dict('index')
+trial_score_by_user = {int(u): float(s)*100.0
+                       for u, s in zip(trial_scored['user'],
+                                       trial_scored['trial_error_score_0to1'])}
+
+def _fmt(x, d=2):
+    try:
+        if x is None or (isinstance(x, float) and np.isnan(x)):
+            return "—"
+        return f"{x:.{d}f}"
+    except Exception:
+        return str(x)
+
+def _te_color(score: float) -> str:
+    if not isinstance(score, (int, float)) or np.isnan(score):
+        return "#999999"
+    if score < 30:
+        return "#d9534f"  # low
+    elif score <= 50:
+        return "#f0ad4e"  # medium
+    else:
+        return "#5cb85c"  # high
+
+
 # ========== STEP 2.7: CAREFULNESS (INCREMENTAL vs BIG JUMPS) ==========
 def analyze_carefulness(user_id, df, params):
     """
@@ -379,6 +420,34 @@ for user in sorted(users):
             print(f"     • {param.capitalize()}: Avg Δ={c['avg_step']:.3f}, Max Δ={c['max_step']:.3f}, "
                   f"Careful Steps={c['careful_ratio']:.1f}%, Behavior={c['behavior_type']}")
 
+    # Trial and Error
+    tm = trial_metrics_by_user.get(user, {})
+
+    print(f"\n  🧪 Trial & Error (A/B/C)")
+    # A) Switching / combination behavior
+    print(f"     A) Switching / Combination")
+    print(f"        • Alternation index:            {_fmt(tm.get('alternation_index'))}")
+    print(f"        • Avg switch interval (s):      {_fmt(tm.get('avg_switch_interval_s'))}")
+    print(f"        • Parameter entropy (bits):     {_fmt(tm.get('param_entropy_bits'))}")
+    print(f"        • Unique params touched:        {tm.get('unique_params', '—')}")
+    print(f"        • Simul explore events:         {tm.get('simul_explore_events', '—')}")
+    print(f"        • Simul explore rate:           {_fmt(tm.get('simul_explore_rate'))}")
+
+    # B) Step style
+    print(f"\n     B) Step style")
+    print(f"        • Avg |Δ| step:                 {_fmt(tm.get('avg_abs_step'))}")
+    print(f"        • Step variability (SD Δ):      {_fmt(tm.get('step_sd'))}")
+    print(f"        • Max |Δ| jump:                 {_fmt(tm.get('max_abs_jump'))}")
+
+    # C) Backtracking & revisits
+    print(f"\n     C) Backtracking & revisits")
+    print(f"        • Backtrack rate (last N):      {_fmt(tm.get('backtrack_rate_lastN'))}")
+    print(f"        • Avg revisit gap (steps):      {_fmt(tm.get('avg_revisit_gap_steps'))}")
+
+    te_score = trial_score_by_user.get(user, float('nan'))
+    print(f"\n  🧮 Trial & Error Score: {('—' if np.isnan(te_score) else f'{te_score:.0f}/100')}")
+
+
 # Comparative analysis
 print(f"\n{'='*80}")
 print(f"🏆 COMPARATIVE ANALYSIS")
@@ -397,6 +466,12 @@ if 'frequency' in params:
 # Most responsive (highest changes per minute)
 most_responsive = max(users, key=lambda u: user_stats[u]['changes_per_minute'])
 print(f"  ⚡ Most Responsive: User {most_responsive} ({user_stats[most_responsive]['changes_per_minute']:.2f} changes/min)")
+
+# Most trial-and-error (highest Trial & Error score)
+if 'trial_score_by_user' in globals() and len(trial_score_by_user) > 0:
+    te_top_user = max(trial_score_by_user, key=lambda u: trial_score_by_user[u])
+    te_top_score = trial_score_by_user[te_top_user]
+    print(f"  🧪 Most Trial-and-Error: User {te_top_user} ({te_top_score:.0f}/100)")
 
 # Calculate engagement distribution
 total_changes_all = sum(user_stats[u]['total_changes'] for u in users)
@@ -419,7 +494,25 @@ for user in sorted(users):
     label = "🟢 Careful" if ratio >= 70 else "🔴 Reckless"
     print(f"     User {user}: {label} ({ratio:.1f}% careful changes)")
 
+# Trial and Error Scores
+if 'trial_score_by_user' in globals() and len(trial_score_by_user) > 0:
+    print(f"\n  🧪 Trial & Error Scores:")
+    for u in sorted(users):
+        s = trial_score_by_user.get(u, float('nan'))
+        if isinstance(s, float) and np.isnan(s):
+            continue
+        if s < 30:
+            level = "Low Trial & Error"
+        elif 30 <= s <= 50:
+            level = "Medium Trial & Error"
+        else:  # s > 50
+            level = "High trial & Error"
+        print(f"     User {u}: {s:.0f}/100 — {level}")
+
+
+
 print(f"\n{'='*80}\n")
+
 
 # ========== STEP 3: VISUALISATION WITH SCROLLING AND FILTERS ==========
 visible_count = 2  # how many graphs to show at once
@@ -498,6 +591,45 @@ def update_stats_display():
                  fontfamily='monospace',
                  fontsize=8,
                  bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.3))
+
+    if 'trial_score_by_user' in globals() and len(trial_score_by_user) > 0:
+        # Create (or recreate) a small inset axis on the right side of the stats panel
+        # [x0, y0, width, height] in axes (0..1) coordinates
+        ax_te = ax_stats.inset_axes([0.60, 0.10, 0.38, 0.80])
+        ax_te.clear()
+
+        y_labels = [f"User {u}" for u in sorted(users)]
+        y_pos = np.arange(len(y_labels))
+        scores = [trial_score_by_user.get(u, np.nan) for u in sorted(users)]
+        colors = [_te_color(s) for s in scores]
+
+        # Bar chart
+        ax_te.barh(y_pos, np.nan_to_num(scores, nan=0.0), height=0.6, edgecolor='none', color=colors)
+        ax_te.set_xlim(0, 100)
+        ax_te.set_yticks(y_pos)
+        ax_te.set_yticklabels(y_labels, fontsize=8)
+        ax_te.invert_yaxis()  # top-to-bottom
+        ax_te.set_xlabel("T&E score", fontsize=8)
+        ax_te.set_title("Trial & Error Scores", fontsize=9, pad=6)
+        ax_te.grid(axis='x', alpha=0.2)
+
+        # Annotate values & tiers
+        for i, s in enumerate(scores):
+            if not isinstance(s, (int, float)) or np.isnan(s):
+                continue
+            if s < 30:
+                lvl = "low"
+            elif s <= 50:
+                lvl = "medium"
+            else:
+                lvl = "high"
+            ax_te.text(min(s + 2, 100), i, f"{s:.0f} ({lvl})", va='center', fontsize=8)
+
+        # Tiny legend
+        ax_te.plot([], [], lw=8, color=_te_color(20), label="low < 30")
+        ax_te.plot([], [], lw=8, color=_te_color(40), label="medium 30–50")
+        ax_te.plot([], [], lw=8, color=_te_color(70), label="high > 50")
+        ax_te.legend(frameon=False, fontsize=7, loc='lower right')
 
 # Function to plot the visible subset
 def draw_visible():
@@ -844,7 +976,7 @@ def show_page(page_index):
             ui_state['radio_widget'] = None
 
         # Recreate the checkboxes freshly
-        recreate_checkboxes()
+        # recreate_checkboxes()
 
     elif page_index == 1:
         # === CAREFULNESS DASHBOARD ===
@@ -854,10 +986,10 @@ def show_page(page_index):
             ctl.set_visible(False)
 
         # Clear checkboxes (so they don't leave “×” artifacts)
-        ax_user_check.clear()
-        ax_param_check.clear()
-        ax_user_check.set_visible(False)
-        ax_param_check.set_visible(False)
+        # ax_user_check.clear()
+        # ax_param_check.clear()
+        # ax_user_check.set_visible(False)
+        # ax_param_check.set_visible(False)
 
         # Show carefulness panel
         ax_care.set_visible(True)
@@ -908,6 +1040,8 @@ show_page(0)
 
 
 plt.show()
+
+
 
 # ========== STEP 4: SAVE IMAGES ==========
 # Save images with current selections
