@@ -29,7 +29,17 @@
 00:05:15.9286088 [Info] User sets amplitude to 17.4.
 00:05:24.5227940 [Info] User 3 sets frequency to 0.9.
 00:05:24.6090002 [Info] User 3 sets frequency to 0.8.
-00:05:24.7606526 [Info] User 3 sets frequency to 0.7.
+00:05:24.8234567 [Info] User 1 sets frequency to 1.0.
+00:05:25.0123456 [Info] User 3 sets frequency to 0.7.
+00:05:25.1890123 [Info] User 1 sets frequency to 1.1.
+00:05:25.3567890 [Info] User 3 sets frequency to 0.6.
+00:05:25.5234567 [Info] User 1 sets frequency to 1.0.
+00:05:25.6901234 [Info] User 3 sets frequency to 0.5.
+00:05:25.8567890 [Info] User 1 sets frequency to 0.9.
+00:05:26.0234567 [Info] User 3 sets frequency to 0.4.
+00:05:26.1901234 [Info] User 1 sets frequency to 0.8.
+00:05:26.3567890 [Info] User 3 sets frequency to 0.3.
+00:05:26.5234567 [Info] User 1 sets frequency to 0.7.
 00:05:25.4096534 [Info] User 1 sets frequency to 0.
 00:05:27.1401717 [Info] User 1 sets frequency to 0.1.
 00:05:27.1742089 [Info] User 1 sets frequency to 0.2.
@@ -145,11 +155,19 @@
 00:05:57.4640607 [Info] User sets amplitude to 16.2.
 00:05:57.4963767 [Info] User sets amplitude to 16.
 00:05:58.7130951 [Info] User 0 sets frequency to 0.9.
-00:05:58.7631073 [Info] User 0 sets frequency to 0.8.
-00:05:58.7974970 [Info] User 0 sets frequency to 0.7.
-00:05:58.8168479 [Info] User 0 sets frequency to 0.6.
-00:05:58.8634847 [Info] User 0 sets frequency to 0.5.
-00:05:58.8999491 [Info] User 0 sets frequency to 0.4.
+00:05:58.9234567 [Info] User 0 sets frequency to 0.8.
+00:05:59.1345678 [Info] User 0 sets frequency to 0.7.
+00:05:59.3456789 [Info] User 2 sets frequency to 0.9.
+00:05:59.5567890 [Info] User 0 sets frequency to 0.6.
+00:05:59.7678901 [Info] User 2 sets frequency to 1.0.
+00:05:59.9789012 [Info] User 0 sets frequency to 0.5.
+00:06:00.1890123 [Info] User 2 sets frequency to 0.8.
+00:06:00.3901234 [Info] User 0 sets frequency to 0.4.
+00:06:00.6012345 [Info] User 2 sets frequency to 0.9.
+00:06:00.8123456 [Info] User 0 sets frequency to 0.3.
+00:06:01.0234567 [Info] User 2 sets frequency to 1.0.
+00:06:01.2345678 [Info] User 0 sets frequency to 0.4.
+00:06:01.4456789 [Info] User 2 sets frequency to 1.1.
 00:06:01.6332726 [Info] User 2 sets frequency to 1.3.
 00:06:15.1966235 [Info] User sets amplitude to 18.1.
 00:06:15.2075947 [Info] User sets amplitude to 24.2.
