@@ -1,0 +1,65 @@
+user,from_param,to_param,count
+0,amplitude,amplitude,540
+0,frequency,amplitude,1
+0,offset,amplitude,4
+0,phase shift,amplitude,0
+0,amplitude,frequency,1
+0,frequency,frequency,25
+0,offset,frequency,0
+0,phase shift,frequency,0
+0,amplitude,offset,3
+0,frequency,offset,0
+0,offset,offset,173
+0,phase shift,offset,1
+0,amplitude,phase shift,1
+0,frequency,phase shift,0
+0,offset,phase shift,0
+0,phase shift,phase shift,33
+1,amplitude,amplitude,525
+1,frequency,amplitude,4
+1,offset,amplitude,3
+1,phase shift,amplitude,1
+1,amplitude,frequency,2
+1,frequency,frequency,93
+1,offset,frequency,2
+1,phase shift,frequency,0
+1,amplitude,offset,4
+1,frequency,offset,1
+1,offset,offset,199
+1,phase shift,offset,1
+1,amplitude,phase shift,1
+1,frequency,phase shift,0
+1,offset,phase shift,1
+1,phase shift,phase shift,15
+2,amplitude,amplitude,492
+2,frequency,amplitude,3
+2,offset,amplitude,2
+2,phase shift,amplitude,1
+2,amplitude,frequency,2
+2,frequency,frequency,105
+2,offset,frequency,1
+2,phase shift,frequency,1
+2,amplitude,offset,4
+2,frequency,offset,1
+2,offset,offset,307
+2,phase shift,offset,0
+2,amplitude,phase shift,0
+2,frequency,phase shift,0
+2,offset,phase shift,2
+2,phase shift,phase shift,187
+3,amplitude,amplitude,510
+3,frequency,amplitude,1
+3,offset,amplitude,5
+3,phase shift,amplitude,0
+3,amplitude,frequency,1
+3,frequency,frequency,15
+3,offset,frequency,0
+3,phase shift,frequency,0
+3,amplitude,offset,4
+3,frequency,offset,0
+3,offset,offset,474
+3,phase shift,offset,0
+3,amplitude,phase shift,1
+3,frequency,phase shift,0
+3,offset,phase shift,0
+3,phase shift,phase shift,37
