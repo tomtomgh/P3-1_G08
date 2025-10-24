@@ -726,30 +726,37 @@ def toggle_full(event):
 button.on_clicked(toggle_full)
 
 # ========== STEP 3.5: PAGE NAVIGATION (Graphs <-> Carefulness Dashboard) ==========
-current_page = [0]  # 0 = Graphs, 1 = Carefulness Dashboard
-radio_objs = {'ax': None, 'widget': None}  # track the radio button so we can remove it later
 
-# dedicated axes for carefulness page
+from matplotlib.widgets import RadioButtons
+from matplotlib.patches import Rectangle
+
+current_page = [0]  # 0 = Graphs, 1 = Carefulness
+ui_state = {'user_check': None, 'param_check': None, 'radio_ax': None, 'radio_widget': None}
+
+# Dedicated axes for carefulness dashboard
 ax_care = fig.add_axes([0.08, 0.15, 0.8, 0.75])
 ax_care.axis('off')
+ax_care.set_visible(False)
 
 def draw_carefulness(uid=None):
-    """Draw the carefulness report (all users or a single one)."""
+    """Draw the carefulness report for all users or a single one."""
     ax_care.clear()
     ax_care.axis('off')
-    text = "🤖 CONTROL CAREFULNESS ANALYSIS\n" + "─" * 90 + "\n\n"
+    text = "CONTROL CAREFULNESS ANALYSIS\n" + "─" * 90 + "\n\n"
+
     users_to_show = [uid] if uid is not None else sorted(users)
     for user in users_to_show:
         stats = user_stats[user]
-        text += f"👤 User {user}\n"
+        text += f"User {user}\n"
         for param, c in stats['carefulness'].items():
             if np.isnan(c['avg_step']):
-                text += f"   • {param.capitalize()}: Insufficient data\n"
+                text += f"  • {param.capitalize():<12} No data\n"
             else:
-                color = "🟢" if c['behavior_type'] == "Careful" else "🔴"
-                text += (f"   • {param.capitalize():<15} "
-                         f"Avg Δ={c['avg_step']:.3f} | Max Δ={c['max_step']:.3f} | "
-                         f"Careful Steps={c['careful_ratio']:.1f}% | {color} {c['behavior_type']}\n")
+                color = 'green' if c['behavior_type'] == 'Careful' else 'red'
+                text += (f"  • {param.capitalize():<12}"
+                         f" Avg Δ={c['avg_step']:.3f} | Max Δ={c['max_step']:.3f} | "
+                         f"Careful Steps={c['careful_ratio']:.1f}% | "
+                         f"{c['behavior_type']}\n")
         text += "\n"
 
     text += "─" * 90 + "\nSUMMARY\n"
@@ -757,53 +764,109 @@ def draw_carefulness(uid=None):
         behaviors = [v['behavior_type'] for v in user_stats[user]['carefulness'].values()
                      if v['behavior_type'] not in ['Insufficient data']]
         if not behaviors:
-            text += f"   User {user}: Insufficient data\n"
             continue
         careful_count = sum(b == 'Careful' or 'no variation' in b for b in behaviors)
         ratio = careful_count / len(behaviors) * 100
-        label = "🟢 Careful" if ratio >= 70 else "🔴 Reckless"
-        text += f"   User {user}: {label} ({ratio:.1f}% careful changes)\n"
+        label = "Careful" if ratio >= 70 else "Reckless"
+        text += f"  User {user}: {label:<8} ({ratio:.1f}% careful changes)\n"
 
     ax_care.text(0.02, 0.98, text,
                  transform=ax_care.transAxes,
                  verticalalignment='top',
                  fontfamily='monospace',
                  fontsize=9,
-                 bbox=dict(boxstyle='round', facecolor='ivory', alpha=0.8))
+                 bbox=dict(boxstyle='round', facecolor='ivory', alpha=0.9))
     fig.canvas.draw_idle()
 
+
+def recreate_checkboxes():
+    """Rebuild user and parameter checkboxes with visible labels."""
+    # Remove old widgets if they exist
+    if ui_state.get('user_check'):
+        del ui_state['user_check']
+    if ui_state.get('param_check'):
+        del ui_state['param_check']
+
+    # Fully clear the axes and make them visible again
+    ax_user_check.clear()
+    ax_param_check.clear()
+    ax_user_check.set_visible(True)
+    ax_param_check.set_visible(True)
+
+    # Titles
+    ax_user_check.set_title("Select Users", fontsize=10, fontweight='bold')
+    ax_param_check.set_title("Select Parameters", fontsize=10, fontweight='bold')
+
+    # Create new checkboxes
+    user_labels = [f"User {u}" for u in users]
+    param_labels = [p.capitalize() for p in params]
+
+    user_check = CheckButtons(ax_user_check, user_labels, [selected_users[u] for u in users])
+    param_check = CheckButtons(ax_param_check, param_labels, [selected_params[p] for p in params])
+
+    # Bind callbacks
+    def user_toggle(label):
+        uid = int(label.split()[-1])
+        selected_users[uid] = not selected_users[uid]
+        draw_visible()
+
+    def param_toggle(label):
+        pname = label.lower()
+        selected_params[pname] = not selected_params[pname]
+        draw_visible()
+
+    user_check.on_clicked(user_toggle)
+    param_check.on_clicked(param_toggle)
+
+    ui_state['user_check'] = user_check
+    ui_state['param_check'] = param_check
+
+    # Force re-render (critical for label visibility)
+    fig.canvas.draw_idle()
+
+
 def show_page(page_index):
-    """Switch between main graphs and carefulness dashboard."""
+    """Switch between the main graph dashboard and the carefulness analysis page."""
     current_page[0] = page_index
 
     if page_index == 0:
-        # === Show graph view ===
+        # === MAIN GRAPH DASHBOARD ===
+        ax_care.set_visible(False)
         for ax in axes:
             ax.set_visible(True)
-        for ctl in [ax_user_check, ax_param_check, ax_stats]:
+        for ctl in [ax_stats, ax_slider_time, ax_slider_param]:
             ctl.set_visible(True)
-        ax_care.set_visible(False)
 
-        # remove radio if it exists
-        if radio_objs['ax'] is not None:
-            radio_objs['ax'].remove()
-            radio_objs['ax'] = None
-            radio_objs['widget'] = None
+        # Remove old radio buttons
+        if ui_state['radio_ax'] is not None:
+            ui_state['radio_ax'].remove()
+            ui_state['radio_ax'] = None
+            ui_state['radio_widget'] = None
+
+        # Recreate the checkboxes freshly
+        recreate_checkboxes()
 
     elif page_index == 1:
-        # === Show carefulness view ===
+        # === CAREFULNESS DASHBOARD ===
         for ax in axes:
             ax.set_visible(False)
-        for ctl in [ax_user_check, ax_param_check, ax_stats]:
+        for ctl in [ax_user_check, ax_param_check, ax_stats, ax_slider_time, ax_slider_param]:
             ctl.set_visible(False)
+
+        # Clear checkboxes (so they don't leave “×” artifacts)
+        ax_user_check.clear()
+        ax_param_check.clear()
+        ax_user_check.set_visible(False)
+        ax_param_check.set_visible(False)
+
+        # Show carefulness panel
         ax_care.set_visible(True)
+        draw_carefulness()
 
-        draw_carefulness()  # draw all users by default
-
-        # --- create fresh radio selector every time ---
-        radio_objs['ax'] = plt.axes([0.90, 0.45, 0.08, 0.2])
+        # Create radio selector for users
+        ui_state['radio_ax'] = plt.axes([0.90, 0.45, 0.08, 0.2])
         labels = ['All'] + [f"User {u}" for u in users]
-        radio_objs['widget'] = RadioButtons(radio_objs['ax'], labels)
+        ui_state['radio_widget'] = RadioButtons(ui_state['radio_ax'], labels)
 
         def on_user_select(label):
             if label == 'All':
@@ -812,15 +875,17 @@ def show_page(page_index):
                 uid = int(label.split()[-1])
                 draw_carefulness(uid)
 
-        radio_objs['widget'].on_clicked(on_user_select)
+        ui_state['radio_widget'].on_clicked(on_user_select)
 
+    # Force refresh of layout and widgets
     fig.canvas.draw_idle()
 
-# Navigation buttons
-ax_prev = plt.axes([0.77, 0.02, 0.10, 0.03])
-btn_prev = Button(ax_prev, '⬅ Back', color='lightgray', hovercolor='0.85')
 
+
+# --- Navigation buttons ---
+ax_prev = plt.axes([0.77, 0.02, 0.10, 0.03])
 ax_next = plt.axes([0.89, 0.02, 0.10, 0.03])
+btn_prev = Button(ax_prev, '⬅ Back', color='lightgray', hovercolor='0.85')
 btn_next = Button(ax_next, '➡ Next Page', color='lightgray', hovercolor='0.85')
 
 def go_next(event):
@@ -838,7 +903,7 @@ def go_prev(event):
 btn_next.on_clicked(go_next)
 btn_prev.on_clicked(go_prev)
 
-# start on main graphs page
+# start on graphs
 show_page(0)
 
 
