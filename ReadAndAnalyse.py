@@ -272,6 +272,7 @@ print("="*80)
 user_stats, total_duration = analyze_user_activity()
 
 # ========= Trial and Error analysis ============
+# Set configuration
 tea_cfg = TrialErrorConfig(
     time_window_simul=WINDOW_FOR_SIMULTANEOUS,
     backtrack_window=5
@@ -593,7 +594,7 @@ def update_stats_display():
                  bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.3))
 
     if 'trial_score_by_user' in globals() and len(trial_score_by_user) > 0:
-        # Create (or recreate) a small inset axis on the right side of the stats panel
+        # Create a graph on the panel
         # [x0, y0, width, height] in axes (0..1) coordinates
         ax_te = ax_stats.inset_axes([0.60, 0.10, 0.38, 0.80])
         ax_te.clear()
@@ -613,7 +614,7 @@ def update_stats_display():
         ax_te.set_title("Trial & Error Scores", fontsize=9, pad=6)
         ax_te.grid(axis='x', alpha=0.2)
 
-        # Annotate values & tiers
+        # Annotate values
         for i, s in enumerate(scores):
             if not isinstance(s, (int, float)) or np.isnan(s):
                 continue
@@ -625,7 +626,7 @@ def update_stats_display():
                 lvl = "high"
             ax_te.text(min(s + 2, 100), i, f"{s:.0f} ({lvl})", va='center', fontsize=8)
 
-        # Tiny legend
+        # Legend
         ax_te.plot([], [], lw=8, color=_te_color(20), label="low < 30")
         ax_te.plot([], [], lw=8, color=_te_color(40), label="medium 30–50")
         ax_te.plot([], [], lw=8, color=_te_color(70), label="high > 50")
