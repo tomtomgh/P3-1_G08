@@ -332,6 +332,7 @@ def show_dashboard(
                 ax.clear()
                 ax.text(0.5, 0.5, "No data selected", ha="center", va="center", transform=ax.transAxes)
             if current_page[0] == 1:
+                
                 update_stats_display(ax_stats, user_stats, total_duration, trial_scores, carefulness_summary)
             _resize_stats_panel(current_page[0] == 1)
             fig.canvas.draw_idle()
@@ -533,6 +534,8 @@ def show_dashboard(
             # Rebuild the user widgets fresh 
             deactivate_checkbuttons(ui_state.get("user_check") or [], ax_user_check)
             ax_user_check.set_visible(True)
+            ax_button_full.set_visible(True)
+            ax_slider_time.set_visible(True)
             ax_user_check.set_title("Select Users", fontsize=10, fontweight="bold")
             ui_state["user_check"] = create_user_widgets(ax_user_check, users, selected_users, draw_visible)
             ax_user_check.set_facecolor("#2d1010")
@@ -559,6 +562,8 @@ def show_dashboard(
             deactivate_checkbuttons(ui_state.get("user_check") or [], ax_user_check)
             ax_strat_legend.set_visible(False)
             ax_care.set_visible(False)
+            ax_button_full.set_visible(False)
+            ax_slider_time.set_visible(False)
 
             ax_stats.set_visible(True)
             _resize_stats_panel(True)
@@ -586,7 +591,6 @@ def show_dashboard(
     ax_next = plt.axes(NAV_NEXT_POS)
 
     def go_prev(event) -> None:
-        # Only handle clicks intended for the Prev button; debounce reentry
         if getattr(event, "inaxes", None) is not ax_prev or nav_busy[0]:
             return
         nav_busy[0] = True
@@ -596,7 +600,6 @@ def show_dashboard(
             nav_busy[0] = False
 
     def go_next(event) -> None:
-        # Only handle clicks intended for the Next button; debounce reentry
         if getattr(event, "inaxes", None) is not ax_next or nav_busy[0]:
             return
         nav_busy[0] = True
@@ -607,6 +610,7 @@ def show_dashboard(
                 show_page(0)
         finally:
             nav_busy[0] = False
+
 
     btn_prev, btn_next = create_navigation_buttons(ax_prev, ax_next, go_prev, go_next)
 

@@ -34,6 +34,8 @@ def main() -> None:
 
     global_carefulness = compute_global_carefulness(df)
 
+
+
     fighting_cfg = FightingConfig()
     carefulness_cfg = CarefulnessConfig()
     trial_cfg = TrialErrorConfig()
