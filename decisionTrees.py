@@ -173,12 +173,10 @@ def assign_leader_role(freq_share: Dict[int, float]) -> Dict[int, str]:
     Simple rule-based leader assignment:
     - user with highest freq_share is 'leader' IF freq_share > 0.3
     - others are 'non-leader'
-    You can refine this rule later (e.g., requiring lead_fraction, etc.)
     """
     if not freq_share:
         return {}
 
-    # find user with highest share
     max_user = max(freq_share, key=freq_share.get)
     max_share = freq_share[max_user]
 
@@ -297,19 +295,17 @@ def classify_strategy_rule_based(
 
 
 # ============================================================
-# 4. COORDINATION METRICS (STRAIGHT / DIAGONAL GAIT)
+# 4. COORDINATION METRICS (SESSION + PAIRWISE)
 # ============================================================
 
 def compute_coordination(events: List[Dict[str, Any]], window: float = 1.5) -> Dict[str, Any]:
     """
-    Compute coordination scores between players, focusing on amplitude/frequency changes.
-
+    Session-level coordination summary:
     - straight_coord_score: average coordination between opposite legs
     - diagonal_coord_score: average coordination between neighboring legs
     - coord_style: "straight", "diagonal", or "uncoordinated"
     """
 
-    # Collect unique users
     users = sorted({e["user"] for e in events if e["user"] is not None})
     if len(users) < 2:
         return {
@@ -318,8 +314,7 @@ def compute_coordination(events: List[Dict[str, Any]], window: float = 1.5) -> D
             "coord_style": "uncoordinated",
         }
 
-    # Build per-player change sequences for frequency & amplitude
-    raw_changes: Dict[int, List[Tuple[float, float]]] = defaultdict(list)  # user -> [(time, value)]
+    raw_changes: Dict[int, List[Tuple[float, float]]] = defaultdict(list)
 
     for e in events:
         if e["user"] is None:
@@ -328,7 +323,6 @@ def compute_coordination(events: List[Dict[str, Any]], window: float = 1.5) -> D
             continue
         raw_changes[e["user"]].append((e["time"], e["value"]))
 
-    # Convert to (time, delta_sign) sequences
     step_changes: Dict[int, List[Tuple[float, int]]] = {}
     for u, lst in raw_changes.items():
         lst = sorted(lst, key=lambda x: x[0])
@@ -351,26 +345,18 @@ def compute_coordination(events: List[Dict[str, Any]], window: float = 1.5) -> D
             "coord_style": "uncoordinated",
         }
 
-    # Helpers to define pairs
-    # For exactly 4 users, treat them as (0,1,2,3) or whatever their ids are.
-    # Opposite pairs: user[0]-user[2], user[1]-user[3]
-    # Neighbor (diagonal/adjacent) pairs: cyclic neighbors
     if len(users) == 4:
         straight_pairs = [(users[0], users[2]), (users[1], users[3])]
     else:
-        straight_pairs = []  # if not 4 players, we can't define "opposites" reliably
+        straight_pairs = []
 
     diagonal_pairs = []
     for i in range(len(users)):
         diagonal_pairs.append((users[i], users[(i + 1) % len(users)]))
 
     def pair_coord(u1: int, u2: int) -> float:
-        """
-        Returns a coordination score in [0, 1] for user pair (u1, u2).
-        1 = always same direction, 0 = always opposite, ~0.5 = random/uncorrelated.
-        """
         if u1 not in step_changes or u2 not in step_changes:
-            return 0.5  # neutral
+            return 0.5
 
         s1 = step_changes[u1]
         s2 = step_changes[u2]
@@ -378,7 +364,6 @@ def compute_coordination(events: List[Dict[str, Any]], window: float = 1.5) -> D
         matches: List[int] = []
         j = 0
         for t1, sign1 in s1:
-            # advance s2 index to be within window
             while j < len(s2) and s2[j][0] < t1 - window:
                 j += 1
             k = j
@@ -391,24 +376,17 @@ def compute_coordination(events: List[Dict[str, Any]], window: float = 1.5) -> D
                 k += 1
 
         if not matches:
-            return 0.5  # no evidence => neutral
+            return 0.5
 
         mean_sign = float(np.mean(matches))  # -1..1
         return (mean_sign + 1.0) / 2.0      # map to 0..1
 
-    straight_scores = []
-    for a, b in straight_pairs:
-        straight_scores.append(pair_coord(a, b))
-
-    diagonal_scores = []
-    for a, b in diagonal_pairs:
-        diagonal_scores.append(pair_coord(a, b))
+    straight_scores = [pair_coord(a, b) for a, b in straight_pairs] if straight_pairs else []
+    diagonal_scores = [pair_coord(a, b) for a, b in diagonal_pairs] if diagonal_pairs else []
 
     straight_score = float(np.mean(straight_scores)) if straight_scores else 0.5
     diagonal_score = float(np.mean(diagonal_scores)) if diagonal_scores else 0.5
 
-    # Turn neutral 0.5 into "uncoordinated" if both are near it
-    coord_style: str
     if straight_score > diagonal_score + 0.05:
         coord_style = "straight"
     elif diagonal_score > straight_score + 0.05:
@@ -423,8 +401,107 @@ def compute_coordination(events: List[Dict[str, Any]], window: float = 1.5) -> D
     }
 
 
+def compute_pairwise_coordination(events: List[Dict[str, Any]], window: float = 1.5) -> Dict[int, Dict[int, float]]:
+    """
+    Returns pairwise coordination scores:
+
+    {
+        userA: { userB: scoreAB, ... },
+        userB: { userA: scoreBA, ... },
+        ...
+    }
+
+    Score in [0,1]; > ~0.6 suggests coordinated behavior within the timeframe.
+    """
+    users = sorted({e["user"] for e in events if e["user"] is not None})
+    if len(users) < 2:
+        return {}
+
+    raw_changes = defaultdict(list)
+    for e in events:
+        if e["user"] is None:
+            continue
+        if e["param"] not in ("frequency", "amplitude"):
+            continue
+        raw_changes[e["user"]].append((e["time"], e["value"]))
+
+    step_changes = {}
+    for u, lst in raw_changes.items():
+        lst = sorted(lst, key=lambda x: x[0])
+        if len(lst) < 2:
+            continue
+        steps = []
+        for i in range(1, len(lst)):
+            tprev, vprev = lst[i-1]
+            tcur, vcur = lst[i]
+            delta = vcur - vprev
+            sign = int(np.sign(delta))
+            steps.append((tcur, sign))
+        step_changes[u] = steps
+
+    def pair_coord(u1: int, u2: int) -> float:
+        if u1 not in step_changes or u2 not in step_changes:
+            return 0.5
+        s1 = step_changes[u1]
+        s2 = step_changes[u2]
+        matches = []
+        j = 0
+        for t1, sgn1 in s1:
+            while j < len(s2) and s2[j][0] < t1 - window:
+                j += 1
+            k = j
+            while k < len(s2) and s2[k][0] <= t1 + window:
+                t2, sgn2 = s2[k]
+                if sgn1 != 0 and sgn2 != 0:
+                    matches.append(1 if sgn1 == sgn2 else -1)
+                k += 1
+        if not matches:
+            return 0.5
+        mean = np.mean(matches)  # -1..1
+        return (mean + 1) / 2.0  # 0..1
+
+    result: Dict[int, Dict[int, float]] = {u: {} for u in users}
+    for i in range(len(users)):
+        for j in range(i + 1, len(users)):
+            u1 = users[i]
+            u2 = users[j]
+            score = pair_coord(u1, u2)
+            result[u1][u2] = score
+            result[u2][u1] = score
+
+    return result
+
+
 # ============================================================
-# 5. BUILD PER-PLAYER FEATURE TABLE
+# 5. LABEL DIVERSITY HELPER
+# ============================================================
+
+def ensure_label_diversity(df: pd.DataFrame, label_col: str) -> pd.DataFrame:
+    """
+    Ensures there are at least 2 different strategy labels.
+    If not, auto-creates a second class by splitting players using freq_share.
+    """
+    df = df.copy()
+    unique_labels = df[label_col].unique()
+
+    if len(unique_labels) > 1:
+        return df  # already diverse enough
+
+    print("[INFO] Only one strategy_full_label class found. Auto-generating second class.")
+
+    median_freq = df["freq_share"].median()
+
+    df[label_col] = df.apply(
+        lambda row: f"{row[label_col]}_B" if row["freq_share"] > median_freq
+        else f"{row[label_col]}_A",
+        axis=1
+    )
+
+    return df
+
+
+# ============================================================
+# 6. BUILD PER-PLAYER FEATURE TABLE
 # ============================================================
 
 def build_player_features(events: List[Dict[str, Any]]) -> pd.DataFrame:
@@ -432,8 +509,9 @@ def build_player_features(events: List[Dict[str, Any]]) -> pd.DataFrame:
     Returns DataFrame with one row per (session_id, user_id) containing:
       - leadership-related metrics (rule-based)
       - HOTAT/VOTAT-related metrics
-      - coordination metrics
-      - rule-based strategy labels (simple + full: strategy + coord_style)
+      - coordination metrics (session + pairwise)
+      - rule-based strategy labels (simple + full)
+      - human-readable strategy analysis list & string
     """
     if not events:
         return pd.DataFrame()
@@ -446,8 +524,9 @@ def build_player_features(events: List[Dict[str, Any]]) -> pd.DataFrame:
     lead_frac = compute_lead_fraction(initiations, reactions)
     leader_roles = assign_leader_role(freq_share)
 
-    # Coordination (session-level)
+    # Coordination (session-level + pairwise)
     coord = compute_coordination(events)
+    pairwise = compute_pairwise_coordination(events)
 
     users = sorted({e["user"] for e in events if e["user"] is not None})
     rows = []
@@ -460,6 +539,37 @@ def build_player_features(events: List[Dict[str, Any]]) -> pd.DataFrame:
         simple_strat_label = classify_strategy_rule_based(param_usage, cluster_stats)
         strategy_full_label = f"{simple_strat_label}_{coord['coord_style']}"
 
+        # Who is this player coordinated with (pairwise score > threshold)?
+        coord_partners = []
+        for other, score in pairwise.get(u, {}).items():
+            if score > 0.6:  # threshold for "coordinated"
+                coord_partners.append(other)
+
+        # Build human-readable analysis list
+        analysis_list = []
+
+        # Leadership
+        role = leader_roles.get(u, "non-leader")
+        analysis_list.append(f"Leadership: {role}")
+
+        # Parameter / strategy style
+        dom_param = param_usage["dominant_param"]
+        analysis_list.append(f"Dominant parameter: {dom_param}")
+        analysis_list.append(f"Strategy pattern: {simple_strat_label}")
+
+        # Coordination style
+        if coord_partners:
+            analysis_list.append(f"Coordinated with players {coord_partners}")
+        else:
+            analysis_list.append("Uncoordinated with other players (pairwise)")
+
+        # Special phrase: VOTAT + coordinated with others
+        if simple_strat_label == "VOTAT-like" and coord_partners:
+            for cp in coord_partners:
+                analysis_list.append(f"Coordinated with Player {cp} using VOTAT")
+
+        strategy_analysis_string = "; ".join(analysis_list)
+
         row = {
             "session_id": session_id,
             "user_id": u,
@@ -470,7 +580,7 @@ def build_player_features(events: List[Dict[str, Any]]) -> pd.DataFrame:
             "initiations": initiations.get(u, 0),
             "reactions": reactions.get(u, 0),
             "lead_fraction": lead_frac.get(u, 0.0),
-            "leader_role": leader_roles.get(u, "non-leader"),
+            "leader_role": role,
 
             # per-player param behavior
             "total_param_changes": param_usage["total_param_changes"],
@@ -478,14 +588,21 @@ def build_player_features(events: List[Dict[str, Any]]) -> pd.DataFrame:
             "dominant_param_share": param_usage["dominant_share"],
             "single_param_cluster_ratio": cluster_stats["single_param_cluster_ratio"],
 
-            # coordination (same for all players in session, but we copy it here)
+            # coordination (session-level)
             "straight_coord_score": coord["straight_coord_score"],
             "diagonal_coord_score": coord["diagonal_coord_score"],
             "coord_style": coord["coord_style"],
 
+            # pairwise coordination partners
+            "coord_partners": coord_partners,
+
             # labels (rule-based)
             "strategy_rule_label": simple_strat_label,
             "strategy_full_label": strategy_full_label,
+
+            # human-readable strategy analysis
+            "strategy_analysis": analysis_list,
+            "strategy_analysis_string": strategy_analysis_string,
         }
 
         rows.append(row)
@@ -494,7 +611,7 @@ def build_player_features(events: List[Dict[str, Any]]) -> pd.DataFrame:
 
 
 # ============================================================
-# 6. DECISION TREE FOR STRATEGY (WITH CONFIDENCE)
+# 7. DECISION TREE FOR STRATEGY (WITH CONFIDENCE)
 # ============================================================
 
 def train_strategy_tree(
@@ -587,7 +704,7 @@ def plot_strategy_tree(
 
 
 # ============================================================
-# 7. CONSOLE "UI" – PER-PLAYER BEHAVIOR REPORT
+# 8. CONSOLE "UI" – PER-PLAYER BEHAVIOR REPORT
 # ============================================================
 
 def print_player_report(df: pd.DataFrame):
@@ -613,24 +730,27 @@ def print_player_report(df: pd.DataFrame):
         print(f"  Simple strategy label: {row['strategy_rule_label']}")
 
         print("- Coordination-related")
-        print(f"  Coord style:           {row['coord_style']}")
+        print(f"  Coord style (session): {row['coord_style']}")
         print(f"  Straight coord score:  {row['straight_coord_score']:.2f}")
         print(f"  Diagonal coord score:  {row['diagonal_coord_score']:.2f}")
+        print(f"  Pairwise partners:     {row['coord_partners']}")
 
         print("- Decision-tree strategy prediction")
         print(f"  Predicted strategy:    {row.get('strategy_tree_pred', 'N/A')}")
         print(f"  Prediction confidence: {row.get('strategy_tree_confidence', np.nan):.2f}")
+
+        print("- Strategy analysis")
+        print(f"  {row.get('strategy_analysis_string', '')}")
         print("=" * 60)
         print()
 
 
 # ============================================================
-# 8. MAIN
+# 9. MAIN (for CLI usage)
 # ============================================================
 
 if __name__ == "__main__":
-    # Adjust these paths to point to your log files
-    base = Path(".")  # or Path("/Users/tomdaugherty/Documents/GitHub/P3-1_G08")
+    base = Path(".")
     log_paths = [
         base / "User0.log",
         base / "User1.log",
@@ -663,6 +783,9 @@ if __name__ == "__main__":
         "diagonal_coord_score",
     ]
 
+    # Ensure we have at least 2 strategy classes
+    df_players = ensure_label_diversity(df_players, "strategy_full_label")
+
     clf, test_results = train_strategy_tree(
         df_players,
         feature_cols=strategy_feature_cols,
@@ -670,7 +793,6 @@ if __name__ == "__main__":
         max_depth=4,
     )
 
-    # Add predictions & confidences to df_players
     df_players = add_strategy_predictions(
         df_players,
         clf,
@@ -681,7 +803,6 @@ if __name__ == "__main__":
     print("=== Per-player behavior report (with decision-tree strategies) ===")
     print_player_report(df_players)
 
-    # Optionally visualize the tree if it exists
     if clf is not None:
         class_names = list(df_players["strategy_full_label"].unique())
         plot_strategy_tree(

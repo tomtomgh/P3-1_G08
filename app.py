@@ -4,18 +4,17 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.tree import plot_tree
 
-# Import your analysis functions from decisionTrees.py
 from decisionTrees import (
     parse_session,
     build_player_features,
     train_strategy_tree,
     add_strategy_predictions,
+    ensure_label_diversity,
 )
 
-
-# --------- Config ---------
+# --------- Streamlit config ---------
 st.set_page_config(
-    page_title="Robot Strategy Analysis",
+    page_title="4-Legged Robot – Strategy & Coordination Analysis",
     layout="wide",
 )
 
@@ -69,15 +68,13 @@ This dashboard:
 - Parses `User0.log` – `User3.log`
 - Uses **rule-based logic** to assign leadership (who owns the shared frequency knob)
 - Extracts **strategy features** (HOTAT / VOTAT / Mixed)
-- Analyzes **coordination** (straight vs diagonal vs uncoordinated)
+- Analyzes **coordination** (straight vs diagonal vs pairwise)
 - Trains a **decision tree** to classify strategies
-- Shows a **confidence value** for the strategy label per player
+- Shows a **confidence value** and a **strategy analysis list** per player
 """
 )
 
 st.sidebar.header("Analysis Controls")
-
-# Could later expose thresholds here; for now, just a refresh button
 if st.sidebar.button("Reload & Recompute"):
     st.experimental_rerun()
 
@@ -87,10 +84,12 @@ if events is None:
 
 # Build per-player features
 df_players = build_player_features(events)
-
 if df_players.empty:
     st.error("No per-player data extracted.")
     st.stop()
+
+st.subheader("Raw Per-Player Feature Table")
+st.dataframe(df_players.set_index(["session_id", "user_id"]))
 
 # Strategy tree features (must match decisionTrees.py)
 strategy_feature_cols = [
@@ -105,10 +104,10 @@ strategy_feature_cols = [
     "diagonal_coord_score",
 ]
 
-st.subheader("Raw Per-Player Feature Table")
-st.dataframe(df_players.set_index(["session_id", "user_id"]))
+# Ensure we have enough label variety
+df_players = ensure_label_diversity(df_players, "strategy_full_label")
 
-# Train strategy decision tree (HOTAT/VOTAT + coordination style)
+# Train strategy decision tree
 clf, test_results = train_strategy_tree(
     df_players,
     feature_cols=strategy_feature_cols,
@@ -116,7 +115,7 @@ clf, test_results = train_strategy_tree(
     max_depth=4,
 )
 
-# Add predictions & confidences
+# Add predictions & confidence
 df_players_pred = add_strategy_predictions(
     df_players,
     clf,
@@ -136,6 +135,8 @@ st.dataframe(
             "strategy_full_label",
             "strategy_tree_pred",
             "strategy_tree_confidence",
+            "coord_partners",
+            "strategy_analysis_string",
         ]
     ].set_index(["session_id", "user_id"])
 )
@@ -157,32 +158,39 @@ for _, row in df_players_pred.iterrows():
             st.write(f"Lead fraction: `{row['lead_fraction']:.2f}`")
 
         with col2:
-            st.markdown("**Parameter Strategy (HOTAT / VOTAT)**")
+            st.markdown("**Parameter Strategy (HOTAT / VOTAT / Mixed)**")
             st.write(f"Total param changes: `{row['total_param_changes']}`")
             st.write(f"# parameters used: `{row['num_params_used']}`")
             st.write(f"Dominant param share: `{row['dominant_param_share']:.2f}`")
             st.write(
-                f"Single-param clusters (VOTAT-ish metric): "
+                "Single-param clusters (VOTAT-like metric): "
                 f"`{row['single_param_cluster_ratio']:.2f}`"
             )
             st.write(f"Rule-based strategy: `{row['strategy_rule_label']}`")
 
         with col3:
-            st.markdown("**Coordination & Decision Tree**")
-            st.write(f"Coordination style: `{row['coord_style']}`")
+            st.markdown("**Coordination & Tree Output**")
+            st.write(f"Session coordination style: `{row['coord_style']}`")
             st.write(
                 f"Straight coord score: `{row['straight_coord_score']:.2f}`"
             )
             st.write(
                 f"Diagonal coord score: `{row['diagonal_coord_score']:.2f}`"
             )
+            st.write(f"Pairwise partners: `{row['coord_partners']}`")
             st.write("---")
-            st.write(
-                f"Tree strategy: `{row['strategy_tree_pred']}`"
-            )
+            st.write(f"Tree strategy: `{row['strategy_tree_pred']}`")
             st.write(
                 f"Confidence: `{row['strategy_tree_confidence']:.2f}`"
             )
+
+        st.markdown("**Strategy analysis**")
+        analysis = row["strategy_analysis"]
+        if isinstance(analysis, list):
+            for item in analysis:
+                st.write("•", item)
+        else:
+            st.write(row["strategy_analysis_string"])
 
 # --------- Strategy tree visualization ---------
 st.subheader("Decision Tree Structure")
