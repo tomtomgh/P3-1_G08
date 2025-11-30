@@ -190,11 +190,393 @@ def assign_leader_role(freq_share: Dict[int, float]) -> Dict[int, str]:
 
 
 # ============================================================
-# 3. PARAM USAGE & HOTAT / VOTAT FEATURES
+# 3. LEARNING STRATEGY FEATURES
 # ============================================================
 
 def player_events(events: List[Dict[str, Any]], user_id: int) -> List[Dict[str, Any]]:
     return [e for e in events if e["user"] == user_id]
+
+
+def compute_action_diversity(player_evts: List[Dict[str, Any]]) -> float:
+    """
+    Shannon entropy of action distribution (param types changed).
+    High entropy = diverse exploration.
+    """
+    if not player_evts:
+        return 0.0
+    
+    param_counts = {}
+    for e in player_evts:
+        p = e["param"]
+        param_counts[p] = param_counts.get(p, 0) + 1
+    
+    total = sum(param_counts.values())
+    if total == 0:
+        return 0.0
+    
+    # Calculate Shannon entropy
+    entropy = 0.0
+    for count in param_counts.values():
+        p = count / total
+        if p > 0:
+            entropy -= p * np.log2(p)
+    
+    # Normalize by max possible entropy based on number of unique params used
+    # This gives more meaningful scores for small time windows
+    num_unique_params = len(param_counts)
+    
+    if num_unique_params <= 1:
+        return 0.0  # No diversity if only one parameter type
+    
+    max_entropy = np.log2(num_unique_params)
+    return entropy / max_entropy if max_entropy > 0 else 0.0
+
+
+def compute_repetition_score(player_evts: List[Dict[str, Any]], window: float = 5.0, debug: bool = False) -> Dict[str, Any]:
+    """
+    Detect repetitive patterns: same parameter changed multiple times in quick succession.
+    Returns repetition ratio and count of repetitive sequences.
+    
+    A repetitive sequence is 3+ consecutive changes to the SAME parameter where
+    each event is within 'window' seconds of the previous event.
+    """
+    if len(player_evts) < 3:  # Need at least 3 events to have repetition
+        return {"repetition_ratio": 0.0, "repetitive_sequences": 0}
+    
+    player_evts = sorted(player_evts, key=lambda e: e["time"])
+    
+    # Group consecutive same-parameter events
+    sequences = []
+    i = 0
+    
+    while i < len(player_evts):
+        current_param = player_evts[i]["param"]
+        sequence = [i]
+        
+        # Look ahead for same parameter with gaps <= window
+        for j in range(i + 1, len(player_evts)):
+            time_gap = player_evts[j]["time"] - player_evts[j-1]["time"]
+            
+            if player_evts[j]["param"] == current_param and time_gap <= window:
+                sequence.append(j)
+            else:
+                break
+        
+        if len(sequence) >= 3:
+            sequences.append(sequence)
+        
+        # Move to the next unprocessed event
+        i = sequence[-1] + 1 if len(sequence) > 1 else i + 1
+    
+    # Calculate metrics
+    events_in_sequences = set()
+    for seq in sequences:
+        events_in_sequences.update(seq)
+    
+    repetition_ratio = len(events_in_sequences) / len(player_evts)
+    
+    # Debug output
+    if debug:
+        user_id = player_evts[0].get("user", "?")
+        print(f"\n[DEBUG] User {user_id} Repetition Analysis:")
+        print(f"  Total events: {len(player_evts)}")
+        print(f"  Events in repetitive sequences: {len(events_in_sequences)}")
+        print(f"  Number of repetitive sequences (3+ events): {len(sequences)}")
+        print(f"  Repetition ratio: {repetition_ratio:.3f}")
+        
+        # Show first few sequences
+        if sequences:
+            print(f"  First 3 sequences:")
+            for idx, seq in enumerate(sequences[:3]):
+                param = player_evts[seq[0]]["param"]
+                start_time = player_evts[seq[0]]["time"]
+                end_time = player_evts[seq[-1]]["time"]
+                duration = end_time - start_time
+                print(f"    Sequence {idx+1}: {len(seq)} events, param={param}, duration={duration:.2f}s")
+    
+    return {
+        "repetition_ratio": repetition_ratio,
+        "repetitive_sequences": len(sequences)
+    }
+
+
+def compute_speed_acceleration(player_evts: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """
+    Detect if player speeds up toward the end (incremental tuning).
+    Compare inter-action intervals in first half vs second half.
+    """
+    if len(player_evts) < 4:
+        return {"speed_acceleration": 0.0, "avg_early_interval": 0.0, "avg_late_interval": 0.0}
+    
+    player_evts = sorted(player_evts, key=lambda e: e["time"])
+    mid = len(player_evts) // 2
+    
+    early_evts = player_evts[:mid]
+    late_evts = player_evts[mid:]
+    
+    def avg_interval(evts):
+        if len(evts) < 2:
+            return 0.0
+        intervals = [evts[i+1]["time"] - evts[i]["time"] for i in range(len(evts)-1)]
+        return np.mean(intervals) if intervals else 0.0
+    
+    early_interval = avg_interval(early_evts)
+    late_interval = avg_interval(late_evts)
+    
+    # Positive acceleration means faster (shorter intervals) later
+    acceleration = (early_interval - late_interval) / (early_interval + 1e-6)
+    
+    return {
+        "speed_acceleration": acceleration,
+        "avg_early_interval": early_interval,
+        "avg_late_interval": late_interval
+    }
+
+
+def compute_backtracking(player_evts: List[Dict[str, Any]], threshold: float = 10.0) -> Dict[str, Any]:
+    """
+    Detect value reversals: player changes a parameter then changes it back (or close to previous value).
+    """
+    if len(player_evts) < 3:
+        return {"backtrack_count": 0, "backtrack_ratio": 0.0}
+    
+    player_evts = sorted(player_evts, key=lambda e: e["time"])
+    
+    # Track last value for each parameter
+    param_history = defaultdict(list)  # param -> [(time, value), ...]
+    
+    for e in player_evts:
+        param_history[e["param"]].append((e["time"], e["value"]))
+    
+    backtrack_count = 0
+    
+    for param, history in param_history.items():
+        if len(history) < 3:
+            continue
+        
+        for i in range(2, len(history)):
+            val_prev = history[i-2][1]
+            val_mid = history[i-1][1]
+            val_curr = history[i][1]
+            
+            # Check if current value is closer to i-2 than to i-1 (backtracking)
+            if abs(val_curr - val_prev) < abs(val_mid - val_prev) * 0.5:
+                backtrack_count += 1
+    
+    backtrack_ratio = backtrack_count / len(player_evts) if player_evts else 0.0
+    
+    return {
+        "backtrack_count": backtrack_count,
+        "backtrack_ratio": backtrack_ratio
+    }
+
+
+def compute_hesitation_pauses(player_evts: List[Dict[str, Any]], pause_threshold: float = 5.0) -> Dict[str, Any]:
+    """
+    Detect unusually long pauses between actions (hesitation before decisions).
+    """
+    if len(player_evts) < 2:
+        return {"long_pause_count": 0, "pause_ratio": 0.0, "avg_pause": 0.0}
+    
+    player_evts = sorted(player_evts, key=lambda e: e["time"])
+    intervals = [player_evts[i+1]["time"] - player_evts[i]["time"] for i in range(len(player_evts)-1)]
+    
+    if not intervals:
+        return {"long_pause_count": 0, "pause_ratio": 0.0, "avg_pause": 0.0}
+    
+    avg_interval = np.mean(intervals)
+    long_pauses = [iv for iv in intervals if iv > pause_threshold]
+    
+    return {
+        "long_pause_count": len(long_pauses),
+        "pause_ratio": len(long_pauses) / len(intervals),
+        "avg_pause": avg_interval
+    }
+
+
+def compute_inefficient_moves(player_evts: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """
+    Detect oscillating or non-goal-directed behavior:
+    - Rapid back-and-forth value changes (e.g., increase then decrease then increase)
+    """
+    if len(player_evts) < 3:
+        return {"oscillation_count": 0, "oscillation_ratio": 0.0}
+    
+    player_evts = sorted(player_evts, key=lambda e: e["time"])
+    param_history = defaultdict(list)
+    
+    for e in player_evts:
+        param_history[e["param"]].append(e["value"])
+    
+    oscillation_count = 0
+    
+    for param, values in param_history.items():
+        if len(values) < 3:
+            continue
+        
+        for i in range(2, len(values)):
+            delta1 = values[i-1] - values[i-2]
+            delta2 = values[i] - values[i-1]
+            
+            # Oscillation: direction changes (sign flip)
+            if delta1 * delta2 < 0:  # opposite signs
+                oscillation_count += 1
+    
+    oscillation_ratio = oscillation_count / len(player_evts) if player_evts else 0.0
+    
+    return {
+        "oscillation_count": oscillation_count,
+        "oscillation_ratio": oscillation_ratio
+    }
+
+
+def compute_iterative_tuning(player_evts: List[Dict[str, Any]], window: float = 3.0) -> Dict[str, Any]:
+    """
+    Detect systematic add-remove or cyclic patterns.
+    Look for parameter changes that are repeatedly adjusted in small increments.
+    """
+    if len(player_evts) < 4:
+        return {"small_adjustment_count": 0, "tuning_ratio": 0.0}
+    
+    player_evts = sorted(player_evts, key=lambda e: e["time"])
+    param_history = defaultdict(list)
+    
+    for e in player_evts:
+        param_history[e["param"]].append((e["time"], e["value"]))
+    
+    small_adjustment_count = 0
+    
+    for param, history in param_history.items():
+        if len(history) < 2:
+            continue
+        
+        for i in range(1, len(history)):
+            delta = abs(history[i][1] - history[i-1][1])
+            time_diff = history[i][0] - history[i-1][0]
+            
+            # Small adjustments: small value changes in quick succession
+            if delta < 0.5 and time_diff < window:  # tuning threshold
+                small_adjustment_count += 1
+    
+    tuning_ratio = small_adjustment_count / len(player_evts) if player_evts else 0.0
+    
+    return {
+        "small_adjustment_count": small_adjustment_count,
+        "tuning_ratio": tuning_ratio
+    }
+
+
+def compute_value_entropy(player_evts: List[Dict[str, Any]]) -> float:
+    """
+    Compute entropy of value changes to detect random vs. purposeful behavior.
+    High entropy = random/chaotic changes across different value ranges.
+    """
+    if len(player_evts) < 2:
+        return 0.0
+    
+    player_evts = sorted(player_evts, key=lambda e: e["time"])
+    
+    # Bin values into ranges and compute entropy
+    all_values = []
+    for e in player_evts:
+        all_values.append(e["value"])
+    
+    if not all_values:
+        return 0.0
+    
+    # Create bins based on value distribution
+    min_val = min(all_values)
+    max_val = max(all_values)
+    
+    if max_val == min_val:
+        return 0.0  # No variation = no entropy
+    
+    # Use 10 bins to discretize values
+    num_bins = min(10, len(set(all_values)))
+    bins = np.linspace(min_val, max_val, num_bins + 1)
+    
+    # Count occurrences in each bin
+    bin_counts = np.zeros(num_bins)
+    for val in all_values:
+        bin_idx = min(int((val - min_val) / (max_val - min_val) * num_bins), num_bins - 1)
+        bin_counts[bin_idx] += 1
+    
+    # Compute Shannon entropy
+    total = len(all_values)
+    entropy = 0.0
+    for count in bin_counts:
+        if count > 0:
+            p = count / total
+            entropy -= p * np.log2(p)
+    
+    # Normalize by max possible entropy
+    max_entropy = np.log2(num_bins) if num_bins > 1 else 1.0
+    normalized_entropy = entropy / max_entropy if max_entropy > 0 else 0.0
+    
+    return normalized_entropy
+
+
+def classify_learning_strategy(features: Dict[str, float]) -> str:
+    """
+    Rule-based classification of learning strategies based on extracted features.
+    
+    Strategies:
+    1. Random/Unstructured: Very high entropy indicating random behavior
+    2. Structured/Curiosity-driven Exploration: High diversity, balanced param usage
+    3. Repetition/Practice: Low diversity, high repetition
+    4. Incremental/Goal-Directed Tuning: Small adjustments (tuning)
+    5. Backtracking and Recovery: High backtrack ratio
+    6. Pause/Hesitation: High pause ratio at decision points
+    7. Playful/Inefficient Moves: High oscillation, inefficient patterns
+    8. Iterative Trial Patterns: High tuning ratio, systematic adjustments
+    """
+    
+    # Extract features
+    diversity = features.get("action_diversity", 0.0)
+    repetition = features.get("repetition_ratio", 0.0)
+    backtrack = features.get("backtrack_ratio", 0.0)
+    pause = features.get("pause_ratio", 0.0)
+    oscillation = features.get("oscillation_ratio", 0.0)
+    tuning = features.get("tuning_ratio", 0.0)
+    entropy = features.get("value_entropy", 0.0)
+    
+    # Decision rules (priority order matters)
+    
+    # 0. Random/Unstructured: very high entropy with high oscillation (chaotic)
+    if entropy > 0.85 and oscillation > 0.3:
+        return "Random_Unstructured"
+    
+    # 1. Structured Exploration: high diversity + low repetition + moderate entropy
+    # if diversity > 0.7 and repetition < 0.3 and entropy < 0.8:
+    if repetition < 0.3 and entropy < 0.8:
+        return "Structured_Exploration"
+    
+    # 2. Repetition/Practice: high repetition + low diversity
+    # if repetition > 0.5:
+    #     return "Repetition_Practice"
+    
+    # 3. Backtracking: clear error correction pattern
+    if backtrack > 0.3:
+        return "Backtracking_Recovery"
+    
+    # 4. Iterative Tuning: systematic small adjustments
+    if tuning > 0.5:
+        return "Iterative_Tuning"
+    
+    # 5. Incremental Tuning: moderate tuning with diversity
+    if tuning > 0.3 and diversity > 0.4:
+        return "Incremental_Tuning"
+    
+    # 6. Playful/Inefficient: high oscillation
+    if oscillation > 0.4:
+        return "Playful_Inefficient"
+    
+    # 7. Pause/Hesitation: many long pauses
+    if pause > 0.3:
+        return "Pause_Hesitation"
+    
+    # Default: Mixed or unclear
+    return "Mixed_Strategy"
 
 
 def compute_param_usage(player_evts: List[Dict[str, Any]]) -> Dict[str, Any]:
@@ -504,13 +886,94 @@ def ensure_label_diversity(df: pd.DataFrame, label_col: str) -> pd.DataFrame:
 # 6. BUILD PER-PLAYER FEATURE TABLE
 # ============================================================
 
+def filter_events_by_time_window(
+    events: List[Dict[str, Any]], 
+    start_time: str, 
+    end_time: str
+) -> List[Dict[str, Any]]:
+    """
+    Filter events to only include those within a specific time window.
+    
+    Args:
+        events: List of event dictionaries
+        start_time: Start time in format "HH:MM:SS" or "MM:SS"
+        end_time: End time in format "HH:MM:SS" or "MM:SS"
+    
+    Returns:
+        Filtered list of events within the time window
+    """
+    def parse_time_string(time_str: str) -> float:
+        """Parse time string to seconds."""
+        parts = time_str.split(':')
+        if len(parts) == 2:  # MM:SS
+            return int(parts[0]) * 60 + float(parts[1])
+        elif len(parts) == 3:  # HH:MM:SS
+            return int(parts[0]) * 3600 + int(parts[1]) * 60 + float(parts[2])
+        else:
+            raise ValueError(f"Invalid time format: {time_str}. Use 'HH:MM:SS' or 'MM:SS'")
+    
+    start_seconds = parse_time_string(start_time)
+    end_seconds = parse_time_string(end_time)
+    
+    filtered = [e for e in events if start_seconds <= e["time"] <= end_seconds]
+    
+    print(f"[Time Window] Time range: {start_seconds}s to {end_seconds}s")
+    print(f"[Time Window] Filtered {len(filtered)} events from {start_time} to {end_time}")
+    
+    if filtered:
+        users_in_window = set(e["user"] for e in filtered if e["user"] is not None)
+        print(f"[Time Window] Users active: {sorted(users_in_window)}")
+    
+    return filtered
+
+
+def analyze_time_window(
+    events: List[Dict[str, Any]],
+    start_time: str,
+    end_time: str,
+    session_id: str = None
+) -> pd.DataFrame:
+    """
+    Analyze player strategies within a specific time window.
+    
+    Args:
+        events: Full list of events
+        start_time: Start time in format "HH:MM:SS" or "MM:SS"
+        end_time: End time in format "HH:MM:SS" or "MM:SS"
+        session_id: Optional session identifier for the window
+    
+    Returns:
+        DataFrame with player features and strategy classifications for the time window
+    """
+    # Filter events to time window
+    windowed_events = filter_events_by_time_window(events, start_time, end_time)
+    
+    if not windowed_events:
+        print(f"[Warning] No events found in time window {start_time} to {end_time}")
+        return pd.DataFrame()
+    
+    # Override session_id if provided
+    if session_id:
+        for e in windowed_events:
+            e["session_id"] = session_id
+    
+    # Use existing build_player_features to analyze the windowed data
+    df_window = build_player_features(windowed_events)
+    
+    # Add time window metadata
+    df_window["time_window_start"] = start_time
+    df_window["time_window_end"] = end_time
+    
+    return df_window
+
+
 def build_player_features(events: List[Dict[str, Any]]) -> pd.DataFrame:
     """
     Returns DataFrame with one row per (session_id, user_id) containing:
       - leadership-related metrics (rule-based)
-      - HOTAT/VOTAT-related metrics
+      - learning strategy features (diversity, repetition, speed, etc.)
       - coordination metrics (session + pairwise)
-      - rule-based strategy labels (simple + full)
+      - rule-based strategy labels
       - human-readable strategy analysis list & string
     """
     if not events:
@@ -534,10 +997,29 @@ def build_player_features(events: List[Dict[str, Any]]) -> pd.DataFrame:
     for u in users:
         p_evts = player_events(events, u)
         param_usage = compute_param_usage(p_evts)
-        cluster_stats = compute_single_param_clusters(p_evts)
-
-        simple_strat_label = classify_strategy_rule_based(param_usage, cluster_stats)
-        strategy_full_label = f"{simple_strat_label}_{coord['coord_style']}"
+        
+        # NEW: Learning strategy features
+        diversity = compute_action_diversity(p_evts)
+        repetition = compute_repetition_score(p_evts, debug=True)  # Enable debug output
+        backtrack = compute_backtracking(p_evts)
+        pauses = compute_hesitation_pauses(p_evts)
+        inefficient = compute_inefficient_moves(p_evts)
+        tuning = compute_iterative_tuning(p_evts)
+        value_entropy = compute_value_entropy(p_evts)
+        
+        # Combine features for classification
+        strategy_features = {
+            "action_diversity": diversity,
+            "repetition_ratio": repetition["repetition_ratio"],
+            "backtrack_ratio": backtrack["backtrack_ratio"],
+            "pause_ratio": pauses["pause_ratio"],
+            "oscillation_ratio": inefficient["oscillation_ratio"],
+            "tuning_ratio": tuning["tuning_ratio"],
+            "value_entropy": value_entropy,
+        }
+        
+        # Classify learning strategy
+        learning_strategy = classify_learning_strategy(strategy_features)
 
         # Who is this player coordinated with (pairwise score > threshold)?
         coord_partners = []
@@ -552,21 +1034,20 @@ def build_player_features(events: List[Dict[str, Any]]) -> pd.DataFrame:
         role = leader_roles.get(u, "non-leader")
         analysis_list.append(f"Leadership: {role}")
 
-        # Parameter / strategy style
+        # Learning strategy
+        analysis_list.append(f"Learning Strategy: {learning_strategy}")
+        analysis_list.append(f"Action Diversity: {diversity:.2f}")
+        analysis_list.append(f"Repetition Pattern: {repetition['repetition_ratio']:.2f}")
+        
+        # Parameter usage
         dom_param = param_usage["dominant_param"]
         analysis_list.append(f"Dominant parameter: {dom_param}")
-        analysis_list.append(f"Strategy pattern: {simple_strat_label}")
 
         # Coordination style
         if coord_partners:
             analysis_list.append(f"Coordinated with players {coord_partners}")
         else:
             analysis_list.append("Uncoordinated with other players (pairwise)")
-
-        # Special phrase: VOTAT + coordinated with others
-        if simple_strat_label == "VOTAT-like" and coord_partners:
-            for cp in coord_partners:
-                analysis_list.append(f"Coordinated with Player {cp} using VOTAT")
 
         strategy_analysis_string = "; ".join(analysis_list)
 
@@ -582,11 +1063,25 @@ def build_player_features(events: List[Dict[str, Any]]) -> pd.DataFrame:
             "lead_fraction": lead_frac.get(u, 0.0),
             "leader_role": role,
 
-            # per-player param behavior
+            # learning strategy features
+            "action_diversity": diversity,
+            "repetition_ratio": repetition["repetition_ratio"],
+            "repetitive_sequences": repetition["repetitive_sequences"],
+            "backtrack_ratio": backtrack["backtrack_ratio"],
+            "backtrack_count": backtrack["backtrack_count"],
+            "pause_ratio": pauses["pause_ratio"],
+            "long_pause_count": pauses["long_pause_count"],
+            "avg_pause": pauses["avg_pause"],
+            "oscillation_ratio": inefficient["oscillation_ratio"],
+            "oscillation_count": inefficient["oscillation_count"],
+            "tuning_ratio": tuning["tuning_ratio"],
+            "small_adjustment_count": tuning["small_adjustment_count"],
+            "value_entropy": value_entropy,
+
+            # per-player param behavior (legacy)
             "total_param_changes": param_usage["total_param_changes"],
             "num_params_used": len(param_usage["param_counts"]),
             "dominant_param_share": param_usage["dominant_share"],
-            "single_param_cluster_ratio": cluster_stats["single_param_cluster_ratio"],
 
             # coordination (session-level)
             "straight_coord_score": coord["straight_coord_score"],
@@ -596,9 +1091,8 @@ def build_player_features(events: List[Dict[str, Any]]) -> pd.DataFrame:
             # pairwise coordination partners
             "coord_partners": coord_partners,
 
-            # labels (rule-based)
-            "strategy_rule_label": simple_strat_label,
-            "strategy_full_label": strategy_full_label,
+            # learning strategy label
+            "learning_strategy": learning_strategy,
 
             # human-readable strategy analysis
             "strategy_analysis": analysis_list,
@@ -617,11 +1111,11 @@ def build_player_features(events: List[Dict[str, Any]]) -> pd.DataFrame:
 def train_strategy_tree(
     df: pd.DataFrame,
     feature_cols: List[str],
-    label_col: str = "strategy_full_label",
-    max_depth: int = 4,
+    label_col: str = "learning_strategy",
+    max_depth: int = 5,
 ) -> Tuple[Any, pd.DataFrame]:
     """
-    Trains a decision tree to classify strategies (full label = HOTAT/VOTAT + coord style).
+    Trains a decision tree to classify learning strategies.
     Returns (classifier or None, test_results_df).
 
     If there is not enough data (e.g. only one class), classifier will be None.
@@ -629,24 +1123,51 @@ def train_strategy_tree(
     data = df.dropna(subset=[label_col]).copy()
     if data.empty or data[label_col].nunique() < 2:
         print(f"[strategy tree] Not enough class variety to train a tree on '{label_col}'.")
+        print(f"[strategy tree] Found classes: {data[label_col].unique()}")
+        print(f"[strategy tree] Class distribution:\n{data[label_col].value_counts()}")
         return None, pd.DataFrame()
 
     X = data[feature_cols]
     y = data[label_col]
+    
+    print(f"[strategy tree] Training on {len(data)} samples with {y.nunique()} unique classes")
+    print(f"[strategy tree] Class distribution:\n{y.value_counts()}")
+
+    # If too few samples, don't split - train on all data
+    if len(data) < 10:
+        print(f"[strategy tree] Few samples ({len(data)}) - training on all data without test split.")
+        clf = DecisionTreeClassifier(
+            max_depth=max_depth,
+            criterion="entropy",
+            random_state=42,
+            min_samples_split=2,
+            min_samples_leaf=1
+        )
+        clf.fit(X, y)
+        
+        # Print tree structure info
+        print(f"[strategy tree] Tree depth: {clf.get_depth()}")
+        print(f"[strategy tree] Number of leaves: {clf.get_n_leaves()}")
+        
+        return clf, pd.DataFrame()
 
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.4, random_state=42, stratify=y
+        X, y, test_size=0.3, random_state=42, stratify=y
     )
 
     clf = DecisionTreeClassifier(
         max_depth=max_depth,
         criterion="entropy",
-        random_state=42
+        random_state=42,
+        min_samples_split=2,
+        min_samples_leaf=1
     )
 
     clf.fit(X_train, y_train)
     acc = clf.score(X_test, y_test)
     print(f"[strategy tree] Accuracy on test split: {acc:.3f}")
+    print(f"[strategy tree] Tree depth: {clf.get_depth()}")
+    print(f"[strategy tree] Number of leaves: {clf.get_n_leaves()}")
 
     test_results = X_test.copy()
     test_results[label_col] = y_test
@@ -659,7 +1180,7 @@ def add_strategy_predictions(
     df: pd.DataFrame,
     clf: DecisionTreeClassifier,
     feature_cols: List[str],
-    label_col: str = "strategy_full_label",
+    label_col: str = "learning_strategy",
 ) -> pd.DataFrame:
     """
     Adds prediction and confidence columns to df using the trained classifier.
@@ -712,36 +1233,39 @@ def print_player_report(df: pd.DataFrame):
     Simple console UI printing behavior analysis for each player.
     """
     for _, row in df.iterrows():
-        print("=" * 60)
+        print("=" * 80)
         print(f"Session {row['session_id']} - Player {row['user_id']}")
-        print("- Leadership-related (rule-based)")
+        print("=" * 80)
+        
+        print("\n[LEARNING STRATEGY CLASSIFICATION]")
+        print(f"  Detected Strategy:     {row['learning_strategy']}")
+        print(f"  Tree Prediction:       {row.get('strategy_tree_pred', 'N/A')}")
+        print(f"  Prediction Confidence: {row.get('strategy_tree_confidence', np.nan):.2f}")
+        
+        print("\n[BEHAVIORAL FEATURES]")
+        print(f"  Action Diversity:      {row['action_diversity']:.3f}  (high = exploration)")
+        print(f"  Repetition Ratio:      {row['repetition_ratio']:.3f}  (high = practice)")
+        print(f"  Value Entropy:         {row['value_entropy']:.3f}  (high = random/chaotic)")
+        print(f"  Backtrack Ratio:       {row['backtrack_ratio']:.3f}  (high = error correction)")
+        print(f"  Pause Ratio:           {row['pause_ratio']:.3f}  (high = hesitation)")
+        print(f"  Oscillation Ratio:     {row['oscillation_ratio']:.3f}  (high = playful/inefficient)")
+        print(f"  Tuning Ratio:          {row['tuning_ratio']:.3f}  (high = iterative refinement)")
+        
+        print("\n[LEADERSHIP METRICS]")
         print(f"  Role:                  {row['leader_role']}")
         print(f"  Frequency changes:     {row['freq_changes']}")
         print(f"  Frequency share:       {row['freq_share']:.2f}")
-        print(f"  Initiations:           {row['initiations']}")
-        print(f"  Reactions:             {row['reactions']}")
         print(f"  Lead fraction:         {row['lead_fraction']:.2f}")
 
-        print("- Strategy-related (rule-based HOTAT / VOTAT)")
-        print(f"  Total param changes:   {row['total_param_changes']}")
-        print(f"  # parameters used:     {row['num_params_used']}")
-        print(f"  Dominant param share:  {row['dominant_param_share']:.2f}")
-        print(f"  Single-param clusters: {row['single_param_cluster_ratio']:.2f}")
-        print(f"  Simple strategy label: {row['strategy_rule_label']}")
-
-        print("- Coordination-related")
+        print("\n[COORDINATION]")
         print(f"  Coord style (session): {row['coord_style']}")
         print(f"  Straight coord score:  {row['straight_coord_score']:.2f}")
         print(f"  Diagonal coord score:  {row['diagonal_coord_score']:.2f}")
-        print(f"  Pairwise partners:     {row['coord_partners']}")
+        print(f"  Coordinated with:      {row['coord_partners']}")
 
-        print("- Decision-tree strategy prediction")
-        print(f"  Predicted strategy:    {row.get('strategy_tree_pred', 'N/A')}")
-        print(f"  Prediction confidence: {row.get('strategy_tree_confidence', np.nan):.2f}")
-
-        print("- Strategy analysis")
+        print("\n[SUMMARY]")
         print(f"  {row.get('strategy_analysis_string', '')}")
-        print("=" * 60)
+        print("=" * 80)
         print()
 
 
@@ -767,47 +1291,75 @@ if __name__ == "__main__":
 
     df_players = build_player_features(events)
 
-    print("=== Per-player behavior report (before decision-tree training) ===")
+    print("=== Per-player behavior report (rule-based classification) ===")
     print_player_report(df_players)
 
-    # Strategy decision-tree
+    # Learning strategy decision-tree features
     strategy_feature_cols = [
-        "freq_changes",
+        "action_diversity",
+        "repetition_ratio",
+        "value_entropy",
+        "backtrack_ratio",
+        "pause_ratio",
+        "oscillation_ratio",
+        "tuning_ratio",
         "freq_share",
         "lead_fraction",
-        "total_param_changes",
-        "num_params_used",
-        "dominant_param_share",
-        "single_param_cluster_ratio",
-        "straight_coord_score",
-        "diagonal_coord_score",
     ]
 
     # Ensure we have at least 2 strategy classes
-    df_players = ensure_label_diversity(df_players, "strategy_full_label")
+    df_players = ensure_label_diversity(df_players, "learning_strategy")
 
     clf, test_results = train_strategy_tree(
         df_players,
         feature_cols=strategy_feature_cols,
-        label_col="strategy_full_label",
-        max_depth=4,
+        label_col="learning_strategy",
+        max_depth=5,
     )
 
     df_players = add_strategy_predictions(
         df_players,
         clf,
         feature_cols=strategy_feature_cols,
-        label_col="strategy_full_label",
+        label_col="learning_strategy",
     )
 
-    print("=== Per-player behavior report (with decision-tree strategies) ===")
+    print("\n=== Per-player behavior report (with ML predictions) ===")
     print_player_report(df_players)
 
+    # Export results
+    output_path = Path("learning_strategies_analysis.csv")
+    df_players.to_csv(output_path, index=False)
+    print(f"\n[INFO] Results saved to {output_path}")
+
+    # Example: Analyze a specific time window
+    print("\n" + "=" * 80)
+    print("EXAMPLE: Analyzing time window 00:05:00 to 00:06:00")
+    print("=" * 80)
+    df_window = analyze_time_window(
+        events,
+        start_time="00:05:00",
+        end_time="00:05:30",
+        session_id="session_1_window_7-7.5min"
+    )
+    
+    if not df_window.empty:
+        print("\n=== Time Window Analysis ===")
+        print_player_report(df_window)
+        
+        # Save time window results
+        window_output = Path("time_window_5-6min_analysis.csv")
+        df_window.to_csv(window_output, index=False)
+        print(f"\n[INFO] Time window results saved to {window_output}")
+    else:
+        print("[INFO] No data in time window or insufficient events for analysis")
+    
+    # Plot decision tree (at the end to avoid blocking)
     if clf is not None:
-        class_names = list(df_players["strategy_full_label"].unique())
+        class_names = sorted(df_players["learning_strategy"].unique())
         plot_strategy_tree(
             clf,
             feature_names=strategy_feature_cols,
             class_names=class_names,
-            title="Strategy (HOTAT/VOTAT + coordination) Decision Tree",
+            title="Learning Strategy Decision Tree",
         )
