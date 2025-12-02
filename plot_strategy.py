@@ -89,6 +89,7 @@ class StrategyTimelineUI:
 
         self.t_min = float(min(self.df_trends["starttime"].min(), self.df_speed["timestamp_sec"].min()))
         self.t_max = float(max(self.df_trends["endtime"].max(), self.df_speed["timestamp_sec"].max()))
+        self.view_span_main = max(1.0, min(60.0, self.t_max - self.t_min))
 
         self.current_time = self.t_min
         self.playing = False
@@ -157,7 +158,7 @@ class StrategyTimelineUI:
             label="speed_px/s",
         )
         self.ax_speed.set_ylabel("Speed (px/s)")
-        self.ax_speed.set_xlim(self.t_min, self.t_max)
+        self.ax_speed.set_xlim(self.t_min, min(self.t_max, self.t_min + self.view_span_main))
         self.ax_speed.grid(alpha=0.25)
         self.ax_speed.legend(loc="upper right")
         self.speed_time_line = self.ax_speed.axvline(self.t_min, color="black", linestyle="--", linewidth=1.5)
@@ -318,6 +319,7 @@ class StrategyTimelineUI:
             line.set_xdata([self.current_time, self.current_time])
         for user, line in self.user_info_time_lines.items():
             line.set_xdata([self.current_time, self.current_time])
+        self._update_view_limits()
         time_label = f"Current Time: {fmt_time(self.current_time)}"
         if self.time_text_main is not None:
             self.time_text_main.set_text(time_label)
@@ -329,6 +331,25 @@ class StrategyTimelineUI:
         self.fig_main.canvas.draw_idle()
         if self.fig_info:
             self.fig_info.canvas.draw_idle()
+
+    def _update_view_limits(self):
+        if self.ax_speed is None or self.view_span_main <= 0:
+            return
+        half_span = self.view_span_main / 2.0
+        left = self.current_time - half_span
+        right = self.current_time + half_span
+        total_span = self.t_max - self.t_min
+        if total_span <= self.view_span_main:
+            left = self.t_min
+            right = self.t_max
+        else:
+            if left < self.t_min:
+                right += self.t_min - left
+                left = self.t_min
+            if right > self.t_max:
+                left -= right - self.t_max
+                right = self.t_max
+        self.ax_speed.set_xlim(left, right)
 
     def _update_info_panels(self):
         for user in self.users:
