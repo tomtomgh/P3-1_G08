@@ -215,6 +215,17 @@ def plot_three_states(input_csv='speed.csv', out='three_states.png', window_size
     for seg in segments:
         ax.axvspan(seg['start'], seg['end'], color=colmap.get(seg['label'], '#cccccc'), alpha=0.35)
 
+    # add centered time labels below each colored segment
+    # make a little room at the bottom of the figure so labels are visible
+    # use transform on the x-axis so x is data coords and y is axes fraction
+    # use small font and clip_on=False so labels appear outside the axes area
+    fig.subplots_adjust(bottom=0.20)
+    for seg in segments:
+        mid = 0.5 * (seg['start'] + seg['end'])
+        txt = f"{seg['start']:.1f}s - {seg['end']:.1f}s"
+        ax.text(mid, -0.06, txt, ha='center', va='top', fontsize=8, color='k',
+                transform=ax.get_xaxis_transform(), clip_on=False)
+
     # build a legend manually
     from matplotlib.patches import Patch
     legend_handles = [Patch(facecolor=colmap[k], edgecolor='k', alpha=0.5, label=k.capitalize()) for k in ['dull','increasing','decreasing']]
