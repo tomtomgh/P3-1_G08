@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 # --------------------------------------------------------------
-# plot_strategy_timeline.py
-# VISUALISE SPEED + SPEED TRENDS + USER STRATEGY TIMELINES
-# WITH STRATEGY LEGEND ON RIGHT SIDE
+# Beautiful Strategy Timeline Plot
+# Speed Curve + Speed Trends + Strategy Timelines (per user)
 # --------------------------------------------------------------
 
 import pandas as pd
@@ -12,6 +11,9 @@ from pathlib import Path
 from strategy_classifier.constants import ALL_STRATEGIES
 
 
+# --------------------------------------------------------------
+# Loaders
+# --------------------------------------------------------------
 def load_predictions():
     return pd.read_csv("segment_strategy_predictions.csv")
 
@@ -27,12 +29,21 @@ def load_speed_series():
     return pd.read_csv(path)
 
 
+# --------------------------------------------------------------
+# Colors for strategies
+# --------------------------------------------------------------
 def build_strategy_colors():
     import matplotlib.colors as mcolors
-    base = list(mcolors.TABLEAU_COLORS.values()) + list(mcolors.CSS4_COLORS.values())
+    base = (
+        list(mcolors.TABLEAU_COLORS.values()) +
+        list(mcolors.XKCD_COLORS.values())
+    )
     return {s: base[i % len(base)] for i, s in enumerate(ALL_STRATEGIES)}
 
 
+# --------------------------------------------------------------
+# Pick strategy with highest probability for a segment row
+# --------------------------------------------------------------
 def dominant_strategy(row):
     best_name = None
     best_prob = -1
@@ -44,30 +55,48 @@ def dominant_strategy(row):
     return best_name, best_prob
 
 
+# --------------------------------------------------------------
+# Main plotter
+# --------------------------------------------------------------
 def plot_timeline():
     df = load_predictions()
     df_trends = load_speed_trends()
     df_speed = load_speed_series()
-    strat_colors = build_strategy_colors()
+    colors = build_strategy_colors()
 
     df = df.sort_values(["user_id", "seg_start"]).reset_index(drop=True)
     users = sorted(df["user_id"].unique())
 
+    # Determine timeline extents
     t_min = min(df_trends["starttime"].min(), df_speed["timestamp_sec"].min())
     t_max = max(df_trends["endtime"].max(), df_speed["timestamp_sec"].max())
 
-    fig, axes = plt.subplots(len(users) + 1, 1, figsize=(22, 3 * (len(users) + 1)), sharex=True)
+    # ----------------------------------------------------------
+    # Build figure
+    # ----------------------------------------------------------
+    fig, axes = plt.subplots(
+        len(users) + 1,
+        1,
+        figsize=(20, 3 * (len(users) + 1)),
+        sharex=True
+    )
 
     # ----------------------------------------------------------
-    # TOP PANEL: SPEED + TRENDS
+    # 1) SPEED PANEL
     # ----------------------------------------------------------
     ax_speed = axes[0]
-    ax_speed.set_title("Robot Speed Timeline (Trends + Speed)", fontsize=14)
+    ax_speed.set_title("Robot Speed Timeline", fontsize=16, pad=10)
 
+    # Trend shading
     for _, row in df_trends.iterrows():
-        c = "gray" if row["trend"] == "dull" else "lightcoral" if row["trend"] == "decreasing" else "lightgreen"
-        ax_speed.axvspan(row["starttime"], row["endtime"], alpha=0.25, color=c)
+        trend_color = (
+            "lightgray" if row["trend"] == "dull" else
+            "lightcoral" if row["trend"] == "decreasing" else
+            "lightgreen"
+        )
+        ax_speed.axvspan(row["starttime"], row["endtime"], alpha=0.25, color=trend_color)
 
+    # Speed curve
     ax_speed.plot(
         df_speed["timestamp_sec"],
         df_speed["speed_px/s"],
@@ -75,19 +104,20 @@ def plot_timeline():
         linewidth=2,
         label="speed_px/s"
     )
-
-    # KEEP the speed legend
-    ax_speed.legend(loc="upper right")
-    ax_speed.set_ylabel("Speed\n(px/s)")
-    ax_speed.set_xlim(t_min, t_max)
+    ax_speed.set_ylabel("Speed (px/s)")
     ax_speed.grid(alpha=0.3)
 
+    # Keep only speed curve legend here
+    ax_speed.legend(loc="upper right", fontsize=10)
+
     # ----------------------------------------------------------
-    # USER PANELS
+    # 2) USER PANELS
     # ----------------------------------------------------------
+    used_strategies = set()
+
     for i, user in enumerate(users):
         ax = axes[i + 1]
-        ax.set_title(f"User {user} Strategy Timeline", fontsize=13)
+        ax.set_title(f"User {user} Strategy Timeline", fontsize=14, pad=6)
 
         df_u = df[df["user_id"] == user]
 
@@ -95,40 +125,50 @@ def plot_timeline():
             s, e = row["seg_start"], row["seg_end"]
             strat, _ = dominant_strategy(row)
 
-            ax.axvspan(s, e, color=strat_colors[strat], alpha=0.7)
-            ax.text((s + e) / 2, 0.5, strat.replace("_", "\n"),
-                    ha='center', va='center', fontsize=8, color='black')
+            used_strategies.add(strat)
+
+            ax.axvspan(
+                s, e,
+                color=colors[strat],
+                alpha=0.8
+            )
 
         ax.set_yticks([])
-        ax.set_ylabel(f"User {user}")
-
-    plt.xlabel("Time (seconds)")
-    plt.tight_layout(rect=(0, 0, 0.82, 1))  # leave space on RIGHT
+        ax.set_ylabel(f"User {user}", rotation=0, labelpad=30)
+        ax.grid(axis='x', alpha=0.2)
 
     # ----------------------------------------------------------
-    # STRATEGY LEGEND ON THE RIGHT SIDE
+    # GLOBAL TIME AXIS
     # ----------------------------------------------------------
-    handles = []
-    labels = []
+    axes[-1].set_xlabel("Time (seconds)", fontsize=14)
+    axes[-1].set_xlim(t_min, t_max)
 
-    for strat, color in strat_colors.items():
-        patch = plt.Line2D([0], [0], color=color, linewidth=12)
-        handles.append(patch)
-        labels.append(strat)
+    # ----------------------------------------------------------
+    # STRATEGY LEGEND (ONLY USED STRATEGIES)
+    # ----------------------------------------------------------
+    legend_handles = []
+    legend_labels = []
+
+    for strat in sorted(used_strategies):
+        patch = plt.Line2D([0], [0], color=colors[strat], linewidth=12)
+        legend_handles.append(patch)
+        legend_labels.append(strat)
 
     fig.legend(
-        handles,
-        labels,
-        title="Strategies",
+        legend_handles,
+        legend_labels,
+        title="Strategies Used",
         loc="upper left",
-        bbox_to_anchor=(0.84, 0.75),  # right-hand side placement
-        fontsize=9,
+        bbox_to_anchor=(0.83, 0.75),
         frameon=True,
-        ncol=1,
+        fontsize=11
     )
 
+    plt.tight_layout(rect=(0, 0, 0.82, 1))
     plt.show()
 
-
+# --------------------------------------------------------------
+# Run as script
+# --------------------------------------------------------------
 if __name__ == "__main__":
     plot_timeline()
