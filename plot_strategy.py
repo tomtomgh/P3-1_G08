@@ -1,165 +1,168 @@
 #!/usr/bin/env python3
 # --------------------------------------------------------------
 # plot_strategy_timeline.py
-# VISUALISE SPEED AND STRATEGY TIMELINES
+# VISUALISE SPEED + SPEED TRENDS + USER STRATEGY TIMELINES
+# WITH SEGMENT TIME LABELS
 # --------------------------------------------------------------
 
 import pandas as pd
 import matplotlib.pyplot as plt
 from pathlib import Path
 
-# Strategy constants
 from strategy_classifier.constants import ALL_STRATEGIES
 
 
-# --------------------------------------------------------------
-# Load outputs from run_all.py
-# --------------------------------------------------------------
 def load_predictions():
-    df = pd.read_csv("segment_strategy_predictions.csv")
+    return pd.read_csv("segment_strategy_predictions.csv")
+
+
+def load_speed_trends():
+    return pd.read_csv(Path("speed/trends.csv"))
+
+
+def load_speed_series():
+    df = pd.read_csv(Path("speed/speed.csv"))
     return df
 
 
-# --------------------------------------------------------------
-# Load speed/trends.csv (for speed segments & speed curves)
-# --------------------------------------------------------------
-def load_speed_trends():
-    speed_csv = Path("speed/trends.csv")
-    return pd.read_csv(speed_csv)
-
-
-# --------------------------------------------------------------
-# Build color map for strategies
-# --------------------------------------------------------------
 def build_strategy_colors():
     import matplotlib.colors as mcolors
-    base_colors = list(mcolors.TABLEAU_COLORS.values()) + \
-                  list(mcolors.CSS4_COLORS.values())
-
-    colors = {}
-    for i, strat in enumerate(ALL_STRATEGIES):
-        colors[strat] = base_colors[i % len(base_colors)]
-    return colors
+    base = list(mcolors.TABLEAU_COLORS.values()) + list(mcolors.CSS4_COLORS.values())
+    return {strat: base[i % len(base)] for i, strat in enumerate(ALL_STRATEGIES)}
 
 
-# --------------------------------------------------------------
-# Pick the highest-probability strategy for each segment row
-# --------------------------------------------------------------
 def dominant_strategy(row):
-    best_strat = None
-    best_prob = -1
-
+    best = None
+    best_p = -1
     for strat in ALL_STRATEGIES:
         col = f"{strat}_prob"
-        if col in row:
-            if row[col] > best_prob:
-                best_prob = row[col]
-                best_strat = strat
-
-    return best_strat, best_prob
+        if col in row and row[col] > best_p:
+            best_p = row[col]
+            best = strat
+    return best, best_p
 
 
-# --------------------------------------------------------------
-# Main visualization function
-# --------------------------------------------------------------
+def fmt_time(sec):
+    """Format seconds into mm:ss or hh:mm:ss depending on size."""
+    if sec < 3600:
+        m = int(sec // 60)
+        s = int(sec % 60)
+        return f"{m:02d}:{s:02d}"
+    else:
+        h = int(sec // 3600)
+        m = int((sec % 3600) // 60)
+        s = int(sec % 60)
+        return f"{h:02d}:{m:02d}:{s:02d}"
+
+
 def plot_timeline():
     df = load_predictions()
-    df_speed = load_speed_trends()
+    df_trends = load_speed_trends()
+    df_speed = load_speed_series()
     strat_colors = build_strategy_colors()
 
-    # Ensure correct sorting
-    df = df.sort_values(["user_id", "seg_start"]).reset_index(drop=True)
-
+    df = df.sort_values(["user_id", "seg_start"])
     users = sorted(df["user_id"].unique())
-    n_users = len(users)
 
-    # Get time range from speed CSV
-    t_min = df_speed["starttime"].min()
-    t_max = df_speed["endtime"].max()
+    # Determine time range
+    t_min = min(df_trends["starttime"].min(), df_speed["timestamp_sec"].min())
+    t_max = max(df_trends["endtime"].max(), df_speed["timestamp_sec"].max())
 
-    # ----------------------------------------------------------
-    # MULTI-PANEL FIGURE
-    # ----------------------------------------------------------
+    # Multi-panel figure
     fig, axes = plt.subplots(
-        n_users + 1,
+        len(users) + 1,
         1,
-        figsize=(18, 3 * (n_users + 1)),
+        figsize=(20, 3 * (len(users) + 1)),
         sharex=True
     )
 
     # ----------------------------------------------------------
-    # TOP PANEL: PLOT SPEED TREND INTERVALS
+    # Top panel: speed trend + speed line
     # ----------------------------------------------------------
     ax_speed = axes[0]
-    ax_speed.set_title("Speed Trend Timeline", fontsize=14)
+    ax_speed.set_title("Robot Speed Timeline", fontsize=14)
 
-    for _, row in df_speed.iterrows():
-        ax_speed.axvspan(
-            row["starttime"],
-            row["endtime"],
-            alpha=0.25,
-            label=row["trend"],
-            color="gray" if row["trend"] == "dull" else
-                  "lightcoral" if row["trend"] == "decreasing" else
-                  "lightgreen"
-        )
+    # Trend blocks
+    for _, row in df_trends.iterrows():
+        color = "gray" if row["trend"] == "dull" else \
+                "lightcoral" if row["trend"] == "decreasing" else "lightgreen"
+        ax_speed.axvspan(row["starttime"], row["endtime"], alpha=0.25, color=color)
 
-    ax_speed.set_ylabel("Speed state")
-    ax_speed.set_xlim(t_min, t_max)
+    # Speed curve
+    ax_speed.plot(
+        df_speed["timestamp_sec"],
+        df_speed["speed_px/s"],
+        color="blue",
+        linewidth=2,
+        label="speed_px/s"
+    )
 
-    # avoid duplicate legends
-    handles, labels = ax_speed.get_legend_handles_labels()
-    by_label = dict(zip(labels, handles))
-    ax_speed.legend(by_label.values(), by_label.keys(), loc="upper right")
+    ax_speed.set_ylabel("Speed\n(px/s)")
+    ax_speed.legend(loc="upper right")
+    ax_speed.grid(alpha=0.25)
 
     # ----------------------------------------------------------
-    # USER PANELS
+    # USER STRATEGY PANELS
     # ----------------------------------------------------------
     for idx, user in enumerate(users):
         ax = axes[idx + 1]
-        ax.set_title(f"User {user} Strategy Timeline", fontsize=13)
+        ax.set_title(f"User {user} Strategy Timeline")
 
         df_u = df[df["user_id"] == user]
 
         for _, row in df_u.iterrows():
-            start = row["seg_start"]
-            end = row["seg_end"]
-            strat, prob = dominant_strategy(row)
+            s = row["seg_start"]
+            e = row["seg_end"]
+
+            strat, _ = dominant_strategy(row)
             color = strat_colors[strat]
 
-            ax.axvspan(
-                start,
-                end,
-                alpha=0.7,
-                color=color,
-                label=strat
-            )
-            # Optionally label the strategy in the block
+            # Colored block
+            ax.axvspan(s, e, color=color, alpha=0.7)
+
+            # Strategy text (middle)
             ax.text(
-                (start + end) / 2,
-                0.5,
+                (s + e) / 2,
+                0.65,
                 strat.replace("_", "\n"),
                 ha="center",
                 va="center",
                 fontsize=8,
-                color="black"
+                color="black",
+            )
+
+            # Time text below block
+            ax.text(
+                (s + e) / 2,
+                0.30,
+                f"{fmt_time(s)} → {fmt_time(e)}",
+                ha="center",
+                va="center",
+                fontsize=7,
+                color="black",
             )
 
         ax.set_yticks([])
         ax.set_ylabel(f"User {user}")
 
-        # One legend per user panel (condensed)
-        handles, labels = ax.get_legend_handles_labels()
-        unique = dict(zip(labels, handles))
-        ax.legend(unique.values(), unique.keys(), loc="upper right", fontsize=7)
-
+    # ----------------------------------------------------------
+    # Format X-axis with readable time
+    # ----------------------------------------------------------
     plt.xlabel("Time (seconds)")
+
+    # show minute:second ticks
+    ticks = []
+    labels = []
+    step = max(1, int((t_max - t_min) // 12))  # ~12 ticks
+    for sec in range(int(t_min), int(t_max) + 1, step):
+        ticks.append(sec)
+        labels.append(fmt_time(sec))
+
+    plt.xticks(ticks, labels, rotation=45)
+
     plt.tight_layout()
     plt.show()
 
 
-# --------------------------------------------------------------
-# Run as script
-# --------------------------------------------------------------
 if __name__ == "__main__":
     plot_timeline()
