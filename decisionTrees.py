@@ -18,7 +18,8 @@ import matplotlib.pyplot as plt
 # "00:05:02.4907287 [Info] User 1 sets frequency to 0.2."
 EVENT_REGEX = re.compile(
     r'(?P<time>\d{2}:\d{2}:\d{2}\.\d+)\s+\[Info\]\s+User(?:\s+(?P<user>\d))?\s+sets\s+'
-    r'(?P<param>frequency|amplitude|offset|phase shift)\s+to\s+(?P<value>-?\d+(?:\.\d+)?)'
+        r'(?P<param>frequency|amplitude|offset|phase shift)\s+to\s+(?P<value>-?\d+(?:\.\d+)?)'
+
 )
 
 
@@ -27,7 +28,7 @@ def parse_time_to_seconds(tstr: str) -> float:
     return int(h) * 3600 + int(m) * 60 + float(s)
 
 
-def parse_log_file(path: Path, session_id: str) -> List[Dict[str, Any]]:
+def parse_log_file(path: Path, session_id: str, fallback_user: int = None) -> List[Dict[str, Any]]:
     """
     Parses a single .log file into a list of events.
     Each event: {session_id, time, user, param, value}
@@ -42,7 +43,10 @@ def parse_log_file(path: Path, session_id: str) -> List[Dict[str, Any]]:
 
             t = parse_time_to_seconds(m.group('time'))
             user_str = m.group('user')
-            user = int(user_str) if user_str is not None else None
+            if user_str is not None:
+                user = int(user_str)
+            else:
+                user = fallback_user
             param = m.group('param')
             raw_val = m.group('value').rstrip('.')  # fail-safe
             value = float(raw_val)
@@ -67,9 +71,65 @@ def parse_session(log_paths: List[Path], session_id: str) -> List[Dict[str, Any]
     """
     all_events: List[Dict[str, Any]] = []
     for p in log_paths:
-        all_events.extend(parse_log_file(p, session_id=session_id))
+        fallback_user = None
+        name = p.stem
+        match = re.search(r"user(\d+)", name, re.IGNORECASE)
+        if match:
+            try:
+                fallback_user = int(match.group(1))
+            except ValueError:
+                fallback_user = None
+        all_events.extend(parse_log_file(p, session_id=session_id, fallback_user=fallback_user))
     all_events.sort(key=lambda e: e["time"])
     return all_events
+
+
+def load_events_from_csv(csv_path: Path, session_id: str = "csv_session") -> List[Dict[str, Any]]:
+    """
+    Load parameter/velocity changes from a CSV file with columns such as:
+    time, user, param, value, time_sec.
+    """
+    if not csv_path.exists():
+        print(f"[csv loader] File not found: {csv_path}")
+        return []
+
+    df = pd.read_csv(csv_path)
+    events: List[Dict[str, Any]] = []
+
+    for _, row in df.iterrows():
+        if "time_sec" in row and not pd.isna(row["time_sec"]):
+            t = float(row["time_sec"])
+        else:
+            time_str = row.get("time")
+            if isinstance(time_str, str):
+                t = parse_time_to_seconds(time_str)
+            else:
+                continue
+
+        user = row.get("user")
+        user_id = int(user) if pd.notna(user) else None
+        param = str(row.get("param", "")).strip()
+        if not param:
+            continue
+        value = row.get("value")
+        try:
+            val = float(value)
+        except (TypeError, ValueError):
+            continue
+
+        events.append(
+            {
+                "session_id": session_id,
+                "time": t,
+                "user": user_id,
+                "param": param,
+                "value": val,
+            }
+        )
+
+    events.sort(key=lambda e: e["time"])
+    print(f"[csv loader] Loaded {len(events)} events from {csv_path}")
+    return events
 
 
 # ============================================================
@@ -1355,6 +1415,10 @@ def plot_strategy_tree(
     class_names: List[str],
     title: str = "Strategy Decision Tree",
 ):
+    if len(class_names) != len(clf.classes_):
+        print("[plot tree] class_names mismatch, falling back to clf.classes_.")
+        class_names = [str(c) for c in clf.classes_]
+
     plt.figure(figsize=(16, 9))
     plot_tree(
         clf,
@@ -1393,10 +1457,45 @@ def read_strategy_results(csv_path: Path) -> pd.DataFrame:
             )
     return df
 
+
+def print_player_overview(df: pd.DataFrame):
+    """
+    Quick-glance overview page to help navigate the detailed terminal output.
+    """
+    if df.empty:
+        print("[overview] No player data to display.")
+        return
+
+    print("=" * 80)
+    print("PAGE 1/2: Strategy Overview (per player)")
+    print("=" * 80)
+    header = f"{'Idx':>3} | {'Session':<15} | {'Player':<6} | {'Strategy':<28} | {'Div':>6} | {'Entropy':>8} | {'Tuning':>7}"
+    print(header)
+    print("-" * len(header))
+
+    for idx, (_, row) in enumerate(df.iterrows(), start=1):
+        print(
+            f"{idx:>3} | {row['session_id']:<15} | {row['user_id']:<6} | "
+            f"{row['learning_strategy']:<28} | {row['action_diversity']:>6.2f} | "
+            f"{row['value_entropy']:>8.3f} | {row['tuning_ratio']:>7.2f}"
+        )
+
+    print("-" * len(header))
+    print("Use the index to locate the matching detailed entry below (Page 2/2).")
+    print()
+
 def print_player_report(df: pd.DataFrame):
     """
     Simple console UI printing behavior analysis for each player.
     """
+    if df.empty:
+        print("[report] No player data to display.")
+        return
+
+    print("=" * 80)
+    print("PAGE 2/2: Detailed Player Profiles")
+    print("=" * 80)
+
     for _, row in df.iterrows():
         print("=" * 80)
         print(f"Session {row['session_id']} - Player {row['user_id']}")
@@ -1457,6 +1556,7 @@ if __name__ == "__main__":
     df_players = build_player_features(events)
 
     print("=== Per-player behavior report (rule-based classification) ===")
+    print_player_overview(df_players)
     print_player_report(df_players)
 
     # Learning strategy decision-tree features
@@ -1490,6 +1590,7 @@ if __name__ == "__main__":
     )
 
     print("\n=== Per-player behavior report (with ML predictions) ===")
+    print_player_overview(df_players)
     print_player_report(df_players)
 
     # Export results
@@ -1501,6 +1602,7 @@ if __name__ == "__main__":
     reloaded_df = read_strategy_results(output_path)
     if not reloaded_df.empty:
         print("\n=== Reloaded results from CSV ===")
+        print_player_overview(reloaded_df)
         print_player_report(reloaded_df)
 
     # Example: Analyze a specific time window
@@ -1508,26 +1610,49 @@ if __name__ == "__main__":
     print("EXAMPLE: Analyzing time window 00:05:00 to 00:06:00")
     print("=" * 80)
     df_window = analyze_time_window(
-        events,
-        start_time="00:05:00",
-        end_time="00:05:30",
-        session_id="session_1_window_7-7.5min"
+         events,
+        start_time="00:06:00",
+        end_time="00:07:00",
+        session_id="session_1_window_6-7min"
     )
     
     if not df_window.empty:
         print("\n=== Time Window Analysis ===")
+        print_player_overview(df_window)
         print_player_report(df_window)
         
         # Save time window results
-        window_output = Path("time_window_5-6min_analysis.csv")
+        window_output = Path("time_window_6-7min_analysis.csv")
         df_window.to_csv(window_output, index=False)
         print(f"\n[INFO] Time window results saved to {window_output}")
     else:
         print("[INFO] No data in time window or insufficient events for analysis")
+
+         # Analyze the same window directly from parameter_changes_summary.csv (includes velocity-friendly data)
+    csv_path = Path("parameter_changes_summary.csv")
+    if csv_path.exists():
+        csv_events = load_events_from_csv(csv_path, session_id="parameter_changes_csv")
+        csv_window_df = analyze_time_window(
+            csv_events,
+            start_time="00:06:00",
+            end_time="00:07:00",
+            session_id="parameter_changes_window_6-7min"
+        )
+        if not csv_window_df.empty:
+            print("\n=== Parameter CSV Time Window Analysis (6-7 min) ===")
+            print_player_overview(csv_window_df)
+            print_player_report(csv_window_df)
+            csv_window_output = Path("parameter_changes_6-7min_analysis.csv")
+            csv_window_df.to_csv(csv_window_output, index=False)
+            print(f"\n[INFO] Parameter CSV window results saved to {csv_window_output}")
+        else:
+            print("[INFO] CSV-based window had no events in the requested time range")
+    else:
+        print(f"[INFO] parameter_changes_summary.csv not found at {csv_path}")
     
     # Plot decision tree (at the end to avoid blocking)
     if clf is not None:
-        class_names = [str(c) for c in clf.classes_]
+        class_names = sorted(df_players["learning_strategy"].unique())
         plot_strategy_tree(
             clf,
             feature_names=strategy_feature_cols,
