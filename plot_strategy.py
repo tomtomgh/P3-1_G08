@@ -7,6 +7,8 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 from pathlib import Path
+from matplotlib.widgets import Slider, Button
+import time
 
 from strategy_classifier.constants import ALL_STRATEGIES
 
@@ -164,7 +166,115 @@ def plot_timeline():
         fontsize=11
     )
 
-    plt.tight_layout(rect=(0, 0, 0.82, 1))
+    # ----------------------------------------------------------
+    # INTERACTIVE TIMELINE SLIDER
+    # ----------------------------------------------------------
+    # Create space for slider and buttons at the bottom
+    plt.tight_layout(rect=(0, 0.08, 0.82, 1))
+    
+    # Add slider axis at bottom
+    slider_ax = plt.axes([0.15, 0.04, 0.65, 0.02])
+    time_slider = Slider(
+        slider_ax,
+        'Time',
+        t_min,
+        t_max,
+        valinit=t_min,
+        valstep=(t_max - t_min) / 1000,  # Smooth sliding
+        color='lightblue'
+    )
+    
+    # Draw vertical line on all axes at slider position
+    vertical_lines = []
+    for ax in axes:
+        line = ax.axvline(t_min, color='black', linewidth=2, linestyle='-', alpha=0.8)
+        vertical_lines.append(line)
+    
+    # Add timestamp text display
+    time_text = fig.text(0.85, 0.045, '', fontsize=12, fontweight='bold', 
+                         bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.8))
+    
+    # Autoplay state
+    autoplay_state = {'playing': False, 'timer_id': None, 'last_real_time': None}
+    
+    def update_timeline(val):
+        """Update vertical line position and timestamp when slider moves."""
+        current_time = time_slider.val
+        
+        # Update all vertical lines
+        for line in vertical_lines:
+            line.set_xdata([current_time, current_time])
+        
+        # Format timestamp as HH:MM:SS
+        hours = int(current_time // 3600)
+        minutes = int((current_time % 3600) // 60)
+        seconds = int(current_time % 60)
+        milliseconds = int((current_time % 1) * 1000)
+        
+        time_text.set_text(f'{hours:02d}:{minutes:02d}:{seconds:02d}.{milliseconds:03d}')
+        
+        fig.canvas.draw_idle()
+    
+    def autoplay_step():
+        """Advance timeline by real-time seconds elapsed."""
+        if not autoplay_state['playing']:
+            return
+        
+        current_real_time = time.time()
+        
+        # Calculate elapsed real time since last update
+        if autoplay_state['last_real_time'] is not None:
+            elapsed = current_real_time - autoplay_state['last_real_time']
+        else:
+            elapsed = 0
+        
+        autoplay_state['last_real_time'] = current_real_time
+        
+        # Advance timeline by elapsed seconds
+        new_time = time_slider.val + elapsed
+        
+        if new_time >= t_max:
+            # Reached end, stop autoplay
+            autoplay_state['playing'] = False
+            play_button.label.set_text('▶ Play')
+            time_slider.set_val(t_max)
+            autoplay_state['last_real_time'] = None
+            return
+        
+        time_slider.set_val(new_time)
+        
+        # Schedule next update (approximately 30 FPS for smooth animation)
+        autoplay_state['timer_id'] = fig.canvas.new_timer(interval=33)
+        autoplay_state['timer_id'].add_callback(autoplay_step)
+        autoplay_state['timer_id'].start()
+    
+    def toggle_autoplay(event):
+        """Toggle autoplay on/off."""
+        if autoplay_state['playing']:
+            # Stop autoplay
+            autoplay_state['playing'] = False
+            play_button.label.set_text('▶ Play')
+            if autoplay_state['timer_id']:
+                autoplay_state['timer_id'].stop()
+            autoplay_state['last_real_time'] = None
+        else:
+            # Start autoplay
+            autoplay_state['playing'] = True
+            play_button.label.set_text('⏸ Pause')
+            autoplay_state['last_real_time'] = time.time()
+            autoplay_step()
+    
+    # Add Play/Pause button
+    button_ax = plt.axes([0.02, 0.04, 0.08, 0.03])
+    play_button = Button(button_ax, '▶ Play', color='lightgreen', hovercolor='green')
+    play_button.on_clicked(toggle_autoplay)
+    
+    # Connect slider to update function
+    time_slider.on_changed(update_timeline)
+    
+    # Initialize the display
+    update_timeline(t_min)
+    
     plt.show()
 
 # --------------------------------------------------------------
