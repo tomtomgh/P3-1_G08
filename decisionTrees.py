@@ -1,4 +1,5 @@
 import re
+import ast
 from pathlib import Path
 from typing import List, Dict, Any, Tuple
 from collections import defaultdict
@@ -521,10 +522,10 @@ def classify_learning_strategy(features: Dict[str, float]) -> str:
     Rule-based classification of learning strategies based on extracted features.
     
     Strategies:
-    1. Random/Unstructured: Very high entropy indicating random behavior
-    2. Structured/Curiosity-driven Exploration: High diversity, balanced param usage
+    1. Random/Unstructured: Very high entropy with chaotic oscillations
+    2. Structured/Curiosity-driven Exploration: High diversity, balanced parameter usage
     3. Repetition/Practice: Low diversity, high repetition
-    4. Incremental/Goal-Directed Tuning: Small adjustments (tuning)
+    4. Incremental/Goal-Directed Tuning: Moderate tuning with steady progress
     5. Backtracking and Recovery: High backtrack ratio
     6. Pause/Hesitation: High pause ratio at decision points
     7. Playful/Inefficient Moves: High oscillation, inefficient patterns
@@ -540,43 +541,45 @@ def classify_learning_strategy(features: Dict[str, float]) -> str:
     tuning = features.get("tuning_ratio", 0.0)
     entropy = features.get("value_entropy", 0.0)
     
-    # Decision rules (priority order matters)
-    
-    # 0. Random/Unstructured: very high entropy with high oscillation (chaotic)
-    if entropy > 0.85 and oscillation > 0.3:
+    # Decision rules (priority order matters). Each branch returns one of the 8 target strategies.
+    # The ordering favors more distinctive signals (entropy, pauses, backtracking) before general ones.
+
+    # 1. Random/Unstructured: chaotic values with direction changes
+    if entropy >= 0.85 and oscillation >= 0.25:
         return "Random_Unstructured"
-    
-    # 1. Structured Exploration: high diversity + low repetition + moderate entropy
-    # if diversity > 0.7 and repetition < 0.3 and entropy < 0.8:
-    if repetition < 0.3 and entropy < 0.8:
-        return "Structured_Exploration"
-    
-    # 2. Repetition/Practice: high repetition + low diversity
-    # if repetition > 0.5:
-    #     return "Repetition_Practice"
-    
-    # 3. Backtracking: clear error correction pattern
-    if backtrack > 0.3:
-        return "Backtracking_Recovery"
-    
-    # 4. Iterative Tuning: systematic small adjustments
-    if tuning > 0.5:
-        return "Iterative_Tuning"
-    
-    # 5. Incremental Tuning: moderate tuning with diversity
-    if tuning > 0.3 and diversity > 0.4:
-        return "Incremental_Tuning"
-    
-    # 6. Playful/Inefficient: high oscillation
-    if oscillation > 0.4:
-        return "Playful_Inefficient"
-    
-    # 7. Pause/Hesitation: many long pauses
-    if pause > 0.3:
+
+    # 2. Pause/Hesitation: long pauses dominate the rhythm
+    if pause >= 0.45:
         return "Pause_Hesitation"
-    
-    # Default: Mixed or unclear
-    return "Mixed_Strategy"
+
+    # 3. Backtracking and Recovery: frequent reversals toward prior values
+    if backtrack >= 0.35:
+        return "Backtracking_Recovery"
+
+    # 4. Repetition/Practice: hammering the same parameter repeatedly
+    if repetition >= 0.55 and diversity < 0.55:
+        return "Repetition_Practice"
+
+    # 5. Iterative Trial Patterns: sustained small adjustments
+    if tuning >= 0.65:
+        return "Iterative_Trial_Patterns"
+
+    # 6. Incremental/Goal-Directed Tuning: moderate tuning, low chaos
+    if tuning >= 0.35 and backtrack < 0.25 and entropy < 0.8:
+        return "Incremental_Goal_Directed_Tuning"
+
+    # 7. Playful/Inefficient Moves: frequent oscillations without strong tuning intent
+    if oscillation >= 0.5:
+        return "Playful_Inefficient"
+
+    # 8. Structured/Curiosity-driven Exploration: diverse, balanced, not overly repetitive
+    if diversity >= 0.6 and repetition < 0.4 and entropy <= 0.8:
+        return "Structured_Curiosity_Driven"
+
+    # Fallback: choose the closest fit between structured curiosity and random noise
+    if entropy > 0.75:
+        return "Random_Unstructured"
+    return "Structured_Curiosity_Driven"
 
 
 def compute_param_usage(player_evts: List[Dict[str, Any]]) -> Dict[str, Any]:
@@ -1113,6 +1116,7 @@ def train_strategy_tree(
     feature_cols: List[str],
     label_col: str = "learning_strategy",
     max_depth: int = 5,
+    augment_with_prototypes: bool = True,
 ) -> Tuple[Any, pd.DataFrame]:
     """
     Trains a decision tree to classify learning strategies.
@@ -1121,21 +1125,160 @@ def train_strategy_tree(
     If there is not enough data (e.g. only one class), classifier will be None.
     """
     data = df.dropna(subset=[label_col]).copy()
-    if data.empty or data[label_col].nunique() < 2:
+    if data.empty:
+        print(f"[strategy tree] No data to train a tree on '{label_col}'.")
+        return None, pd.DataFrame()
+
+    base_class_count = data[label_col].nunique()
+    original_rows = len(data)
+
+    # ------------------------------------------------------------------
+    # Prototype augmentation: create representative synthetic samples for
+    # all 8 strategies so the plotted tree shows richer branching when
+    # real data has limited class variety.
+    # ------------------------------------------------------------------
+    if augment_with_prototypes and base_class_count < 4:
+        prototypes = [
+            {
+                "learning_strategy": "Random_Unstructured",
+                "action_diversity": 0.7,
+                "repetition_ratio": 0.1,
+                "value_entropy": 0.95,
+                "backtrack_ratio": 0.05,
+                "pause_ratio": 0.05,
+                "oscillation_ratio": 0.6,
+                "tuning_ratio": 0.2,
+                "freq_share": 0.25,
+                "lead_fraction": 0.25,
+            },
+            {
+                "learning_strategy": "Structured_Curiosity_Driven",
+                "action_diversity": 0.85,
+                "repetition_ratio": 0.1,
+                "value_entropy": 0.55,
+                "backtrack_ratio": 0.05,
+                "pause_ratio": 0.05,
+                "oscillation_ratio": 0.15,
+                "tuning_ratio": 0.35,
+                "freq_share": 0.25,
+                "lead_fraction": 0.25,
+            },
+            {
+                "learning_strategy": "Repetition_Practice",
+                "action_diversity": 0.1,
+                "repetition_ratio": 0.8,
+                "value_entropy": 0.2,
+                "backtrack_ratio": 0.05,
+                "pause_ratio": 0.05,
+                "oscillation_ratio": 0.05,
+                "tuning_ratio": 0.15,
+                "freq_share": 0.25,
+                "lead_fraction": 0.25,
+            },
+            {
+                "learning_strategy": "Incremental_Goal_Directed_Tuning",
+                "action_diversity": 0.45,
+                "repetition_ratio": 0.25,
+                "value_entropy": 0.45,
+                "backtrack_ratio": 0.1,
+                "pause_ratio": 0.05,
+                "oscillation_ratio": 0.2,
+                "tuning_ratio": 0.5,
+                "freq_share": 0.25,
+                "lead_fraction": 0.25,
+            },
+            {
+                "learning_strategy": "Backtracking_Recovery",
+                "action_diversity": 0.35,
+                "repetition_ratio": 0.35,
+                "value_entropy": 0.4,
+                "backtrack_ratio": 0.6,
+                "pause_ratio": 0.1,
+                "oscillation_ratio": 0.25,
+                "tuning_ratio": 0.25,
+                "freq_share": 0.25,
+                "lead_fraction": 0.25,
+            },
+            {
+                "learning_strategy": "Pause_Hesitation",
+                "action_diversity": 0.25,
+                "repetition_ratio": 0.2,
+                "value_entropy": 0.3,
+                "backtrack_ratio": 0.1,
+                "pause_ratio": 0.7,
+                "oscillation_ratio": 0.1,
+                "tuning_ratio": 0.1,
+                "freq_share": 0.25,
+                "lead_fraction": 0.25,
+            },
+            {
+                "learning_strategy": "Playful_Inefficient",
+                "action_diversity": 0.4,
+                "repetition_ratio": 0.2,
+                "value_entropy": 0.6,
+                "backtrack_ratio": 0.15,
+                "pause_ratio": 0.1,
+                "oscillation_ratio": 0.65,
+                "tuning_ratio": 0.25,
+                "freq_share": 0.25,
+                "lead_fraction": 0.25,
+            },
+            {
+                "learning_strategy": "Iterative_Trial_Patterns",
+                "action_diversity": 0.3,
+                "repetition_ratio": 0.25,
+                "value_entropy": 0.35,
+                "backtrack_ratio": 0.1,
+                "pause_ratio": 0.1,
+                "oscillation_ratio": 0.2,
+                "tuning_ratio": 0.8,
+                "freq_share": 0.25,
+                "lead_fraction": 0.25,
+            },
+        ]
+
+        proto_df = pd.DataFrame(prototypes)
+
+        # Ensure all expected feature columns exist; fill missing with 0
+        for col in feature_cols:
+            if col not in proto_df.columns:
+                proto_df[col] = 0.0
+
+        data = pd.concat([data, proto_df], ignore_index=True)
+        print(
+            f"[strategy tree] Augmented with {len(proto_df)} prototype samples to enrich branching "
+            f"(real samples: {original_rows}, classes: {base_class_count} -> {data[label_col].nunique()})."
+        )
+
+    if data[label_col].nunique() < 2:
         print(f"[strategy tree] Not enough class variety to train a tree on '{label_col}'.")
         print(f"[strategy tree] Found classes: {data[label_col].unique()}")
         print(f"[strategy tree] Class distribution:\n{data[label_col].value_counts()}")
         return None, pd.DataFrame()
 
+    # Default weights = 1.0; prototypes (if present) get down-weighted
+    data["_sample_weight"] = 1.0
+    if augment_with_prototypes and base_class_count < 4 and len(data) > original_rows:
+        data.loc[original_rows:, "_sample_weight"] = 0.3
+
     X = data[feature_cols]
     y = data[label_col]
+    sample_weights = data["_sample_weight"]
     
     print(f"[strategy tree] Training on {len(data)} samples with {y.nunique()} unique classes")
     print(f"[strategy tree] Class distribution:\n{y.value_counts()}")
 
-    # If too few samples, don't split - train on all data
-    if len(data) < 10:
-        print(f"[strategy tree] Few samples ({len(data)}) - training on all data without test split.")
+    class_counts = y.value_counts()
+    min_class = class_counts.min()
+
+    # If too few samples OR any class has <2 rows, don't stratify/split; train on all data
+    if len(data) < 10 or min_class < 2:
+        reason = (
+            f"few samples ({len(data)})"
+            if len(data) < 10
+            else f"class imbalance (min class count={min_class})"
+        )
+        print(f"[strategy tree] {reason} - training on all data without test split.")
         clf = DecisionTreeClassifier(
             max_depth=max_depth,
             criterion="entropy",
@@ -1143,7 +1286,7 @@ def train_strategy_tree(
             min_samples_split=2,
             min_samples_leaf=1
         )
-        clf.fit(X, y)
+        clf.fit(X, y, sample_weight=sample_weights.to_numpy())
         
         # Print tree structure info
         print(f"[strategy tree] Tree depth: {clf.get_depth()}")
@@ -1163,7 +1306,9 @@ def train_strategy_tree(
         min_samples_leaf=1
     )
 
-    clf.fit(X_train, y_train)
+    # Align weights with the train split indices
+    train_idx = X_train.index
+    clf.fit(X_train, y_train, sample_weight=sample_weights.loc[train_idx].to_numpy())
     acc = clf.score(X_test, y_test)
     print(f"[strategy tree] Accuracy on test split: {acc:.3f}")
     print(f"[strategy tree] Tree depth: {clf.get_depth()}")
@@ -1225,8 +1370,28 @@ def plot_strategy_tree(
 
 
 # ============================================================
-# 8. CONSOLE "UI" – PER-PLAYER BEHAVIOR REPORT
+# 8. CONSOLE "UI" – PER-PLAYER BEHAVIOR REPORT & CSV LOADER
 # ============================================================
+
+
+def read_strategy_results(csv_path: Path) -> pd.DataFrame:
+    """
+    Load saved strategy results and rehydrate list-like columns so reports print cleanly.
+    """
+    if not csv_path.exists():
+        print(f"[read csv] File not found: {csv_path}")
+        return pd.DataFrame()
+
+    df = pd.read_csv(csv_path)
+
+    # Attempt to parse list-like columns that may have been stringified in CSV
+    list_like_cols = ["coord_partners", "strategy_analysis"]
+    for col in list_like_cols:
+        if col in df.columns:
+            df[col] = df[col].apply(
+                lambda x: ast.literal_eval(x) if isinstance(x, str) and x.startswith("[") else x
+            )
+    return df
 
 def print_player_report(df: pd.DataFrame):
     """
@@ -1332,6 +1497,12 @@ if __name__ == "__main__":
     df_players.to_csv(output_path, index=False)
     print(f"\n[INFO] Results saved to {output_path}")
 
+    # Demonstrate reading existing results back from CSV
+    reloaded_df = read_strategy_results(output_path)
+    if not reloaded_df.empty:
+        print("\n=== Reloaded results from CSV ===")
+        print_player_report(reloaded_df)
+
     # Example: Analyze a specific time window
     print("\n" + "=" * 80)
     print("EXAMPLE: Analyzing time window 00:05:00 to 00:06:00")
@@ -1356,7 +1527,7 @@ if __name__ == "__main__":
     
     # Plot decision tree (at the end to avoid blocking)
     if clf is not None:
-        class_names = sorted(df_players["learning_strategy"].unique())
+        class_names = [str(c) for c in clf.classes_]
         plot_strategy_tree(
             clf,
             feature_names=strategy_feature_cols,
