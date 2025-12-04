@@ -630,13 +630,7 @@ def _print_pred_rows_for_window(preds_df, view_start, view_end):
 # Call these right after the plot axes are prepared and before plt.show()
 # Example insertion point (inside plot_timeline or equivalent):
 # view_start, view_end should be the current x-axis limits or the time window you inspect
-try:
-    ax = plt.gca()
-    x0, x1 = ax.get_xlim()
-    _annotate_segment_boundaries(ax, df, segments, view_start=x0, view_end=x1)
-    _print_pred_rows_for_window(df, x0, x1)
-except Exception:
-    pass
+
 # --------------------------------------------------------------
 # Run as script
 # --------------------------------------------------------------
