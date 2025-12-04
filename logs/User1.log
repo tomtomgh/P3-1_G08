@@ -1,0 +1,123 @@
+00:00:11.1985781 [Info] B is in control.
+00:01:36.5211127 [Info] User sets phase shift to 5.811947.
+00:01:40.0674003 [Info] User sets phase shift to 0.5585054.
+00:02:35.0064077 [Info] User 0 sets frequency to 1.
+00:02:39.4318815 [Info] User 0 sets frequency to 0.1.
+00:03:14.0203995 [Info] User sets offset to 80.
+00:03:18.8655023 [Info] User sets amplitude to 9.6.
+00:03:22.4058227 [Info] User sets amplitude to 20.
+00:03:30.5036475 [Info] User 0 sets frequency to 0.3.
+00:04:04.5036723 [Info] User 0 sets frequency to 0.5.
+00:04:16.8679107 [Info] User sets offset to 130.
+00:04:38.5500778 [Info] User sets offset to 80.
+00:04:45.5444563 [Info] User sets offset to 100.
+00:05:00.3116629 [Info] User sets phase shift to 0.06981318.
+00:05:01.0940592 [Info] User sets phase shift to 0.03490659.
+00:05:07.9257144 [Info] User sets amplitude to 11.7.
+00:05:09.0750300 [Info] User sets amplitude to 9.2.
+00:05:12.8879270 [Info] User sets amplitude to 10.
+00:07:20.0736795 [Info] User 2 sets frequency to 0.
+00:07:21.7027509 [Info] User sets amplitude to 0.
+00:07:21.7029671 [Info] User sets phase shift to 0.
+00:07:21.7033938 [Info] User sets offset to 90.
+00:08:02.5544991 [Info] User 0 sets frequency to 0.1.
+00:08:08.9362700 [Info] User 0 sets frequency to 0.4.
+00:08:11.8802811 [Info] User sets offset to 100.
+00:08:14.7215403 [Info] User 0 sets frequency to 0.2.
+00:08:46.4070364 [Info] User 0 sets frequency to 0.5.
+00:08:49.0380727 [Info] User 0 sets frequency to 0.7.
+00:08:49.3671382 [Info] User 0 sets frequency to 0.6.
+00:09:37.2775343 [Info] User 0 sets frequency to 1.
+00:09:38.5047147 [Info] User 0 sets frequency to 1.1.
+00:09:39.0748933 [Info] User 0 sets frequency to 1.2.
+00:09:51.7342017 [Info] User 0 sets frequency to 0.5.
+00:10:09.8506148 [Info] User 0 sets frequency to 0.7.
+00:10:11.5045362 [Info] User 0 sets frequency to 0.8.
+00:10:11.9055716 [Info] User 0 sets frequency to 0.9.
+00:10:19.6842236 [Info] User 0 sets frequency to 0.8.
+00:10:19.8852858 [Info] User 0 sets frequency to 0.7.
+00:10:20.2686243 [Info] User 0 sets frequency to 0.6.
+00:10:20.2850108 [Info] User 0 sets frequency to 0.5.
+00:10:20.3034247 [Info] User 0 sets frequency to 0.4.
+00:10:20.3185117 [Info] User 0 sets frequency to 0.3.
+00:10:20.3512151 [Info] User 0 sets frequency to 0.2.
+00:10:20.3693080 [Info] User 0 sets frequency to 0.1.
+00:10:20.4345877 [Info] User 0 sets frequency to 0.
+00:10:23.9865455 [Info] User 0 sets frequency to 0.1.
+00:10:24.0026179 [Info] User 0 sets frequency to 0.2.
+00:10:24.0201329 [Info] User 0 sets frequency to 0.3.
+00:10:24.0520278 [Info] User 0 sets frequency to 0.4.
+00:10:24.1197364 [Info] User 0 sets frequency to 0.5.
+00:10:24.1376437 [Info] User 0 sets frequency to 0.6.
+00:10:24.1527438 [Info] User 0 sets frequency to 0.7.
+00:10:24.2020753 [Info] User 0 sets frequency to 0.8.
+00:10:24.2354070 [Info] User 0 sets frequency to 0.9.
+00:10:24.2523063 [Info] User 0 sets frequency to 1.
+00:10:24.5533353 [Info] User 0 sets frequency to 1.1.
+00:10:24.5856324 [Info] User 0 sets frequency to 1.2.
+00:10:24.6040409 [Info] User 0 sets frequency to 1.3.
+00:10:24.7191163 [Info] User 0 sets frequency to 1.4.
+00:10:25.3523473 [Info] User 0 sets frequency to 1.5.
+00:10:25.4345080 [Info] User 0 sets frequency to 1.6.
+00:10:28.5356451 [Info] User 0 sets frequency to 1.5.
+00:10:28.6036644 [Info] User 0 sets frequency to 1.4.
+00:10:28.7031916 [Info] User 0 sets frequency to 1.3.
+00:10:29.8859312 [Info] User 0 sets frequency to 1.2.
+00:10:29.9532124 [Info] User 0 sets frequency to 1.1.
+00:10:31.6024996 [Info] User 0 sets frequency to 1.
+00:10:32.0033461 [Info] User 0 sets frequency to 0.9.
+00:10:32.0685886 [Info] User 0 sets frequency to 0.8.
+00:10:32.6856841 [Info] User 0 sets frequency to 0.9.
+00:10:33.3521410 [Info] User 0 sets frequency to 1.
+00:10:37.5686450 [Info] User 0 sets frequency to 1.1.
+00:10:42.5437039 [Info] User 0 sets frequency to 0.6.
+00:10:47.7339261 [Info] User 0 sets frequency to 0.7.
+00:10:47.7526633 [Info] User 0 sets frequency to 0.8.
+00:10:47.9190095 [Info] User 0 sets frequency to 0.9.
+00:10:48.0362355 [Info] User 0 sets frequency to 1.
+00:10:48.1372465 [Info] User 0 sets frequency to 1.1.
+00:11:04.1228021 [Info] User 0 sets frequency to 0.9.
+00:11:04.4195890 [Info] User 0 sets frequency to 0.8.
+00:11:04.9356469 [Info] User 0 sets frequency to 0.9.
+00:11:10.9591183 [Info] User 0 sets frequency to 1.
+00:11:11.7358437 [Info] User 0 sets frequency to 1.1.
+00:11:12.0710179 [Info] User 0 sets frequency to 1.2.
+00:11:12.2201923 [Info] User 0 sets frequency to 1.3.
+00:11:12.5359365 [Info] User 0 sets frequency to 1.4.
+00:11:12.6541252 [Info] User 0 sets frequency to 1.5.
+00:11:13.2864752 [Info] User 0 sets frequency to 1.4.
+00:11:15.0358791 [Info] User 0 sets frequency to 1.3.
+00:11:15.4879783 [Info] User 0 sets frequency to 1.2.
+00:11:15.6534626 [Info] User 0 sets frequency to 1.1.
+00:11:15.7047442 [Info] User 0 sets frequency to 1.2.
+00:11:33.9407440 [Info] User 0 sets frequency to 0.9.
+00:11:45.5182999 [Info] User 0 sets frequency to 1.1.
+00:12:07.0762967 [Info] User sets offset to 120.
+00:12:23.5335277 [Info] User sets offset to 144.
+00:12:23.6723976 [Info] User sets offset to 148.
+00:12:23.6913392 [Info] User sets offset to 156.
+00:12:23.7061062 [Info] User sets offset to 164.
+00:12:23.7235912 [Info] User sets offset to 173.
+00:12:23.7413391 [Info] User sets offset to 177.
+00:12:23.7579235 [Info] User sets offset to 180.
+00:12:28.3620659 [Info] User sets offset to 78.
+00:12:36.5134911 [Info] User sets offset to 101.
+00:12:49.5648765 [Info] User sets offset to 120.
+00:13:09.5360433 [Info] User 0 sets frequency to 0.8.
+00:13:11.1703203 [Info] User 0 sets frequency to 0.7.
+00:13:47.3221766 [Info] User sets offset to 70.
+00:13:50.3949542 [Info] User sets offset to 90.
+00:13:55.0388830 [Info] User 0 sets frequency to 0.9.
+00:15:44.0492050 [Info] User sets amplitude to 20.
+00:15:51.0221339 [Info] User sets amplitude to 30.
+00:16:05.4763544 [Info] User sets amplitude to 40.
+00:16:21.0324259 [Info] User sets amplitude to 75.1.
+00:16:37.9337159 [Info] User sets amplitude to 0.
+00:17:43.3038434 [Info] User sets amplitude to 45.
+00:17:46.1916004 [Info] User sets offset to 144.
+00:17:50.7985427 [Info] User sets phase shift to 3.1415927.
+00:18:42.4661563 [Info] User 0 sets frequency to 0.
+00:18:44.1015595 [Info] User sets amplitude to 0.
+00:18:44.1018113 [Info] User sets phase shift to 0.
+00:18:44.1024555 [Info] User sets offset to 90.
+00:19:08.8516869 [Info] B is no longer in control.
