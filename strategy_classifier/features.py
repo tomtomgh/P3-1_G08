@@ -1,10 +1,72 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import Dict, Any, List, Tuple
-import numpy as np
 import pandas as pd
-from .constants import PARAMS
-from .segmentation import SpeedSegment, assign_events_to_segments
+import numpy as np
+
+# import segmentation helpers used by this module
+from .segmentation import assign_events_to_segments, SpeedSegment
+
+# import constants used in feature computations
+from strategy_classifier.constants import PARAMS
+
+def build_feature_table_for_session(
+    events: List[Dict[str, Any]],
+    segments: List[SpeedSegment],
+    session_id: str | None = None,
+) -> pd.DataFrame:
+    """
+    Produce one row per (segment, user). Guarantees `num_actions` and `has_events`
+    are present and that all features are computed from events filtered by user_id.
+    This prevents partner-induced leakage.
+    """
+    rows = []
+    # deduce users from events; fallback to 0-3 if none found
+    users = sorted({e.get("user_id") for e in events_sorted if e.get("user_id") is not None})
+    if not users:
+        users = [0, 1, 2, 3]
+
+    for seg_index, seg in enumerate(segments):
+        seg_start = getattr(seg, "start", getattr(seg, "starttime", None))
+        seg_end = getattr(seg, "end", getattr(seg, "endtime", None))
+        seg_dur = float(seg_end - seg_start) if seg_start is not None and seg_end is not None else 0.0
+
+        for user in users:
+            # per-user events inside this segment
+            evs = [
+                e for e in events
+                if e.get("user_id") == user
+                and ("timestamp_sec" in e and seg_start <= e["timestamp_sec"] < seg_end
+                     or "timestamp" in e and seg_start <= e["timestamp"] < seg_end)
+            ]
+            num_actions = len(evs)
+            has_events = 1 if num_actions > 0 else 0
+            action_rate = num_actions / seg_dur if seg_dur > 0 else 0.0
+
+            # minimal safe stats (you can replace with richer computations)
+            row = {
+                "session_id": session_id,
+                "user_id": user,
+                "seg_index": seg_index,
+                "seg_start": seg_start,
+                "seg_end": seg_end,
+                "segment_duration": seg_dur,
+                "num_actions": num_actions,
+                "has_events": has_events,
+                "action_rate": action_rate,
+            }
+
+            # ensure all DEFAULT_FEATURE_COLS exist with safe defaults
+            for col in DEFAULT_FEATURE_COLS:
+                if col not in row:
+                    row[col] = 0.0 if col not in ("has_events", "num_actions") else int(row.get(col, 0))
+
+            rows.append(row)
+
+    df = pd.DataFrame(rows)
+    # keep deterministic ordering
+    df = df.sort_values(["user_id", "seg_index"]).reset_index(drop=True)
+    return df
 
 @dataclass
 class SegmentFeatures:
@@ -187,55 +249,90 @@ def _coord_features(seg_events: List[Dict[str,Any]], users: List[int], window: f
     return res
 
 def build_feature_table_for_session(
-    events: List[Dict[str,Any]],
+    events: List[Dict[str, Any]],
     segments: List[SpeedSegment],
     session_id: str,
 ) -> pd.DataFrame:
     if not events or not segments:
         return pd.DataFrame()
-    events_sorted = sorted(events, key=lambda e:e["time"])
+
+    # normalize / sort events by a canonical timestamp field
+    def _evt_ts(e: Dict[str, Any]) -> float:
+        # prefer parser-standard "timestamp_sec", fall back to other common names, default 0.0
+        return float(e.get("timestamp_sec") or e.get("timestamp") or e.get("time") or 0.0)
+
+    events_sorted = sorted(events, key=_evt_ts)
+
     seg_map = assign_events_to_segments(events_sorted, segments)
-    users = sorted({e["user"] for e in events_sorted if e["user"] is not None})
+    users = sorted({e.get("user_id") for e in events_sorted if e.get("user_id") is not None})
     if not users:
         return pd.DataFrame()
-    rows: List[Dict[str,Any]]=[]
-    prev_cfg = {u:np.zeros(len(PARAMS)) for u in users}
-    prev2_cfg = {u:np.zeros(len(PARAMS)) for u in users}
-    prev_sp = {u:0.0 for u in users}
-    prev2_sp = {u:0.0 for u in users}
-    rep_run = {u:0 for u in users}
-    state = {u:_init_state() for u in users}
+
+    rows: List[Dict[str, Any]] = []
+    prev_cfg = {u: np.zeros(len(PARAMS)) for u in users}
+    prev2_cfg = {u: np.zeros(len(PARAMS)) for u in users}
+    prev_sp = {u: 0.0 for u in users}
+    prev2_sp = {u: 0.0 for u in users}
+    rep_run = {u: 0 for u in users}
+    state = {u: _init_state() for u in users}
     total_segs = len(segments)
-    segs_sorted = sorted(segments, key=lambda s:s.start)
+    segs_sorted = sorted(segments, key=lambda s: s.start)
+
     for idx, seg in enumerate(segs_sorted):
-        seg_evts = seg_map.get(seg.segment_id,[])
+        # normalize events for this segment so downstream code can use
+        # ev["time"] and ev["user"] (compat with older code)
+        seg_evts_raw = seg_map.get(seg.segment_id, [])
+        seg_evts = []
+        for ev in seg_evts_raw:
+            ev2 = ev.copy()
+            ev2["time"] = ev.get("timestamp_sec") or ev.get("timestamp") or ev.get("time") or ev.get("ts") or 0.0
+            # prefer explicit user_id but fall back to legacy 'user'
+            ev2["user"] = ev.get("user_id") if ev.get("user_id") is not None else ev.get("user")
+            # ensure param/value live at top-level (payload variants)
+            payload = ev.get("payload") or {}
+            if ev2.get("param") is None:
+                ev2["param"] = payload.get("param")
+            if ev2.get("value") is None:
+                ev2["value"] = payload.get("value")
+            seg_evts.append(ev2)
+
         coord = _coord_features(seg_evts, users)
-        by_user = {u:[] for u in users}
+
+        by_user = {u: [] for u in users}
         for ev in seg_evts:
             u = ev.get("user")
             if u in by_user:
                 by_user[u].append(ev)
+
         for u in users:
-            u_evts = sorted(by_user[u], key=lambda e:e["time"])
+            u_evts = sorted(by_user[u], key=lambda e: e["time"])
+            # ✅ Skip user if they made no valid parameter changes in this segment
+            if not any(ev["param"] in PARAMS for ev in u_evts):
+                continue
+
             for ev in u_evts:
                 if ev["param"] in PARAMS:
-                    state[u][ev["param"]]=float(ev["value"])
-            (num_actions,num_types,ent,dom,ms,vs,zig,undo,num_params,param_counts,sp_ratio)=_compute_action_stats(u_evts,state[u])
-            cfg_end = np.array([state[u].get(p,0.0) for p in PARAMS],dtype=float)
-            d_prev = float(np.linalg.norm(cfg_end-prev_cfg[u]))
-            d_prev2 = float(np.linalg.norm(cfg_end-prev2_cfg[u]))
-            if num_actions>0 and d_prev<0.05:
-                rep_run[u]+=1
-            elif num_actions>0:
-                rep_run[u]=1
+                    state[u][ev["param"]] = float(ev["value"])
+
+            (num_actions, num_types, ent, dom, ms, vs, zig, undo, num_params, param_counts, sp_ratio) = _compute_action_stats(u_evts, state[u])
+            cfg_end = np.array([state[u].get(p, 0.0) for p in PARAMS], dtype=float)
+            d_prev = float(np.linalg.norm(cfg_end - prev_cfg[u]))
+            d_prev2 = float(np.linalg.norm(cfg_end - prev2_cfg[u]))
+
+            if num_actions > 0 and d_prev < 0.05:
+                rep_run[u] += 1
+            elif num_actions > 0:
+                rep_run[u] = 1
+
             rate, mp = _time_features(u_evts, seg)
             m_speed = _trend_to_speed(seg.trend)
-            ds = m_speed-prev_sp[u]
-            ds2 = m_speed-prev2_sp[u]
-            seg_pos = idx/float(max(total_segs-1,1))
-            is_dull = 1 if str(seg.trend).lower()=="dull" else 0
-            dom_param_share = max(param_counts.values())/float(num_actions) if num_actions>0 and param_counts else 0.0
-            coord_ratio, coord_partners = coord.get(u,(0.0,0))
+            ds = m_speed - prev_sp[u]
+            ds2 = m_speed - prev2_sp[u]
+            seg_pos = idx / float(max(total_segs - 1, 1))
+            is_dull = 1 if str(seg.trend).lower() == "dull" else 0
+            dom_param_share = max(param_counts.values()) / float(num_actions) if num_actions > 0 and param_counts else 0.0
+            coord_ratio, coord_partners = coord.get(u, (0.0, 0))
+
             f = SegmentFeatures(
                 session_id=session_id,
                 user_id=u,
@@ -260,7 +357,7 @@ def build_feature_table_for_session(
                 mean_speed=m_speed,
                 delta_speed_prev=ds,
                 delta_speed_prev2=ds2,
-                has_events=1 if num_actions>0 else 0,
+                has_events=1 if num_actions > 0 else 0,
                 is_dull_speed=is_dull,
                 num_params_used=num_params,
                 dominant_param_share=dom_param_share,
@@ -270,8 +367,11 @@ def build_feature_table_for_session(
                 coord_num_partners=coord_partners,
             )
             rows.append(f.to_dict())
-            prev2_cfg[u]=prev_cfg[u]
-            prev_cfg[u]=cfg_end
-            prev2_sp[u]=prev_sp[u]
-            prev_sp[u]=m_speed
+
+            prev2_cfg[u] = prev_cfg[u]
+            prev_cfg[u] = cfg_end
+            prev2_sp[u] = prev_sp[u]
+            prev_sp[u] = m_speed
+
     return pd.DataFrame(rows)
+

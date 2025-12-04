@@ -53,6 +53,13 @@ def parse_log_file(path: Path, session_id: str) -> List[Dict[str, Any]]:
     """
     Parse a log file. If user ID is missing in the log line,
     infer it from the filename (e.g., User3.log → user=3).
+
+    Standardize output keys to:
+      - "session_id"
+      - "timestamp_sec"
+      - "user_id"
+      - "param"
+      - "value"
     """
     events = []
     inferred_user = infer_user_from_filename(path)
@@ -66,29 +73,34 @@ def parse_log_file(path: Path, session_id: str) -> List[Dict[str, Any]]:
             if not m:
                 continue
 
-            # Parse timestamp
+            # Parse timestamp (seconds)
             t = parse_time_to_seconds(m.group("time"))
-
-            # Determine user
+            
+            # Determine user: if explicitly stated in line (e.g., 'User 1 sets ...') use it
+            # otherwise, fall back to file-based inferred user
             user_str = m.group("user")
             if user_str is not None:
                 user = int(user_str)
+                # If the user in the log line does NOT match the file's user, SKIP this event
+                if inferred_user is not None and user != inferred_user:
+                    continue  # skip line: this change was made by another user
             else:
-                user = inferred_user   # <-- FIXED BEHAVIOR
+                user = inferred_user
 
             param = m.group("param")
             raw_val = m.group("value").rstrip(".")
             value = float(raw_val)
 
+            # standardized keys used by the rest of the pipeline
             events.append({
                 "session_id": session_id,
-                "time": t,
-                "user": user,
+                "timestamp_sec": t,
+                "user_id": user,
                 "param": param,
                 "value": value,
             })
 
-    events.sort(key=lambda e: e["time"])
+    events.sort(key=lambda e: e["timestamp_sec"])
     return events
 
 
@@ -100,7 +112,7 @@ def parse_session(log_paths: List[Path], session_id: str) -> List[Dict[str, Any]
     all_events = []
     for p in log_paths:
         all_events.extend(parse_log_file(p, session_id=session_id))
-    all_events.sort(key=lambda e: e["time"])
+    all_events.sort(key=lambda e: e["timestamp_sec"])
     return all_events
 
 

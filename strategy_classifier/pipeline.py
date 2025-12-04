@@ -5,6 +5,7 @@ import pandas as pd
 from .segmentation import build_segments_from_speed_csv, SpeedSegment
 from .features import build_feature_table_for_session
 from .trees import apply_all_strategies
+from .prediction_utils import enforce_inactive_guard
 
 def run_full_pipeline_for_session(
     events: List[Dict[str,Any]],
@@ -15,5 +16,11 @@ def run_full_pipeline_for_session(
 ) -> Tuple[pd.DataFrame, List[SpeedSegment]]:
     segments = build_segments_from_speed_csv(speed_csv_path, dull_max_duration, dull_window)
     df_feats = build_feature_table_for_session(events, segments, session_id=session_id)
-    df_pred = apply_all_strategies(df_feats)
+
+    # run rule-based strategy prediction / prob assignment
+    df_pred = apply_all_strategies(df_feats.copy())
+
+    # enforce inactive-rows guard AFTER predictions/probabilities are assigned
+    df_pred = enforce_inactive_guard(df_pred)
+
     return df_pred, segments

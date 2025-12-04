@@ -26,17 +26,18 @@ def load_data(csv_path: str | Path = "segment_strategy_predictions.csv") -> pd.D
 
 
 def compute_global_label(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    For each row, choose the strategy with the highest rule-based probability.
-    Adds column: global_strategy_label
-    """
     labels = []
     max_probs = []
 
     for _, row in df.iterrows():
+        # treat segments with no user actions as unlabeled
+        if int(row.get("has_events", 1)) == 0 or int(row.get("num_actions", 0)) == 0:
+            labels.append(None)
+            max_probs.append(0.0)
+            continue
+
         best_name = None
         best_prob = -1.0
-
         for strat in ALL_STRATEGIES:
             col = f"{strat}_prob"
             if col not in row:
@@ -49,14 +50,10 @@ def compute_global_label(df: pd.DataFrame) -> pd.DataFrame:
         labels.append(best_name)
         max_probs.append(best_prob)
 
-    df = df.copy()
-    df["global_strategy_label"] = labels
-    df["global_strategy_max_prob"] = max_probs
-
-    # Optionally: filter out rows where confidence is extremely low
-    # For now we keep everything; you could do:
-    # df = df[df["global_strategy_max_prob"] >= 0.2]
-    return df
+    df2 = df.copy()
+    df2["global_strategy_label"] = labels
+    df2["global_strategy_max_prob"] = max_probs
+    return df2
 
 
 def train_global_tree(
@@ -64,26 +61,24 @@ def train_global_tree(
     feature_cols=None,
     max_depth: int = 5,
 ) -> DecisionTreeClassifier:
-    """
-    Train a multi-class decision tree that predicts global_strategy_label
-    from the feature columns.
-    """
     if feature_cols is None:
         feature_cols = DEFAULT_FEATURE_COLS
 
-    # Drop rows without a label
+    if "global_strategy_label" not in df.columns:
+        df = compute_global_label(df)
+
+    # drop rows without label and rows with no events to avoid leakage
     df_train = df.dropna(subset=["global_strategy_label"]).copy()
+    if "has_events" in df_train.columns:
+        df_train = df_train[df_train["has_events"].astype(int) > 0].copy()
+
     if df_train.empty:
         raise RuntimeError("No labeled rows available to train the global tree.")
 
     X = df_train[feature_cols]
     y = df_train["global_strategy_label"]
 
-    clf = DecisionTreeClassifier(
-        max_depth=max_depth,
-        criterion="entropy",
-        random_state=42,
-    )
+    clf = DecisionTreeClassifier(max_depth=max_depth, criterion="entropy", random_state=42)
     clf.fit(X, y)
 
     # Simple training accuracy (just to see it works)
