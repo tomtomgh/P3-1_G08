@@ -7,12 +7,12 @@
 
 import pandas as pd
 import matplotlib.pyplot as plt
-<<<<<<< Updated upstream
+
 import matplotlib.colors as mcolors
-=======
+
 from pathlib import Path
 from bisect import bisect_right
->>>>>>> Stashed changes
+
 from matplotlib.widgets import Slider, Button
 from matplotlib.patches import Rectangle
 from pathlib import Path
@@ -34,8 +34,6 @@ def load_speed_series():
     return df
 
 
-<<<<<<< Updated upstream
-=======
 # --------------------------------------------------------------
 # Parameter timelines
 # --------------------------------------------------------------
@@ -144,7 +142,6 @@ def format_param_label(user, snapshot):
 # --------------------------------------------------------------
 # Colors for strategies
 # --------------------------------------------------------------
->>>>>>> Stashed changes
 def build_strategy_colors():
     base = list(mcolors.TABLEAU_COLORS.values()) + list(mcolors.CSS4_COLORS.values())
     return {strat: base[i % len(base)] for i, strat in enumerate(ALL_STRATEGIES)}
@@ -524,12 +521,12 @@ def plot_timeline():
     df = load_predictions()
     df_trends = load_speed_trends()
     df_speed = load_speed_series()
-<<<<<<< Updated upstream
+
     strat_colors = build_strategy_colors()
 
     viewer = StrategyTimelineUI(df, df_trends, df_speed, strat_colors)
     viewer.show()
-=======
+
     param_events = load_parameter_events()
     user_param_timelines, shared_param_timelines = build_parameter_timelines(
         param_events,
@@ -550,11 +547,9 @@ def plot_timeline():
             if user in users:
                 freq_events.append((t, user))
     freq_events.sort(key=lambda x: x[0])
->>>>>>> Stashed changes
 
 
-<<<<<<< Updated upstream
-=======
+
     # ----------------------------------------------------------
     # Build figure
     # ----------------------------------------------------------
@@ -883,6 +878,6 @@ def plot_timeline():
 # --------------------------------------------------------------
 # Run as script
 # --------------------------------------------------------------
->>>>>>> Stashed changes
+
 if __name__ == "__main__":
     plot_timeline()
