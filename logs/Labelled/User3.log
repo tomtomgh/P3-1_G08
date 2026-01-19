@@ -1,0 +1,1297 @@
+00:00:27.5992861 [Info] C is in control.
+00:00:38.5595987 [Info] User 0 sets frequency to 0.2.
+00:00:39.1462060 [Info] User 2 sets frequency to 0.
+00:00:57.7656928 [Info] User sets phase shift to 6.2308254.
+00:00:57.7845264 [Info] User sets phase shift to 5.8992133.
+00:00:57.8108565 [Info] User sets phase shift to 5.742133.
+00:00:57.8119303 [Info] User sets phase shift to 5.6548667.
+00:00:57.8517813 [Info] User sets phase shift to 5.585054.
+00:00:57.8521336 [Info] User sets phase shift to 5.5676007.
+00:00:57.8524303 [Info] User sets phase shift to 5.4803343.
+00:00:57.8715995 [Info] User sets phase shift to 5.393068.
+00:00:57.8722122 [Info] User sets phase shift to 5.323254.
+00:00:57.8875629 [Info] User sets phase shift to 5.2185345.
+00:00:57.9037940 [Info] User sets phase shift to 5.113815.
+00:00:57.9204878 [Info] User sets phase shift to 5.0265484.
+00:00:57.9381544 [Info] User sets phase shift to 4.991642.
+00:00:57.9529842 [Info] User sets phase shift to 4.939282.
+00:00:57.9688054 [Info] User sets phase shift to 4.9218287.
+00:00:57.9870942 [Info] User sets phase shift to 4.8694687.
+00:00:58.0009579 [Info] User sets phase shift to 4.8345623.
+00:00:58.0210524 [Info] User sets phase shift to 4.8171086.
+00:00:58.0666014 [Info] User sets phase shift to 4.7996554.
+00:00:58.3672566 [Info] User sets phase shift to 4.8171086.
+00:00:58.4180992 [Info] User sets phase shift to 4.8520155.
+00:00:58.4513640 [Info] User sets phase shift to 4.8694687.
+00:00:58.4710505 [Info] User sets phase shift to 4.8869224.
+00:00:58.7833672 [Info] User sets phase shift to 4.904375.
+00:00:58.8835336 [Info] User sets phase shift to 4.9218287.
+00:00:58.9001825 [Info] User sets phase shift to 4.939282.
+00:00:58.9498070 [Info] User sets phase shift to 4.974189.
+00:00:58.9678401 [Info] User sets phase shift to 5.0090947.
+00:01:00.2693407 [Info] User sets offset to 87.
+00:01:00.3971805 [Info] User sets offset to 82.
+00:01:00.4027145 [Info] User sets offset to 80.
+00:01:00.4163208 [Info] User sets offset to 78.
+00:01:00.4315100 [Info] User sets offset to 77.
+00:01:00.4498613 [Info] User sets offset to 73.
+00:01:00.4663493 [Info] User sets offset to 70.
+00:01:00.4831964 [Info] User sets offset to 68.
+00:01:00.4996455 [Info] User sets offset to 67.
+00:01:00.5328538 [Info] User sets offset to 65.
+00:01:00.5639852 [Info] User sets offset to 64.
+00:01:00.5834289 [Info] User sets offset to 63.
+00:01:00.6222537 [Info] User sets offset to 62.
+00:01:00.6634804 [Info] User sets offset to 61.
+00:01:00.7671517 [Info] User sets offset to 60.
+00:01:00.8969732 [Info] User sets offset to 59.
+00:01:02.4682941 [Info] User sets offset to 66.
+00:01:02.6147580 [Info] User sets offset to 72.
+00:01:02.6394338 [Info] User sets offset to 75.
+00:01:02.6744924 [Info] User sets offset to 77.
+00:01:02.6830880 [Info] User sets offset to 79.
+00:01:02.7021890 [Info] User sets offset to 82.
+00:01:02.7170601 [Info] User sets offset to 83.
+00:01:02.7336019 [Info] User sets offset to 84.
+00:01:02.7479787 [Info] User sets offset to 85.
+00:01:02.7646733 [Info] User sets offset to 87.
+00:01:02.7809863 [Info] User sets offset to 88.
+00:01:02.7983279 [Info] User sets offset to 90.
+00:01:02.8149168 [Info] User sets offset to 91.
+00:01:02.8312110 [Info] User sets offset to 92.
+00:01:02.8484229 [Info] User sets offset to 93.
+00:01:02.8647100 [Info] User sets offset to 95.
+00:01:02.8826425 [Info] User sets offset to 96.
+00:01:02.8999028 [Info] User sets offset to 97.
+00:01:02.9162603 [Info] User sets offset to 98.
+00:01:02.9332270 [Info] User sets offset to 99.
+00:01:02.9506599 [Info] User sets offset to 101.
+00:01:02.9660601 [Info] User sets offset to 102.
+00:01:02.9836755 [Info] User sets offset to 103.
+00:01:03.0143355 [Info] User sets offset to 104.
+00:01:03.0328473 [Info] User sets offset to 105.
+00:01:03.0640931 [Info] User sets offset to 106.
+00:01:03.1136714 [Info] User sets offset to 107.
+00:01:03.1478382 [Info] User sets offset to 108.
+00:01:03.1965885 [Info] User sets offset to 109.
+00:01:04.6131218 [Info] User sets offset to 116.
+00:01:04.6175088 [Info] User sets offset to 117.
+00:01:04.6339593 [Info] User sets offset to 118.
+00:01:04.6472492 [Info] User sets offset to 120.
+00:01:04.6645512 [Info] User sets offset to 122.
+00:01:04.6842894 [Info] User sets offset to 123.
+00:01:04.7000516 [Info] User sets offset to 125.
+00:01:04.7142752 [Info] User sets offset to 126.
+00:01:04.7321235 [Info] User sets offset to 127.
+00:01:04.7498804 [Info] User sets offset to 129.
+00:01:04.7705313 [Info] User sets offset to 130.
+00:01:04.7925663 [Info] User sets offset to 132.
+00:01:04.7996164 [Info] User sets offset to 133.
+00:01:04.8159373 [Info] User sets offset to 135.
+00:01:04.8327924 [Info] User sets offset to 136.
+00:01:04.8492146 [Info] User sets offset to 138.
+00:01:04.8662650 [Info] User sets offset to 139.
+00:01:04.9004620 [Info] User sets offset to 140.
+00:01:04.9311129 [Info] User sets offset to 141.
+00:01:04.9482729 [Info] User sets offset to 142.
+00:01:04.9811772 [Info] User sets offset to 143.
+00:01:05.0641792 [Info] User sets offset to 144.
+00:01:13.3967983 [Info] User sets amplitude to 4.1.
+00:01:13.4144999 [Info] User sets amplitude to 5.
+00:01:13.4342263 [Info] User sets amplitude to 5.6.
+00:01:13.4490167 [Info] User sets amplitude to 6.3.
+00:01:13.4640477 [Info] User sets amplitude to 7.3.
+00:01:13.4836188 [Info] User sets amplitude to 8.
+00:01:13.4980444 [Info] User sets amplitude to 9.1.
+00:01:13.5135116 [Info] User sets amplitude to 9.6.
+00:01:13.5332283 [Info] User sets amplitude to 10.1.
+00:01:13.5501317 [Info] User sets amplitude to 10.6.
+00:01:13.5649667 [Info] User sets amplitude to 11.1.
+00:01:13.5808676 [Info] User sets amplitude to 11.5.
+00:01:13.5978941 [Info] User sets amplitude to 12.2.
+00:01:13.6152282 [Info] User sets amplitude to 12.5.
+00:01:13.6329774 [Info] User sets amplitude to 12.9.
+00:01:13.6496236 [Info] User sets amplitude to 13.3.
+00:01:13.6637899 [Info] User sets amplitude to 13.7.
+00:01:13.6812294 [Info] User sets amplitude to 13.9.
+00:01:13.6990465 [Info] User sets amplitude to 14.1.
+00:01:13.7143847 [Info] User sets amplitude to 14.2.
+00:01:13.7302456 [Info] User sets amplitude to 14.5.
+00:01:13.7489508 [Info] User sets amplitude to 14.6.
+00:01:13.8455395 [Info] User sets amplitude to 14.7.
+00:01:13.9137107 [Info] User sets amplitude to 14.8.
+00:01:14.3645506 [Info] User sets amplitude to 14.7.
+00:01:14.3816061 [Info] User sets amplitude to 14.6.
+00:01:14.3984879 [Info] User sets amplitude to 14.4.
+00:01:14.4158013 [Info] User sets amplitude to 14.2.
+00:01:14.4308839 [Info] User sets amplitude to 14.
+00:01:14.4479070 [Info] User sets amplitude to 13.8.
+00:01:14.4664074 [Info] User sets amplitude to 13.5.
+00:01:14.4819019 [Info] User sets amplitude to 13.3.
+00:01:14.5136051 [Info] User sets amplitude to 13.1.
+00:01:14.5316318 [Info] User sets amplitude to 12.8.
+00:01:14.5511034 [Info] User sets amplitude to 12.7.
+00:01:14.5637514 [Info] User sets amplitude to 12.5.
+00:01:14.6302707 [Info] User sets amplitude to 12.4.
+00:01:14.6484478 [Info] User sets amplitude to 12.2.
+00:01:14.6823022 [Info] User sets amplitude to 11.9.
+00:01:14.7148173 [Info] User sets amplitude to 11.8.
+00:01:14.7310015 [Info] User sets amplitude to 11.7.
+00:01:14.7519278 [Info] User sets amplitude to 11.5.
+00:01:14.7815329 [Info] User sets amplitude to 11.4.
+00:01:16.3179559 [Info] User 1 sets frequency to 0.1.
+00:01:16.7534792 [Info] User 1 sets frequency to 0.2.
+00:01:19.6666812 [Info] User 2 sets frequency to 0.3.
+00:01:19.8493559 [Info] User 2 sets frequency to 0.4.
+00:01:20.2149790 [Info] User 2 sets frequency to 0.5.
+00:01:20.5661077 [Info] User 2 sets frequency to 0.6.
+00:01:21.0996140 [Info] User 2 sets frequency to 0.7.
+00:01:26.3460469 [Info] User sets offset to 143.
+00:01:26.4803601 [Info] User sets offset to 139.
+00:01:26.4849735 [Info] User sets offset to 138.
+00:01:26.4978664 [Info] User sets offset to 137.
+00:01:26.5143976 [Info] User sets offset to 135.
+00:01:26.5328077 [Info] User sets offset to 134.
+00:01:26.5473947 [Info] User sets offset to 133.
+00:01:26.5683992 [Info] User sets offset to 132.
+00:01:26.5821352 [Info] User sets offset to 131.
+00:01:26.5980446 [Info] User sets offset to 130.
+00:01:26.6180709 [Info] User sets offset to 128.
+00:01:26.6345173 [Info] User sets offset to 127.
+00:01:26.6506019 [Info] User sets offset to 126.
+00:01:26.6660353 [Info] User sets offset to 125.
+00:01:26.6828756 [Info] User sets offset to 123.
+00:01:26.6987926 [Info] User sets offset to 121.
+00:01:26.7327401 [Info] User sets offset to 120.
+00:01:26.7506103 [Info] User sets offset to 119.
+00:01:26.7656742 [Info] User sets offset to 118.
+00:01:26.7985036 [Info] User sets offset to 117.
+00:01:26.8165991 [Info] User sets offset to 116.
+00:01:26.8555160 [Info] User sets offset to 115.
+00:01:26.8668691 [Info] User sets offset to 114.
+00:01:26.9018741 [Info] User sets offset to 113.
+00:01:26.9177181 [Info] User sets offset to 112.
+00:01:26.9340974 [Info] User sets offset to 111.
+00:01:26.9527120 [Info] User sets offset to 110.
+00:01:27.0006559 [Info] User sets offset to 109.
+00:01:27.0383635 [Info] User sets offset to 108.
+00:01:27.0816872 [Info] User sets offset to 107.
+00:01:27.1144309 [Info] User sets offset to 106.
+00:01:27.1965979 [Info] User sets offset to 105.
+00:01:40.2108668 [Info] User sets amplitude to 14.8.
+00:01:40.3660850 [Info] User sets amplitude to 17.3.
+00:01:40.3838234 [Info] User sets amplitude to 17.7.
+00:01:40.3970401 [Info] User sets amplitude to 18.
+00:01:40.4155079 [Info] User sets amplitude to 18.4.
+00:01:40.4333363 [Info] User sets amplitude to 18.7.
+00:01:40.4496904 [Info] User sets amplitude to 19.1.
+00:01:40.4646546 [Info] User sets amplitude to 19.4.
+00:01:40.4830132 [Info] User sets amplitude to 19.8.
+00:01:40.4989659 [Info] User sets amplitude to 20.
+00:01:40.5174283 [Info] User sets amplitude to 20.4.
+00:01:40.5336827 [Info] User sets amplitude to 20.9.
+00:01:40.5494576 [Info] User sets amplitude to 21.1.
+00:01:40.5707531 [Info] User sets amplitude to 21.3.
+00:01:40.5829095 [Info] User sets amplitude to 21.4.
+00:01:40.5988675 [Info] User sets amplitude to 21.6.
+00:01:40.6168375 [Info] User sets amplitude to 21.7.
+00:01:40.6306008 [Info] User sets amplitude to 21.8.
+00:01:40.6488681 [Info] User sets amplitude to 21.9.
+00:01:40.6640776 [Info] User sets amplitude to 22.
+00:01:40.7140851 [Info] User sets amplitude to 22.2.
+00:01:48.1523213 [Info] User 0 sets frequency to 0.6.
+00:01:48.2347590 [Info] User 0 sets frequency to 0.5.
+00:01:49.5182338 [Info] User 0 sets frequency to 0.6.
+00:01:49.6023656 [Info] User 0 sets frequency to 0.7.
+00:01:51.4351706 [Info] User 0 sets frequency to 0.6.
+00:02:51.5657747 [Info] User 2 sets frequency to 0.2.
+00:02:51.8995454 [Info] User 2 sets frequency to 0.1.
+00:02:51.9173780 [Info] User 2 sets frequency to 0.
+00:02:56.5725596 [Info] User sets offset to 109.
+00:02:56.6110265 [Info] User sets offset to 103.
+00:02:56.6155306 [Info] User sets offset to 102.
+00:02:56.6341320 [Info] User sets offset to 101.
+00:02:56.6497157 [Info] User sets offset to 99.
+00:02:56.6674819 [Info] User sets offset to 97.
+00:02:56.6850896 [Info] User sets offset to 96.
+00:02:56.6996275 [Info] User sets offset to 95.
+00:02:56.7195799 [Info] User sets offset to 94.
+00:02:56.7344847 [Info] User sets offset to 92.
+00:02:56.7508307 [Info] User sets offset to 90.
+00:02:56.7665525 [Info] User sets offset to 88.
+00:02:56.7854765 [Info] User sets offset to 87.
+00:02:56.8002410 [Info] User sets offset to 86.
+00:02:56.8191946 [Info] User sets offset to 84.
+00:02:56.8395167 [Info] User sets offset to 81.
+00:02:56.8500532 [Info] User sets offset to 80.
+00:02:56.8679973 [Info] User sets offset to 78.
+00:02:56.8845405 [Info] User sets offset to 75.
+00:02:56.9018750 [Info] User sets offset to 73.
+00:02:56.9179920 [Info] User sets offset to 71.
+00:02:56.9506116 [Info] User sets offset to 70.
+00:02:56.9686081 [Info] User sets offset to 67.
+00:02:56.9869688 [Info] User sets offset to 66.
+00:02:57.0031364 [Info] User sets offset to 64.
+00:02:57.0152050 [Info] User sets offset to 63.
+00:02:57.0535602 [Info] User sets offset to 62.
+00:02:57.0664249 [Info] User sets offset to 61.
+00:02:57.0834552 [Info] User sets offset to 60.
+00:02:57.1007857 [Info] User sets offset to 59.
+00:02:57.1320626 [Info] User sets offset to 58.
+00:02:57.1669233 [Info] User sets offset to 57.
+00:02:57.2167462 [Info] User sets offset to 56.
+00:02:57.3646434 [Info] User sets offset to 55.
+00:02:57.4809678 [Info] User sets offset to 54.
+00:02:57.8150969 [Info] User sets offset to 53.
+00:02:58.1308815 [Info] User sets offset to 52.
+00:02:58.2053259 [Info] User sets offset to 51.
+00:02:58.2481677 [Info] User sets offset to 50.
+00:02:58.2980121 [Info] User sets offset to 49.
+00:02:58.3483412 [Info] User sets offset to 48.
+00:02:58.3836955 [Info] User sets offset to 47.
+00:02:58.4020731 [Info] User sets offset to 46.
+00:02:58.4337933 [Info] User sets offset to 45.
+00:02:58.4522780 [Info] User sets offset to 44.
+00:02:58.4703805 [Info] User sets offset to 43.
+00:02:58.4861074 [Info] User sets offset to 41.
+00:02:58.5004784 [Info] User sets offset to 40.
+00:02:58.5174179 [Info] User sets offset to 39.
+00:02:58.5348795 [Info] User sets offset to 38.
+00:02:58.5485336 [Info] User sets offset to 36.
+00:02:58.5671696 [Info] User sets offset to 34.
+00:02:58.5835009 [Info] User sets offset to 33.
+00:02:58.6002128 [Info] User sets offset to 31.
+00:02:58.6158933 [Info] User sets offset to 28.
+00:02:58.6345474 [Info] User sets offset to 25.
+00:02:58.6512654 [Info] User sets offset to 23.
+00:02:58.6688644 [Info] User sets offset to 20.
+00:02:58.6853846 [Info] User sets offset to 18.
+00:02:58.7028329 [Info] User sets offset to 16.
+00:02:58.7381578 [Info] User sets offset to 14.
+00:02:58.7384465 [Info] User sets offset to 13.
+00:02:58.7536549 [Info] User sets offset to 11.
+00:02:58.7707089 [Info] User sets offset to 9.
+00:02:58.7845817 [Info] User sets offset to 8.
+00:02:58.7992122 [Info] User sets offset to 7.
+00:02:58.8175622 [Info] User sets offset to 6.
+00:02:58.8329361 [Info] User sets offset to 5.
+00:02:58.8558542 [Info] User sets offset to 4.
+00:02:58.8669820 [Info] User sets offset to 3.
+00:02:58.8851029 [Info] User sets offset to 2.
+00:02:58.9151636 [Info] User sets offset to 1.
+00:02:58.9478823 [Info] User sets offset to 0.
+00:03:05.2481445 [Info] User sets offset to 12.
+00:03:05.3321886 [Info] User sets offset to 20.
+00:03:05.3397577 [Info] User sets offset to 21.
+00:03:05.3505333 [Info] User sets offset to 23.
+00:03:05.3682692 [Info] User sets offset to 28.
+00:03:05.3836838 [Info] User sets offset to 30.
+00:03:05.4023168 [Info] User sets offset to 33.
+00:03:05.4178492 [Info] User sets offset to 35.
+00:03:05.4325831 [Info] User sets offset to 37.
+00:03:05.4486829 [Info] User sets offset to 39.
+00:03:05.4670068 [Info] User sets offset to 41.
+00:03:05.4829019 [Info] User sets offset to 43.
+00:03:05.4999632 [Info] User sets offset to 45.
+00:03:05.5177674 [Info] User sets offset to 46.
+00:03:05.5320210 [Info] User sets offset to 49.
+00:03:05.5489847 [Info] User sets offset to 50.
+00:03:05.5659990 [Info] User sets offset to 52.
+00:03:05.5824532 [Info] User sets offset to 54.
+00:03:05.6011986 [Info] User sets offset to 57.
+00:03:05.6166753 [Info] User sets offset to 59.
+00:03:05.6337390 [Info] User sets offset to 62.
+00:03:05.6502823 [Info] User sets offset to 64.
+00:03:05.6658856 [Info] User sets offset to 67.
+00:03:05.6843418 [Info] User sets offset to 70.
+00:03:05.6989877 [Info] User sets offset to 73.
+00:03:05.7163655 [Info] User sets offset to 76.
+00:03:05.7314306 [Info] User sets offset to 80.
+00:03:05.7494306 [Info] User sets offset to 83.
+00:03:05.7682888 [Info] User sets offset to 87.
+00:03:05.7832939 [Info] User sets offset to 89.
+00:03:05.7989967 [Info] User sets offset to 92.
+00:03:05.8180116 [Info] User sets offset to 96.
+00:03:05.8331082 [Info] User sets offset to 100.
+00:03:05.8490865 [Info] User sets offset to 104.
+00:03:05.8706031 [Info] User sets offset to 106.
+00:03:05.8851175 [Info] User sets offset to 111.
+00:03:05.9026532 [Info] User sets offset to 116.
+00:03:05.9207689 [Info] User sets offset to 122.
+00:03:05.9348060 [Info] User sets offset to 126.
+00:03:05.9505420 [Info] User sets offset to 129.
+00:03:05.9701115 [Info] User sets offset to 134.
+00:03:05.9833967 [Info] User sets offset to 139.
+00:03:06.0022906 [Info] User sets offset to 142.
+00:03:06.0172028 [Info] User sets offset to 144.
+00:03:06.0317755 [Info] User sets offset to 147.
+00:03:06.0509559 [Info] User sets offset to 149.
+00:03:06.0673803 [Info] User sets offset to 151.
+00:03:06.0837939 [Info] User sets offset to 153.
+00:03:06.1006831 [Info] User sets offset to 155.
+00:03:06.1183339 [Info] User sets offset to 156.
+00:03:06.1361889 [Info] User sets offset to 158.
+00:03:06.1523409 [Info] User sets offset to 160.
+00:03:06.1689666 [Info] User sets offset to 161.
+00:03:06.1846469 [Info] User sets offset to 163.
+00:03:06.2026417 [Info] User sets offset to 165.
+00:03:06.2174937 [Info] User sets offset to 166.
+00:03:06.2340937 [Info] User sets offset to 168.
+00:03:06.2562694 [Info] User sets offset to 169.
+00:03:06.2699935 [Info] User sets offset to 170.
+00:03:06.2839488 [Info] User sets offset to 171.
+00:03:06.3011779 [Info] User sets offset to 172.
+00:03:06.3337856 [Info] User sets offset to 173.
+00:03:06.3709654 [Info] User sets offset to 174.
+00:03:06.3838291 [Info] User sets offset to 175.
+00:03:06.4162845 [Info] User sets offset to 176.
+00:03:06.4483174 [Info] User sets offset to 177.
+00:03:06.4978270 [Info] User sets offset to 178.
+00:03:06.5351259 [Info] User sets offset to 179.
+00:03:06.5833068 [Info] User sets offset to 180.
+00:03:34.5978210 [Info] User sets phase shift to 4.8171086.
+00:03:34.6070183 [Info] User sets phase shift to 4.7996554.
+00:03:34.6218500 [Info] User sets phase shift to 4.764749.
+00:03:34.6734517 [Info] User sets phase shift to 4.729842.
+00:03:34.6866439 [Info] User sets phase shift to 4.712389.
+00:03:34.7044581 [Info] User sets phase shift to 4.694936.
+00:03:34.7243556 [Info] User sets phase shift to 4.6774826.
+00:03:34.7549086 [Info] User sets phase shift to 4.6600294.
+00:03:34.8036828 [Info] User sets phase shift to 4.6425757.
+00:03:34.8217247 [Info] User sets phase shift to 4.6251225.
+00:03:34.8396378 [Info] User sets phase shift to 4.6076694.
+00:03:34.8558363 [Info] User sets phase shift to 4.572763.
+00:03:34.8732630 [Info] User sets phase shift to 4.55531.
+00:03:34.9053140 [Info] User sets phase shift to 4.537856.
+00:03:34.9213666 [Info] User sets phase shift to 4.502949.
+00:03:34.9365404 [Info] User sets phase shift to 4.485496.
+00:03:34.9552877 [Info] User sets phase shift to 4.4680433.
+00:03:34.9706148 [Info] User sets phase shift to 4.4331365.
+00:03:34.9884230 [Info] User sets phase shift to 4.4156833.
+00:03:35.0043858 [Info] User sets phase shift to 4.3982296.
+00:03:35.0204811 [Info] User sets phase shift to 4.3807764.
+00:03:35.0409052 [Info] User sets phase shift to 4.363323.
+00:03:35.0544924 [Info] User sets phase shift to 4.34587.
+00:03:35.0716551 [Info] User sets phase shift to 4.310963.
+00:03:35.0894495 [Info] User sets phase shift to 4.29351.
+00:03:35.1074955 [Info] User sets phase shift to 4.276057.
+00:03:35.1202786 [Info] User sets phase shift to 4.2586036.
+00:03:35.1399615 [Info] User sets phase shift to 4.2411504.
+00:03:35.1584741 [Info] User sets phase shift to 4.2062435.
+00:03:35.5031206 [Info] User sets phase shift to 4.2236967.
+00:03:35.5198147 [Info] User sets phase shift to 4.2411504.
+00:03:35.5544116 [Info] User sets phase shift to 4.276057.
+00:03:35.5876379 [Info] User sets phase shift to 4.29351.
+00:03:35.6040256 [Info] User sets phase shift to 4.310963.
+00:03:35.6524809 [Info] User sets phase shift to 4.34587.
+00:03:35.7038022 [Info] User sets phase shift to 4.363323.
+00:03:35.7365278 [Info] User sets phase shift to 4.3982296.
+00:03:35.7873622 [Info] User sets phase shift to 4.4156833.
+00:03:35.8043232 [Info] User sets phase shift to 4.4505897.
+00:03:35.8532019 [Info] User sets phase shift to 4.4680433.
+00:03:35.8871554 [Info] User sets phase shift to 4.485496.
+00:03:35.9023137 [Info] User sets phase shift to 4.502949.
+00:03:35.9244933 [Info] User sets phase shift to 4.520403.
+00:03:35.9382155 [Info] User sets phase shift to 4.55531.
+00:03:35.9707495 [Info] User sets phase shift to 4.572763.
+00:03:36.0027551 [Info] User sets phase shift to 4.590216.
+00:03:36.0214921 [Info] User sets phase shift to 4.6076694.
+00:03:36.0384029 [Info] User sets phase shift to 4.6251225.
+00:03:36.0547188 [Info] User sets phase shift to 4.6425757.
+00:03:36.0726076 [Info] User sets phase shift to 4.6600294.
+00:03:36.0903523 [Info] User sets phase shift to 4.6774826.
+00:03:36.1060689 [Info] User sets phase shift to 4.694936.
+00:03:36.1232934 [Info] User sets phase shift to 4.729842.
+00:03:36.1377244 [Info] User sets phase shift to 4.764749.
+00:03:36.1548257 [Info] User sets phase shift to 4.7822022.
+00:03:36.1715033 [Info] User sets phase shift to 4.7996554.
+00:03:36.1867872 [Info] User sets phase shift to 4.8345623.
+00:03:36.2032917 [Info] User sets phase shift to 4.8520155.
+00:03:36.2409023 [Info] User sets phase shift to 4.8694687.
+00:03:36.2556281 [Info] User sets phase shift to 4.8869224.
+00:03:36.2878687 [Info] User sets phase shift to 4.904375.
+00:03:36.3060643 [Info] User sets phase shift to 4.939282.
+00:03:36.3372544 [Info] User sets phase shift to 4.956735.
+00:03:36.3736870 [Info] User sets phase shift to 4.974189.
+00:03:36.4228671 [Info] User sets phase shift to 4.991642.
+00:03:36.4384240 [Info] User sets phase shift to 5.0090947.
+00:03:36.5069924 [Info] User sets phase shift to 5.0265484.
+00:03:36.5198555 [Info] User sets phase shift to 5.0440016.
+00:03:36.5873947 [Info] User sets phase shift to 5.0614552.
+00:03:36.6165597 [Info] User sets phase shift to 5.0789084.
+00:03:36.6537156 [Info] User sets phase shift to 5.0963616.
+00:03:36.6946566 [Info] User sets phase shift to 5.113815.
+00:03:36.7049079 [Info] User sets phase shift to 5.131268.
+00:03:36.7396216 [Info] User sets phase shift to 5.166175.
+00:03:36.7885569 [Info] User sets phase shift to 5.183628.
+00:03:36.8196591 [Info] User sets phase shift to 5.2185345.
+00:03:36.8386890 [Info] User sets phase shift to 5.2359877.
+00:03:36.8716736 [Info] User sets phase shift to 5.2883477.
+00:03:36.8938676 [Info] User sets phase shift to 5.323254.
+00:03:36.9070141 [Info] User sets phase shift to 5.393068.
+00:03:36.9222474 [Info] User sets phase shift to 5.4279737.
+00:03:36.9415572 [Info] User sets phase shift to 5.4977875.
+00:03:36.9555756 [Info] User sets phase shift to 5.532694.
+00:03:36.9724202 [Info] User sets phase shift to 5.585054.
+00:03:36.9872738 [Info] User sets phase shift to 5.6374135.
+00:03:37.0041199 [Info] User sets phase shift to 5.7072268.
+00:03:37.0248016 [Info] User sets phase shift to 5.759587.
+00:03:37.0416862 [Info] User sets phase shift to 5.811947.
+00:03:37.0559314 [Info] User sets phase shift to 5.9166665.
+00:03:37.0721753 [Info] User sets phase shift to 5.9864798.
+00:03:37.0904768 [Info] User sets phase shift to 6.0388393.
+00:03:37.1060763 [Info] User sets phase shift to 6.126106.
+00:03:37.1213110 [Info] User sets phase shift to 6.161012.
+00:03:37.1387417 [Info] User sets phase shift to 6.213372.
+00:03:37.1546576 [Info] User sets phase shift to 0.
+00:03:37.1714814 [Info] User sets phase shift to 0.06981318.
+00:03:37.1895166 [Info] User sets phase shift to 0.13962635.
+00:03:37.2077683 [Info] User sets phase shift to 0.19198622.
+00:03:37.2222412 [Info] User sets phase shift to 0.2617994.
+00:03:37.2392387 [Info] User sets phase shift to 0.33161256.
+00:03:37.2552903 [Info] User sets phase shift to 0.40142575.
+00:03:37.2730823 [Info] User sets phase shift to 0.45378563.
+00:03:37.2898479 [Info] User sets phase shift to 0.5410521.
+00:03:37.3074078 [Info] User sets phase shift to 0.593412.
+00:03:37.3249681 [Info] User sets phase shift to 0.62831855.
+00:03:37.3404450 [Info] User sets phase shift to 0.6632251.
+00:03:37.3533229 [Info] User sets phase shift to 0.715585.
+00:03:37.3721071 [Info] User sets phase shift to 0.7330383.
+00:03:37.3868518 [Info] User sets phase shift to 0.7679449.
+00:03:37.4216237 [Info] User sets phase shift to 0.7853982.
+00:03:37.4372138 [Info] User sets phase shift to 0.8028515.
+00:03:37.4554261 [Info] User sets phase shift to 0.82030475.
+00:03:37.4866975 [Info] User sets phase shift to 0.8377581.
+00:03:37.5201015 [Info] User sets phase shift to 0.8552114.
+00:03:37.5537919 [Info] User sets phase shift to 0.8726647.
+00:03:37.5719775 [Info] User sets phase shift to 0.90757126.
+00:03:37.5917069 [Info] User sets phase shift to 0.9424779.
+00:03:37.6039815 [Info] User sets phase shift to 0.9599311.
+00:03:37.6226475 [Info] User sets phase shift to 0.9948377.
+00:03:37.6530351 [Info] User sets phase shift to 1.0297443.
+00:03:37.6777351 [Info] User sets phase shift to 1.0646509.
+00:03:37.6884871 [Info] User sets phase shift to 1.0821042.
+00:03:37.7030550 [Info] User sets phase shift to 1.0995574.
+00:03:37.7372300 [Info] User sets phase shift to 1.1170108.
+00:03:37.7877838 [Info] User sets phase shift to 1.134464.
+00:03:37.8043358 [Info] User sets phase shift to 1.1519173.
+00:03:37.8394445 [Info] User sets phase shift to 1.1693707.
+00:03:37.8533164 [Info] User sets phase shift to 1.186824.
+00:03:37.8889930 [Info] User sets phase shift to 1.2042772.
+00:03:38.2745598 [Info] User sets phase shift to 1.186824.
+00:03:38.2870375 [Info] User sets phase shift to 1.1519173.
+00:03:38.3201310 [Info] User sets phase shift to 1.1170108.
+00:03:38.3376481 [Info] User sets phase shift to 1.0995574.
+00:03:38.3548574 [Info] User sets phase shift to 1.0821042.
+00:03:38.3899005 [Info] User sets phase shift to 1.0471976.
+00:03:38.6047018 [Info] User sets phase shift to 1.0297443.
+00:03:38.6051277 [Info] User sets phase shift to 0.9948377.
+00:03:38.6081153 [Info] User sets phase shift to 0.97738445.
+00:03:38.6082426 [Info] User sets phase shift to 0.9250245.
+00:03:38.6084786 [Info] User sets phase shift to 0.8726647.
+00:03:38.6087239 [Info] User sets phase shift to 0.82030475.
+00:03:38.6089911 [Info] User sets phase shift to 0.7679449.
+00:03:38.6092968 [Info] User sets phase shift to 0.715585.
+00:03:38.6094983 [Info] User sets phase shift to 0.6632251.
+00:03:38.6097389 [Info] User sets phase shift to 0.6108653.
+00:03:38.6100081 [Info] User sets phase shift to 0.50614554.
+00:03:38.6102069 [Info] User sets phase shift to 0.40142575.
+00:03:38.6104098 [Info] User sets phase shift to 0.296706.
+00:03:38.6426749 [Info] User sets phase shift to 0.24434611.
+00:03:38.6465890 [Info] User sets phase shift to 0.17453294.
+00:03:38.6564480 [Info] User sets phase shift to 0.122173056.
+00:03:38.6710359 [Info] User sets phase shift to 0.052359883.
+00:03:38.6887157 [Info] User sets phase shift to 0.
+00:03:38.7057076 [Info] User sets phase shift to 6.195919.
+00:03:38.7221451 [Info] User sets phase shift to 6.143559.
+00:03:38.7385369 [Info] User sets phase shift to 6.0911994.
+00:03:38.7551502 [Info] User sets phase shift to 6.0388393.
+00:03:38.7722028 [Info] User sets phase shift to 6.021386.
+00:03:38.7872934 [Info] User sets phase shift to 5.9864798.
+00:03:38.9706363 [Info] User sets phase shift to 5.969026.
+00:03:38.9877123 [Info] User sets phase shift to 5.951573.
+00:03:39.0211060 [Info] User sets phase shift to 5.934119.
+00:03:39.0558385 [Info] User sets phase shift to 5.9166665.
+00:03:39.0695473 [Info] User sets phase shift to 5.8992133.
+00:03:39.0879092 [Info] User sets phase shift to 5.8817596.
+00:03:39.1075389 [Info] User sets phase shift to 5.8293996.
+00:03:39.1208262 [Info] User sets phase shift to 5.794493.
+00:03:39.1365211 [Info] User sets phase shift to 5.6897736.
+00:03:39.1588640 [Info] User sets phase shift to 5.585054.
+00:03:39.1731586 [Info] User sets phase shift to 5.340708.
+00:03:39.1878598 [Info] User sets phase shift to 5.2010813.
+00:03:39.2065860 [Info] User sets phase shift to 4.8520155.
+00:03:39.2215994 [Info] User sets phase shift to 4.590216.
+00:03:39.2375378 [Info] User sets phase shift to 4.29351.
+00:03:39.2563195 [Info] User sets phase shift to 4.0491643.
+00:03:39.2745557 [Info] User sets phase shift to 3.8920844.
+00:03:39.2879502 [Info] User sets phase shift to 3.7524579.
+00:03:39.3060043 [Info] User sets phase shift to 3.6826448.
+00:03:39.3235637 [Info] User sets phase shift to 3.630285.
+00:03:39.3380628 [Info] User sets phase shift to 3.577925.
+00:03:39.3557961 [Info] User sets phase shift to 3.5255651.
+00:03:39.3740648 [Info] User sets phase shift to 3.508112.
+00:03:39.3889304 [Info] User sets phase shift to 3.4906588.
+00:03:39.4056209 [Info] User sets phase shift to 3.4382985.
+00:03:39.4222570 [Info] User sets phase shift to 3.3859386.
+00:03:39.4384857 [Info] User sets phase shift to 3.3684857.
+00:03:39.4552526 [Info] User sets phase shift to 3.3335788.
+00:03:39.4742532 [Info] User sets phase shift to 3.281219.
+00:03:39.4883178 [Info] User sets phase shift to 3.2463124.
+00:03:39.5049892 [Info] User sets phase shift to 3.211406.
+00:03:39.5211928 [Info] User sets phase shift to 3.1764994.
+00:03:39.5384791 [Info] User sets phase shift to 3.159046.
+00:03:40.9198290 [Info] User sets phase shift to 3.8397243.
+00:03:40.9418087 [Info] User sets phase shift to 3.8571775.
+00:03:40.9546626 [Info] User sets phase shift to 3.8920844.
+00:03:40.9723601 [Info] User sets phase shift to 3.926991.
+00:03:40.9884371 [Info] User sets phase shift to 3.9618976.
+00:03:41.0057297 [Info] User sets phase shift to 3.9793508.
+00:03:41.0233905 [Info] User sets phase shift to 4.0317106.
+00:03:41.0383353 [Info] User sets phase shift to 4.0666175.
+00:03:41.0565619 [Info] User sets phase shift to 4.08407.
+00:03:41.0727445 [Info] User sets phase shift to 4.118977.
+00:03:41.0889364 [Info] User sets phase shift to 4.153884.
+00:03:41.1044691 [Info] User sets phase shift to 4.2062435.
+00:03:41.1220589 [Info] User sets phase shift to 4.2586036.
+00:03:41.1391914 [Info] User sets phase shift to 4.29351.
+00:03:41.1553357 [Info] User sets phase shift to 4.34587.
+00:03:41.1711348 [Info] User sets phase shift to 4.3807764.
+00:03:41.1887980 [Info] User sets phase shift to 4.3982296.
+00:03:41.2052769 [Info] User sets phase shift to 4.4331365.
+00:03:41.2219217 [Info] User sets phase shift to 4.4680433.
+00:03:41.2398573 [Info] User sets phase shift to 4.485496.
+00:03:41.2716744 [Info] User sets phase shift to 4.520403.
+00:03:41.2883240 [Info] User sets phase shift to 4.537856.
+00:03:41.3359399 [Info] User sets phase shift to 4.55531.
+00:03:42.0822643 [Info] User sets phase shift to 4.08407.
+00:03:42.0917472 [Info] User sets phase shift to 4.0317106.
+00:03:42.1094054 [Info] User sets phase shift to 3.9793508.
+00:03:42.1384654 [Info] User sets phase shift to 3.9444442.
+00:03:42.1550791 [Info] User sets phase shift to 3.8397243.
+00:03:42.1620905 [Info] User sets phase shift to 3.7524579.
+00:03:42.1739395 [Info] User sets phase shift to 3.7175512.
+00:03:42.1881135 [Info] User sets phase shift to 3.6651914.
+00:03:42.2048393 [Info] User sets phase shift to 3.6128316.
+00:03:42.2227916 [Info] User sets phase shift to 3.5604718.
+00:03:42.2398602 [Info] User sets phase shift to 3.508112.
+00:03:42.2540644 [Info] User sets phase shift to 3.4557521.
+00:03:42.2767369 [Info] User sets phase shift to 3.4382985.
+00:03:42.2902660 [Info] User sets phase shift to 3.3684857.
+00:03:42.3050679 [Info] User sets phase shift to 3.3335788.
+00:03:42.3227508 [Info] User sets phase shift to 3.2986722.
+00:03:42.3391411 [Info] User sets phase shift to 3.2637658.
+00:03:44.0197220 [Info] User sets phase shift to 3.4033923.
+00:03:44.0380501 [Info] User sets phase shift to 3.4382985.
+00:03:44.0739981 [Info] User sets phase shift to 3.4732053.
+00:03:44.0881666 [Info] User sets phase shift to 3.4906588.
+00:03:44.1061859 [Info] User sets phase shift to 3.5255651.
+00:03:44.1223210 [Info] User sets phase shift to 3.5604718.
+00:03:44.1370379 [Info] User sets phase shift to 3.577925.
+00:03:44.1565145 [Info] User sets phase shift to 3.6128316.
+00:03:44.1865808 [Info] User sets phase shift to 3.6477382.
+00:03:44.2052089 [Info] User sets phase shift to 3.6826448.
+00:03:44.2221312 [Info] User sets phase shift to 3.700098.
+00:03:44.2393804 [Info] User sets phase shift to 3.7350047.
+00:03:44.2563513 [Info] User sets phase shift to 3.7699115.
+00:03:44.2876037 [Info] User sets phase shift to 3.8048177.
+00:03:44.3214058 [Info] User sets phase shift to 3.8397243.
+00:03:44.3372148 [Info] User sets phase shift to 3.8571775.
+00:03:44.3733408 [Info] User sets phase shift to 3.8746312.
+00:03:44.3899754 [Info] User sets phase shift to 3.8920844.
+00:03:44.4059603 [Info] User sets phase shift to 3.9095378.
+00:03:44.4232278 [Info] User sets phase shift to 3.926991.
+00:03:44.4386805 [Info] User sets phase shift to 3.9618976.
+00:03:44.4541416 [Info] User sets phase shift to 3.9793508.
+00:03:44.4754794 [Info] User sets phase shift to 3.9968042.
+00:03:44.4894280 [Info] User sets phase shift to 4.0142574.
+00:03:44.5212334 [Info] User sets phase shift to 4.0317106.
+00:03:44.5411260 [Info] User sets phase shift to 4.0666175.
+00:03:44.5703857 [Info] User sets phase shift to 4.08407.
+00:03:44.5864933 [Info] User sets phase shift to 4.118977.
+00:03:44.6052398 [Info] User sets phase shift to 4.1364307.
+00:03:44.6225736 [Info] User sets phase shift to 4.171337.
+00:03:44.6390299 [Info] User sets phase shift to 4.1887903.
+00:03:44.6715551 [Info] User sets phase shift to 4.2062435.
+00:03:44.6904051 [Info] User sets phase shift to 4.2236967.
+00:03:44.7044211 [Info] User sets phase shift to 4.2586036.
+00:03:44.7395323 [Info] User sets phase shift to 4.29351.
+00:03:44.7554664 [Info] User sets phase shift to 4.310963.
+00:03:44.7871685 [Info] User sets phase shift to 4.328417.
+00:03:44.8045825 [Info] User sets phase shift to 4.34587.
+00:03:44.8435131 [Info] User sets phase shift to 4.363323.
+00:03:44.8710657 [Info] User sets phase shift to 4.3807764.
+00:03:44.8878352 [Info] User sets phase shift to 4.3982296.
+00:03:44.9030319 [Info] User sets phase shift to 4.4156833.
+00:03:45.0034439 [Info] User sets phase shift to 4.3982296.
+00:03:45.0201532 [Info] User sets phase shift to 4.328417.
+00:03:45.0384333 [Info] User sets phase shift to 4.2411504.
+00:03:45.0595197 [Info] User sets phase shift to 4.0666175.
+00:03:45.0752597 [Info] User sets phase shift to 3.9793508.
+00:03:45.0900027 [Info] User sets phase shift to 3.8920844.
+00:03:45.1043551 [Info] User sets phase shift to 3.8397243.
+00:03:45.1262544 [Info] User sets phase shift to 3.7524579.
+00:03:45.1400785 [Info] User sets phase shift to 3.6651914.
+00:03:45.1588073 [Info] User sets phase shift to 3.5953784.
+00:03:45.1731228 [Info] User sets phase shift to 3.5255651.
+00:03:45.1866820 [Info] User sets phase shift to 3.4732053.
+00:03:45.2113904 [Info] User sets phase shift to 3.4208455.
+00:03:45.5444094 [Info] User 0 sets frequency to 0.3.
+00:03:48.9293128 [Info] User 0 sets frequency to 0.5.
+00:03:49.8185902 [Info] User sets offset to 178.
+00:03:50.0499311 [Info] User sets offset to 172.
+00:03:50.0692222 [Info] User sets offset to 171.
+00:03:50.0844629 [Info] User sets offset to 169.
+00:03:50.1012156 [Info] User sets offset to 167.
+00:03:50.1191691 [Info] User sets offset to 165.
+00:03:50.1343503 [Info] User sets offset to 162.
+00:03:50.1520594 [Info] User sets offset to 160.
+00:03:50.1676788 [Info] User sets offset to 159.
+00:03:50.1869112 [Info] User sets offset to 158.
+00:03:50.2026668 [Info] User sets offset to 157.
+00:03:50.2196858 [Info] User sets offset to 156.
+00:03:50.2428392 [Info] User sets offset to 154.
+00:03:50.2523014 [Info] User sets offset to 153.
+00:03:50.2693970 [Info] User sets offset to 152.
+00:03:50.2867004 [Info] User sets offset to 151.
+00:03:50.3048885 [Info] User sets offset to 150.
+00:03:50.3183455 [Info] User sets offset to 149.
+00:03:50.3560036 [Info] User sets offset to 148.
+00:03:50.3673019 [Info] User sets offset to 146.
+00:03:50.3915834 [Info] User sets offset to 144.
+00:03:50.3990738 [Info] User sets offset to 142.
+00:03:50.4178771 [Info] User sets offset to 141.
+00:03:50.4341527 [Info] User sets offset to 140.
+00:03:50.4522551 [Info] User sets offset to 139.
+00:03:50.4691856 [Info] User sets offset to 137.
+00:03:50.4850215 [Info] User sets offset to 136.
+00:03:50.5013245 [Info] User sets offset to 135.
+00:03:50.5196848 [Info] User sets offset to 134.
+00:03:50.5355983 [Info] User sets offset to 133.
+00:03:50.5520529 [Info] User sets offset to 132.
+00:03:50.5687169 [Info] User sets offset to 131.
+00:03:50.6026808 [Info] User sets offset to 130.
+00:03:50.6210679 [Info] User sets offset to 129.
+00:03:50.6339763 [Info] User sets offset to 128.
+00:03:50.6513988 [Info] User sets offset to 127.
+00:03:50.6663268 [Info] User sets offset to 126.
+00:03:50.7149248 [Info] User sets offset to 125.
+00:03:50.7646641 [Info] User sets offset to 124.
+00:03:50.8153260 [Info] User sets offset to 123.
+00:03:50.8991650 [Info] User sets offset to 122.
+00:03:51.0985343 [Info] User sets offset to 121.
+00:03:51.1825084 [Info] User sets offset to 120.
+00:03:51.2177160 [Info] User sets offset to 119.
+00:03:51.2659924 [Info] User sets offset to 118.
+00:03:51.2858392 [Info] User sets offset to 117.
+00:03:51.3004440 [Info] User sets offset to 116.
+00:03:51.3158644 [Info] User sets offset to 115.
+00:03:51.3371289 [Info] User sets offset to 114.
+00:03:51.3533114 [Info] User sets offset to 113.
+00:03:51.3671976 [Info] User sets offset to 112.
+00:03:51.3870898 [Info] User sets offset to 111.
+00:03:51.4021403 [Info] User sets offset to 110.
+00:03:51.4169787 [Info] User sets offset to 109.
+00:03:51.4678425 [Info] User sets offset to 108.
+00:03:51.4897822 [Info] User sets offset to 107.
+00:03:51.5174857 [Info] User sets offset to 106.
+00:03:51.5497250 [Info] User sets offset to 105.
+00:03:51.5704827 [Info] User sets offset to 104.
+00:03:51.5995506 [Info] User sets offset to 103.
+00:03:51.6334679 [Info] User sets offset to 102.
+00:03:51.6660636 [Info] User sets offset to 101.
+00:03:51.7154129 [Info] User sets offset to 100.
+00:03:51.7362115 [Info] User sets offset to 99.
+00:03:51.7538320 [Info] User sets offset to 98.
+00:03:51.7687163 [Info] User sets offset to 97.
+00:03:51.7872803 [Info] User sets offset to 96.
+00:03:51.8184574 [Info] User sets offset to 95.
+00:03:51.8187769 [Info] User sets offset to 94.
+00:03:51.8368210 [Info] User sets offset to 92.
+00:03:51.8531430 [Info] User sets offset to 91.
+00:03:51.8688846 [Info] User sets offset to 89.
+00:03:51.8833422 [Info] User sets offset to 87.
+00:03:51.9012976 [Info] User sets offset to 85.
+00:03:51.9173261 [Info] User sets offset to 83.
+00:03:51.9327701 [Info] User sets offset to 82.
+00:03:51.9509393 [Info] User sets offset to 81.
+00:03:51.9664079 [Info] User sets offset to 80.
+00:03:52.0014500 [Info] User sets offset to 79.
+00:03:52.6317329 [Info] User sets offset to 80.
+00:03:52.7651722 [Info] User sets offset to 81.
+00:04:02.8912321 [Info] User sets offset to 84.
+00:04:02.9495447 [Info] User sets offset to 77.
+00:04:02.9583618 [Info] User sets offset to 76.
+00:04:02.9705284 [Info] User sets offset to 73.
+00:04:02.9875048 [Info] User sets offset to 71.
+00:04:03.0011273 [Info] User sets offset to 69.
+00:04:03.0202881 [Info] User sets offset to 67.
+00:04:03.0376754 [Info] User sets offset to 65.
+00:04:03.0532208 [Info] User sets offset to 63.
+00:04:03.0701494 [Info] User sets offset to 62.
+00:04:03.0873013 [Info] User sets offset to 61.
+00:04:03.1027907 [Info] User sets offset to 59.
+00:04:03.1323578 [Info] User sets offset to 58.
+00:04:06.5687148 [Info] User 0 sets frequency to 0.4.
+00:04:06.5876955 [Info] User 0 sets frequency to 0.3.
+00:04:06.6072537 [Info] User 0 sets frequency to 0.2.
+00:04:06.6188713 [Info] User 0 sets frequency to 0.1.
+00:04:06.6525504 [Info] User 0 sets frequency to 0.
+00:04:09.8327521 [Info] User sets offset to 61.
+00:04:09.8834841 [Info] User sets offset to 55.
+00:04:09.9420300 [Info] User sets offset to 53.
+00:04:09.9422966 [Info] User sets offset to 52.
+00:04:09.9425985 [Info] User sets offset to 50.
+00:04:09.9695578 [Info] User sets offset to 49.
+00:04:09.9840403 [Info] User sets offset to 48.
+00:04:10.0018523 [Info] User sets offset to 47.
+00:04:10.0181001 [Info] User sets offset to 45.
+00:04:10.0517468 [Info] User sets offset to 44.
+00:04:10.0693475 [Info] User sets offset to 42.
+00:04:10.0923830 [Info] User sets offset to 41.
+00:04:10.1184579 [Info] User sets offset to 40.
+00:04:10.1370818 [Info] User sets offset to 39.
+00:04:10.1905508 [Info] User sets offset to 38.
+00:04:10.2158839 [Info] User sets offset to 37.
+00:04:10.2655220 [Info] User sets offset to 36.
+00:04:10.3166035 [Info] User sets offset to 35.
+00:04:10.3664528 [Info] User sets offset to 34.
+00:04:10.5156252 [Info] User sets offset to 33.
+00:04:10.6326258 [Info] User sets offset to 32.
+00:04:10.9825191 [Info] User sets offset to 33.
+00:04:11.0175425 [Info] User sets offset to 34.
+00:04:11.0504839 [Info] User sets offset to 35.
+00:04:11.0679973 [Info] User sets offset to 36.
+00:04:11.0855487 [Info] User sets offset to 37.
+00:04:11.1031191 [Info] User sets offset to 38.
+00:04:11.1188027 [Info] User sets offset to 39.
+00:04:11.1328797 [Info] User sets offset to 41.
+00:04:11.1511798 [Info] User sets offset to 42.
+00:04:11.1693925 [Info] User sets offset to 43.
+00:04:11.1844397 [Info] User sets offset to 45.
+00:04:11.2030909 [Info] User sets offset to 46.
+00:04:11.2166724 [Info] User sets offset to 47.
+00:04:11.2342180 [Info] User sets offset to 49.
+00:04:11.2527793 [Info] User sets offset to 50.
+00:04:11.2688339 [Info] User sets offset to 51.
+00:04:11.2853769 [Info] User sets offset to 52.
+00:04:11.3021669 [Info] User sets offset to 53.
+00:04:11.3194132 [Info] User sets offset to 54.
+00:04:11.3517771 [Info] User sets offset to 55.
+00:04:11.3684472 [Info] User sets offset to 57.
+00:04:11.3859423 [Info] User sets offset to 58.
+00:04:11.4160786 [Info] User sets offset to 59.
+00:04:11.4537951 [Info] User sets offset to 60.
+00:04:11.4826090 [Info] User sets offset to 61.
+00:04:11.5163743 [Info] User sets offset to 62.
+00:04:11.5663023 [Info] User sets offset to 63.
+00:04:11.6163006 [Info] User sets offset to 64.
+00:04:11.6681088 [Info] User sets offset to 65.
+00:04:11.7159891 [Info] User sets offset to 66.
+00:04:11.8002895 [Info] User sets offset to 67.
+00:04:12.0819045 [Info] User sets offset to 68.
+00:04:12.2834238 [Info] User sets offset to 69.
+00:04:12.5515659 [Info] User sets offset to 70.
+00:04:12.6328767 [Info] User sets offset to 71.
+00:04:12.7153261 [Info] User sets offset to 72.
+00:04:12.7496345 [Info] User sets offset to 73.
+00:04:12.7996861 [Info] User sets offset to 74.
+00:04:12.8571927 [Info] User sets offset to 75.
+00:04:12.8999172 [Info] User sets offset to 76.
+00:04:12.9318123 [Info] User sets offset to 77.
+00:04:12.9661674 [Info] User sets offset to 78.
+00:04:12.9997692 [Info] User sets offset to 79.
+00:04:13.0333144 [Info] User sets offset to 80.
+00:04:13.0507872 [Info] User sets offset to 81.
+00:04:13.0715404 [Info] User sets offset to 82.
+00:04:13.1013957 [Info] User sets offset to 83.
+00:04:13.1198973 [Info] User sets offset to 84.
+00:04:13.1382484 [Info] User sets offset to 85.
+00:04:13.1536041 [Info] User sets offset to 86.
+00:04:13.1692154 [Info] User sets offset to 87.
+00:04:13.1851324 [Info] User sets offset to 88.
+00:04:13.2021686 [Info] User sets offset to 90.
+00:04:13.2168304 [Info] User sets offset to 91.
+00:04:13.2332302 [Info] User sets offset to 92.
+00:04:13.2658566 [Info] User sets offset to 94.
+00:04:13.2863557 [Info] User sets offset to 95.
+00:04:13.3019156 [Info] User sets offset to 96.
+00:04:13.3182782 [Info] User sets offset to 97.
+00:04:13.3499136 [Info] User sets offset to 98.
+00:04:13.3865520 [Info] User sets offset to 99.
+00:04:13.4184438 [Info] User sets offset to 100.
+00:04:13.4498924 [Info] User sets offset to 101.
+00:04:13.5005596 [Info] User sets offset to 102.
+00:04:13.5336012 [Info] User sets offset to 103.
+00:04:13.5663016 [Info] User sets offset to 104.
+00:04:13.6154584 [Info] User sets offset to 105.
+00:04:13.6827748 [Info] User sets offset to 106.
+00:04:13.7332286 [Info] User sets offset to 107.
+00:04:13.7846947 [Info] User sets offset to 108.
+00:04:13.8185952 [Info] User sets offset to 109.
+00:04:13.8538416 [Info] User sets offset to 110.
+00:04:13.9005603 [Info] User sets offset to 111.
+00:04:13.9329625 [Info] User sets offset to 112.
+00:04:13.9542712 [Info] User sets offset to 113.
+00:04:14.0177932 [Info] User sets offset to 114.
+00:04:14.0720077 [Info] User sets offset to 115.
+00:04:14.1016997 [Info] User sets offset to 116.
+00:04:14.1333227 [Info] User sets offset to 117.
+00:04:14.1517006 [Info] User sets offset to 118.
+00:04:14.1828713 [Info] User sets offset to 119.
+00:04:14.2166647 [Info] User sets offset to 120.
+00:04:14.2501391 [Info] User sets offset to 121.
+00:04:14.2857526 [Info] User sets offset to 122.
+00:04:14.3348886 [Info] User sets offset to 123.
+00:04:14.3530475 [Info] User sets offset to 124.
+00:04:14.3698227 [Info] User sets offset to 125.
+00:04:14.4021186 [Info] User sets offset to 126.
+00:04:14.4333228 [Info] User sets offset to 127.
+00:04:14.4539726 [Info] User sets offset to 128.
+00:04:14.4830721 [Info] User sets offset to 129.
+00:04:14.5168605 [Info] User sets offset to 130.
+00:04:14.5666665 [Info] User sets offset to 131.
+00:04:14.5870336 [Info] User sets offset to 132.
+00:04:14.6183850 [Info] User sets offset to 133.
+00:04:14.6369657 [Info] User sets offset to 134.
+00:04:14.6542831 [Info] User sets offset to 135.
+00:04:14.6999245 [Info] User sets offset to 136.
+00:04:14.7345937 [Info] User sets offset to 137.
+00:04:14.7654935 [Info] User sets offset to 138.
+00:04:14.8159286 [Info] User sets offset to 139.
+00:04:14.8666747 [Info] User sets offset to 140.
+00:04:14.9013460 [Info] User sets offset to 141.
+00:04:14.9348252 [Info] User sets offset to 142.
+00:04:14.9698658 [Info] User sets offset to 143.
+00:04:15.0049745 [Info] User sets offset to 144.
+00:04:15.0334612 [Info] User sets offset to 145.
+00:04:15.0665176 [Info] User sets offset to 146.
+00:04:15.0997310 [Info] User sets offset to 147.
+00:04:15.1499174 [Info] User sets offset to 148.
+00:04:15.1838191 [Info] User sets offset to 149.
+00:04:15.2041514 [Info] User sets offset to 150.
+00:04:15.2513965 [Info] User sets offset to 151.
+00:04:15.3099085 [Info] User sets offset to 152.
+00:04:15.3491777 [Info] User sets offset to 153.
+00:04:15.3840107 [Info] User sets offset to 154.
+00:04:15.4326026 [Info] User sets offset to 155.
+00:04:15.4823945 [Info] User sets offset to 156.
+00:04:15.5510491 [Info] User sets offset to 157.
+00:04:15.6028484 [Info] User sets offset to 158.
+00:04:15.6332602 [Info] User sets offset to 159.
+00:04:15.6826800 [Info] User sets offset to 160.
+00:04:15.8186764 [Info] User sets offset to 161.
+00:04:16.0174380 [Info] User sets offset to 162.
+00:04:16.7675283 [Info] User sets offset to 161.
+00:04:16.8175044 [Info] User sets offset to 160.
+00:04:16.8851654 [Info] User sets offset to 159.
+00:04:17.7492114 [Info] User sets offset to 160.
+00:04:18.1320698 [Info] User sets offset to 159.
+00:04:18.2006029 [Info] User sets offset to 158.
+00:04:18.2329465 [Info] User sets offset to 157.
+00:04:18.3002184 [Info] User sets offset to 156.
+00:04:18.3657583 [Info] User sets offset to 155.
+00:04:18.4827634 [Info] User sets offset to 154.
+00:04:18.9697528 [Info] User sets offset to 153.
+00:04:44.4035321 [Info] User 0 sets frequency to 0.1.
+00:04:44.5860118 [Info] User 0 sets frequency to 0.2.
+00:04:46.0109593 [Info] User 0 sets frequency to 0.3.
+00:04:46.1439661 [Info] User 0 sets frequency to 0.4.
+00:04:46.2700747 [Info] User 0 sets frequency to 0.5.
+00:04:50.0196838 [Info] User 0 sets frequency to 0.6.
+00:04:50.3352014 [Info] User 0 sets frequency to 0.7.
+00:04:50.5356971 [Info] User 0 sets frequency to 0.8.
+00:04:50.9692990 [Info] User 0 sets frequency to 0.9.
+00:04:51.4535010 [Info] User 0 sets frequency to 1.
+00:04:52.2313512 [Info] User sets offset to 151.
+00:04:52.2711484 [Info] User sets offset to 145.
+00:04:52.2802265 [Info] User sets offset to 144.
+00:04:52.3024347 [Info] User sets offset to 143.
+00:04:52.3209908 [Info] User sets offset to 141.
+00:04:52.3355357 [Info] User sets offset to 140.
+00:04:52.3514733 [Info] User sets offset to 139.
+00:04:52.3679632 [Info] User sets offset to 138.
+00:04:52.3851218 [Info] User sets offset to 136.
+00:04:52.4020050 [Info] User sets offset to 135.
+00:04:52.4189032 [Info] User sets offset to 134.
+00:04:52.4342875 [Info] User sets offset to 133.
+00:04:52.4667711 [Info] User sets offset to 132.
+00:04:52.4862110 [Info] User sets offset to 131.
+00:04:52.5035337 [Info] User sets offset to 130.
+00:04:52.5211695 [Info] User sets offset to 129.
+00:04:52.5367712 [Info] User sets offset to 128.
+00:04:52.5570696 [Info] User sets offset to 127.
+00:04:52.5848360 [Info] User sets offset to 126.
+00:04:52.6499044 [Info] User sets offset to 125.
+00:04:52.6998071 [Info] User sets offset to 124.
+00:04:52.7841850 [Info] User sets offset to 123.
+00:04:52.9329482 [Info] User sets offset to 122.
+00:04:53.0178359 [Info] User sets offset to 121.
+00:04:53.0852440 [Info] User sets offset to 120.
+00:04:53.1869286 [Info] User sets offset to 119.
+00:04:53.3156925 [Info] User sets offset to 118.
+00:04:53.4001182 [Info] User sets offset to 117.
+00:04:53.5659689 [Info] User sets offset to 116.
+00:04:54.3661379 [Info] User sets offset to 115.
+00:04:54.5655131 [Info] User sets offset to 114.
+00:04:54.7496341 [Info] User sets offset to 113.
+00:04:54.9002459 [Info] User sets offset to 112.
+00:04:56.7529751 [Info] User sets offset to 116.
+00:04:56.8709329 [Info] User sets offset to 110.
+00:04:56.8871284 [Info] User sets offset to 109.
+00:04:56.9032367 [Info] User sets offset to 108.
+00:04:56.9233758 [Info] User sets offset to 107.
+00:04:56.9357090 [Info] User sets offset to 105.
+00:04:56.9526411 [Info] User sets offset to 103.
+00:04:56.9687708 [Info] User sets offset to 102.
+00:04:56.9854286 [Info] User sets offset to 101.
+00:04:57.0014046 [Info] User sets offset to 99.
+00:04:57.0185866 [Info] User sets offset to 98.
+00:04:57.0351841 [Info] User sets offset to 96.
+00:04:57.0547071 [Info] User sets offset to 95.
+00:04:57.0731922 [Info] User sets offset to 94.
+00:04:57.0871320 [Info] User sets offset to 93.
+00:04:57.1043920 [Info] User sets offset to 92.
+00:04:57.1329418 [Info] User sets offset to 91.
+00:04:57.1519814 [Info] User sets offset to 90.
+00:04:57.2010919 [Info] User sets offset to 89.
+00:04:57.4850594 [Info] User sets offset to 88.
+00:04:57.5669360 [Info] User sets offset to 87.
+00:04:57.6162411 [Info] User sets offset to 86.
+00:04:57.7829709 [Info] User sets offset to 85.
+00:04:57.9883007 [Info] User 2 sets frequency to 0.6.
+00:05:02.7611402 [Info] User 0 sets frequency to 0.3.
+00:05:04.2889628 [Info] User 0 sets frequency to 0.1.
+00:05:04.4357524 [Info] User sets offset to 88.
+00:05:04.5012233 [Info] User sets offset to 82.
+00:05:04.5082326 [Info] User sets offset to 81.
+00:05:04.5179258 [Info] User sets offset to 80.
+00:05:04.5377867 [Info] User sets offset to 79.
+00:05:04.5531748 [Info] User sets offset to 78.
+00:05:04.5697705 [Info] User sets offset to 77.
+00:05:04.5864667 [Info] User sets offset to 75.
+00:05:04.6066986 [Info] User sets offset to 74.
+00:05:04.6185896 [Info] User sets offset to 72.
+00:05:04.6364922 [Info] User sets offset to 71.
+00:05:04.6672557 [Info] User sets offset to 70.
+00:05:04.6871046 [Info] User sets offset to 69.
+00:05:04.7014392 [Info] User sets offset to 68.
+00:05:04.7208115 [Info] User sets offset to 67.
+00:05:04.7536337 [Info] User sets offset to 66.
+00:05:04.7697961 [Info] User sets offset to 65.
+00:05:04.8041858 [Info] User sets offset to 64.
+00:05:04.8500704 [Info] User sets offset to 63.
+00:05:04.8997174 [Info] User sets offset to 62.
+00:05:04.9700783 [Info] User sets offset to 61.
+00:05:05.0164464 [Info] User sets offset to 60.
+00:05:05.0683517 [Info] User sets offset to 59.
+00:05:05.1015045 [Info] User sets offset to 58.
+00:05:05.1510647 [Info] User sets offset to 57.
+00:05:05.1998402 [Info] User sets offset to 56.
+00:05:05.2341177 [Info] User sets offset to 55.
+00:05:05.2994558 [Info] User sets offset to 54.
+00:05:05.4178309 [Info] User sets offset to 53.
+00:05:07.5871684 [Info] User sets amplitude to 23.
+00:05:07.9168110 [Info] User sets amplitude to 25.3.
+00:05:07.9389091 [Info] User sets amplitude to 25.7.
+00:05:07.9545852 [Info] User sets amplitude to 25.8.
+00:05:07.9698879 [Info] User sets amplitude to 25.9.
+00:05:07.9874704 [Info] User sets amplitude to 26.1.
+00:05:08.0036964 [Info] User sets amplitude to 26.2.
+00:05:08.0200364 [Info] User sets amplitude to 26.3.
+00:05:08.1333050 [Info] User sets amplitude to 26.1.
+00:05:08.1512068 [Info] User sets amplitude to 25.8.
+00:05:08.1689340 [Info] User sets amplitude to 25.6.
+00:05:08.1881148 [Info] User sets amplitude to 25.1.
+00:05:08.2035001 [Info] User sets amplitude to 24.6.
+00:05:08.2194700 [Info] User sets amplitude to 24.2.
+00:05:08.2358723 [Info] User sets amplitude to 23.7.
+00:05:08.2527001 [Info] User sets amplitude to 23.2.
+00:05:08.2719702 [Info] User sets amplitude to 22.6.
+00:05:08.2869408 [Info] User sets amplitude to 21.9.
+00:05:08.3034211 [Info] User sets amplitude to 21.1.
+00:05:08.3191575 [Info] User sets amplitude to 20.4.
+00:05:08.3351304 [Info] User sets amplitude to 19.8.
+00:05:08.3533278 [Info] User sets amplitude to 19.
+00:05:08.3681743 [Info] User sets amplitude to 18.6.
+00:05:08.3871659 [Info] User sets amplitude to 17.6.
+00:05:08.4138951 [Info] User sets amplitude to 17.
+00:05:08.4179923 [Info] User sets amplitude to 16.6.
+00:05:08.4366051 [Info] User sets amplitude to 16.
+00:05:08.4503350 [Info] User sets amplitude to 15.7.
+00:05:08.4673603 [Info] User sets amplitude to 15.4.
+00:05:08.4838314 [Info] User sets amplitude to 15.3.
+00:05:08.5012281 [Info] User sets amplitude to 15.1.
+00:05:08.5175396 [Info] User sets amplitude to 15.
+00:05:08.5346850 [Info] User sets amplitude to 14.8.
+00:05:08.5507489 [Info] User sets amplitude to 14.7.
+00:05:08.5705365 [Info] User sets amplitude to 14.6.
+00:05:08.6038895 [Info] User sets amplitude to 14.5.
+00:05:08.6510325 [Info] User sets amplitude to 14.4.
+00:05:08.7520929 [Info] User sets amplitude to 14.2.
+00:05:08.8665466 [Info] User sets amplitude to 14.1.
+00:05:08.8898774 [Info] User sets amplitude to 14.
+00:05:08.9329233 [Info] User sets amplitude to 13.9.
+00:05:08.9542988 [Info] User sets amplitude to 13.8.
+00:05:09.0010289 [Info] User sets amplitude to 13.7.
+00:05:09.0216846 [Info] User sets amplitude to 13.5.
+00:05:09.0367991 [Info] User sets amplitude to 13.4.
+00:05:09.0511285 [Info] User sets amplitude to 13.3.
+00:05:09.1042063 [Info] User sets amplitude to 13.2.
+00:05:09.1339017 [Info] User sets amplitude to 13.1.
+00:05:09.1836420 [Info] User sets amplitude to 12.9.
+00:05:10.6708988 [Info] User sets amplitude to 13.2.
+00:05:10.8704837 [Info] User sets amplitude to 10.6.
+00:05:10.8848340 [Info] User sets amplitude to 10.1.
+00:05:10.9006684 [Info] User sets amplitude to 9.3.
+00:05:10.9173071 [Info] User sets amplitude to 8.6.
+00:05:10.9365215 [Info] User sets amplitude to 7.9.
+00:05:10.9531595 [Info] User sets amplitude to 7.6.
+00:05:10.9684408 [Info] User sets amplitude to 7.5.
+00:05:10.9838589 [Info] User sets amplitude to 7.3.
+00:05:11.0042473 [Info] User sets amplitude to 7.2.
+00:05:11.0185192 [Info] User sets amplitude to 7.
+00:05:11.0366536 [Info] User sets amplitude to 6.9.
+00:05:11.0680770 [Info] User sets amplitude to 6.7.
+00:05:11.0842370 [Info] User sets amplitude to 6.5.
+00:05:11.1193254 [Info] User sets amplitude to 6.3.
+00:05:11.1372816 [Info] User sets amplitude to 6.2.
+00:05:11.1677672 [Info] User sets amplitude to 6.1.
+00:05:11.1864032 [Info] User sets amplitude to 5.9.
+00:05:11.2498393 [Info] User sets amplitude to 5.7.
+00:05:36.7199115 [Info] User 0 sets frequency to 0.
+00:05:55.7434379 [Info] User 2 sets frequency to 0.1.
+00:05:57.7093504 [Info] User 2 sets frequency to 0.2.
+00:05:58.3163632 [Info] User 2 sets frequency to 0.3.
+00:06:12.5027776 [Info] User sets offset to 56.
+00:06:12.5853159 [Info] User sets offset to 62.
+00:06:12.6064295 [Info] User sets offset to 63.
+00:06:12.6220193 [Info] User sets offset to 65.
+00:06:12.6356442 [Info] User sets offset to 66.
+00:06:12.6693129 [Info] User sets offset to 67.
+00:06:12.7023121 [Info] User sets offset to 68.
+00:06:12.7504502 [Info] User sets offset to 69.
+00:06:12.7852622 [Info] User sets offset to 70.
+00:06:12.8180763 [Info] User sets offset to 71.
+00:06:12.8512436 [Info] User sets offset to 72.
+00:06:12.8855449 [Info] User sets offset to 73.
+00:06:12.9516964 [Info] User sets offset to 74.
+00:06:13.0177672 [Info] User sets offset to 75.
+00:06:13.1172032 [Info] User sets offset to 76.
+00:06:13.2175770 [Info] User sets offset to 77.
+00:06:13.3543075 [Info] User sets offset to 78.
+00:06:13.4699991 [Info] User sets offset to 79.
+00:06:13.5674079 [Info] User sets offset to 80.
+00:06:13.6379257 [Info] User sets offset to 81.
+00:06:13.6872951 [Info] User sets offset to 82.
+00:06:13.7506147 [Info] User sets offset to 83.
+00:06:13.8347357 [Info] User sets offset to 84.
+00:06:13.9040018 [Info] User sets offset to 85.
+00:06:13.9532560 [Info] User sets offset to 86.
+00:06:14.0015040 [Info] User sets offset to 87.
+00:06:14.0350028 [Info] User sets offset to 88.
+00:06:14.0691074 [Info] User sets offset to 89.
+00:06:14.1405080 [Info] User sets offset to 90.
+00:06:14.1535679 [Info] User sets offset to 91.
+00:06:14.2044601 [Info] User sets offset to 92.
+00:06:14.2533106 [Info] User sets offset to 93.
+00:06:14.2743495 [Info] User sets offset to 94.
+00:06:14.3040198 [Info] User sets offset to 95.
+00:06:14.3349058 [Info] User sets offset to 96.
+00:06:14.3838355 [Info] User sets offset to 97.
+00:06:14.4187828 [Info] User sets offset to 98.
+00:06:14.5052126 [Info] User sets offset to 99.
+00:06:14.6177623 [Info] User sets offset to 100.
+00:06:14.7350330 [Info] User sets offset to 101.
+00:06:14.8195125 [Info] User sets offset to 102.
+00:06:14.9033069 [Info] User sets offset to 103.
+00:06:14.9504315 [Info] User sets offset to 104.
+00:06:15.0178371 [Info] User sets offset to 105.
+00:06:15.1003292 [Info] User sets offset to 106.
+00:06:15.2171979 [Info] User sets offset to 107.
+00:06:15.3554190 [Info] User sets offset to 108.
+00:06:15.6009840 [Info] User sets offset to 109.
+00:06:15.7010553 [Info] User sets offset to 110.
+00:06:15.7516094 [Info] User sets offset to 111.
+00:06:15.8183315 [Info] User sets offset to 112.
+00:06:15.8680181 [Info] User sets offset to 113.
+00:06:15.9536898 [Info] User sets offset to 114.
+00:06:16.0352743 [Info] User sets offset to 115.
+00:06:16.1367577 [Info] User sets offset to 116.
+00:06:16.2513868 [Info] User sets offset to 117.
+00:06:16.3528147 [Info] User sets offset to 118.
+00:06:16.5063273 [Info] User sets offset to 119.
+00:06:16.6358267 [Info] User sets offset to 120.
+00:06:16.7676287 [Info] User sets offset to 121.
+00:06:16.9004993 [Info] User sets offset to 122.
+00:06:17.1505117 [Info] User sets offset to 123.
+00:06:17.2840722 [Info] User sets offset to 124.
+00:06:17.4023520 [Info] User sets offset to 125.
+00:06:17.5687576 [Info] User sets offset to 126.
+00:06:17.6838711 [Info] User sets offset to 127.
+00:06:17.7513888 [Info] User sets offset to 128.
+00:06:17.8220285 [Info] User sets offset to 129.
+00:06:17.9187211 [Info] User sets offset to 130.
+00:06:18.0514620 [Info] User sets offset to 131.
+00:06:18.1852364 [Info] User sets offset to 132.
+00:06:18.3848466 [Info] User sets offset to 133.
+00:06:38.8655107 [Info] User 0 sets frequency to 0.5.
+00:07:52.3712504 [Info] User 0 sets frequency to 0.7.
+00:07:57.4110957 [Info] User 0 sets frequency to 0.5.
+00:08:23.7582907 [Info] User sets offset to 138.
+00:08:23.9198372 [Info] User sets offset to 131.
+00:08:23.9569647 [Info] User sets offset to 130.
+00:08:23.9725345 [Info] User sets offset to 129.
+00:08:24.0252367 [Info] User sets offset to 128.
+00:08:24.0562980 [Info] User sets offset to 127.
+00:08:24.0897853 [Info] User sets offset to 126.
+00:08:24.1587804 [Info] User sets offset to 125.
+00:08:24.2032610 [Info] User sets offset to 124.
+00:08:25.0053998 [Info] User sets amplitude to 6.5.
+00:08:25.2035194 [Info] User sets amplitude to 9.4.
+00:08:25.2219568 [Info] User sets amplitude to 10.
+00:08:25.2398990 [Info] User sets amplitude to 10.5.
+00:08:25.2612819 [Info] User sets amplitude to 11.2.
+00:08:25.2729188 [Info] User sets amplitude to 11.8.
+00:08:25.2897979 [Info] User sets amplitude to 12.1.
+00:08:25.3057270 [Info] User sets amplitude to 12.7.
+00:08:25.3220315 [Info] User sets amplitude to 13.4.
+00:08:25.3432493 [Info] User sets amplitude to 14.
+00:08:25.3551403 [Info] User sets amplitude to 14.4.
+00:08:25.3718814 [Info] User sets amplitude to 14.6.
+00:08:25.3889054 [Info] User sets amplitude to 15.
+00:08:25.4089092 [Info] User sets amplitude to 15.3.
+00:08:25.4270119 [Info] User sets amplitude to 15.8.
+00:08:25.4373285 [Info] User sets amplitude to 16.3.
+00:08:25.4593429 [Info] User sets amplitude to 16.6.
+00:08:25.4739044 [Info] User sets amplitude to 17.1.
+00:08:25.4893199 [Info] User sets amplitude to 17.4.
+00:08:25.5072087 [Info] User sets amplitude to 17.7.
+00:08:25.5217046 [Info] User sets amplitude to 17.9.
+00:08:25.5395515 [Info] User sets amplitude to 18.1.
+00:08:25.5625490 [Info] User sets amplitude to 18.5.
+00:08:25.5915027 [Info] User sets amplitude to 18.7.
+00:08:25.6211429 [Info] User sets amplitude to 19.
+00:08:25.6405974 [Info] User sets amplitude to 19.1.
+00:08:25.6551470 [Info] User sets amplitude to 19.2.
+00:08:25.6752504 [Info] User sets amplitude to 19.3.
+00:08:25.7052895 [Info] User sets amplitude to 19.6.
+00:08:25.7408553 [Info] User sets amplitude to 19.7.
+00:08:25.7546929 [Info] User sets amplitude to 19.8.
+00:08:25.7724213 [Info] User sets amplitude to 20.
+00:08:25.8185128 [Info] User sets amplitude to 20.2.
+00:08:25.8390092 [Info] User sets amplitude to 20.3.
+00:08:25.8565279 [Info] User sets amplitude to 20.5.
+00:08:25.8737062 [Info] User sets amplitude to 20.6.
+00:08:25.8897256 [Info] User sets amplitude to 20.7.
+00:08:25.9041783 [Info] User sets amplitude to 20.9.
+00:08:25.9255961 [Info] User sets amplitude to 21.1.
+00:08:25.9540907 [Info] User sets amplitude to 21.2.
+00:08:25.9736788 [Info] User sets amplitude to 21.3.
+00:08:25.9883635 [Info] User sets amplitude to 21.4.
+00:08:26.0058929 [Info] User sets amplitude to 21.7.
+00:08:26.0219712 [Info] User sets amplitude to 21.9.
+00:08:26.0372053 [Info] User sets amplitude to 22.
+00:08:26.0557653 [Info] User sets amplitude to 22.2.
+00:08:26.0718152 [Info] User sets amplitude to 22.4.
+00:08:26.1039339 [Info] User sets amplitude to 22.5.
+00:08:26.1295248 [Info] User sets amplitude to 22.6.
+00:08:26.1696555 [Info] User sets amplitude to 22.7.
+00:08:37.3572382 [Info] User sets amplitude to 26.9.
+00:08:37.4706550 [Info] User sets amplitude to 23.9.
+00:08:37.4877885 [Info] User sets amplitude to 23.7.
+00:08:37.5068587 [Info] User sets amplitude to 23.5.
+00:08:37.5889639 [Info] User sets amplitude to 23.2.
+00:08:37.6217412 [Info] User sets amplitude to 23.1.
+00:08:37.6413876 [Info] User sets amplitude to 23.
+00:08:37.6545027 [Info] User sets amplitude to 22.6.
+00:08:37.6721310 [Info] User sets amplitude to 22.5.
+00:08:37.6977051 [Info] User sets amplitude to 22.2.
+00:08:37.7042314 [Info] User sets amplitude to 21.9.
+00:08:37.7218708 [Info] User sets amplitude to 21.7.
+00:08:37.7383700 [Info] User sets amplitude to 21.3.
+00:08:37.7571438 [Info] User sets amplitude to 21.
+00:08:37.7747389 [Info] User sets amplitude to 20.6.
+00:08:37.7905267 [Info] User sets amplitude to 20.3.
+00:08:37.8068682 [Info] User sets amplitude to 20.
+00:08:37.8249124 [Info] User sets amplitude to 19.8.
+00:08:37.8556116 [Info] User sets amplitude to 19.6.
+00:08:37.8729166 [Info] User sets amplitude to 19.4.
+00:08:37.8911711 [Info] User sets amplitude to 19.2.
+00:08:37.9068849 [Info] User sets amplitude to 19.1.
+00:08:37.9242053 [Info] User sets amplitude to 18.6.
+00:08:37.9393327 [Info] User sets amplitude to 18.4.
+00:08:37.9585634 [Info] User sets amplitude to 18.1.
+00:08:37.9701939 [Info] User sets amplitude to 17.7.
+00:08:37.9879427 [Info] User sets amplitude to 17.4.
+00:08:38.0055002 [Info] User sets amplitude to 17.1.
+00:08:38.0206148 [Info] User sets amplitude to 16.7.
+00:08:38.0387869 [Info] User sets amplitude to 16.4.
+00:08:38.0544068 [Info] User sets amplitude to 16.1.
+00:08:38.0702846 [Info] User sets amplitude to 16.
+00:08:38.0886348 [Info] User sets amplitude to 15.9.
+00:08:38.1075969 [Info] User sets amplitude to 15.7.
+00:08:38.1246585 [Info] User sets amplitude to 15.4.
+00:08:38.1390670 [Info] User sets amplitude to 15.3.
+00:08:38.1578729 [Info] User sets amplitude to 15.1.
+00:08:38.1748411 [Info] User sets amplitude to 14.8.
+00:08:38.1911855 [Info] User sets amplitude to 14.6.
+00:08:38.2083216 [Info] User sets amplitude to 14.2.
+00:08:38.2220113 [Info] User sets amplitude to 14.
+00:08:38.2396857 [Info] User sets amplitude to 13.8.
+00:08:38.2555326 [Info] User sets amplitude to 13.3.
+00:08:38.2723828 [Info] User sets amplitude to 12.9.
+00:08:38.2898865 [Info] User sets amplitude to 12.7.
+00:08:38.3085185 [Info] User sets amplitude to 12.4.
+00:08:38.3209741 [Info] User sets amplitude to 12.2.
+00:08:38.3396793 [Info] User sets amplitude to 12.
+00:08:38.3575713 [Info] User sets amplitude to 11.9.
+00:08:38.3776328 [Info] User sets amplitude to 11.7.
+00:08:38.3925087 [Info] User sets amplitude to 11.4.
+00:08:38.4100039 [Info] User sets amplitude to 11.2.
+00:08:38.4228350 [Info] User sets amplitude to 10.8.
+00:08:38.4431946 [Info] User sets amplitude to 10.6.
+00:08:38.4570847 [Info] User sets amplitude to 10.2.
+00:08:38.4738055 [Info] User sets amplitude to 9.9.
+00:08:38.4888933 [Info] User sets amplitude to 9.5.
+00:08:38.5087712 [Info] User sets amplitude to 9.1.
+00:08:38.5224416 [Info] User sets amplitude to 8.8.
+00:08:38.5388023 [Info] User sets amplitude to 8.5.
+00:08:38.5557111 [Info] User sets amplitude to 8.2.
+00:08:38.5721881 [Info] User sets amplitude to 8.1.
+00:08:38.5885023 [Info] User sets amplitude to 7.9.
+00:08:38.6051053 [Info] User sets amplitude to 7.6.
+00:08:38.6226113 [Info] User sets amplitude to 7.3.
+00:08:38.6402390 [Info] User sets amplitude to 7.
+00:08:38.6556915 [Info] User sets amplitude to 6.7.
+00:08:38.6752546 [Info] User sets amplitude to 6.5.
+00:08:38.6913437 [Info] User sets amplitude to 6.1.
+00:08:38.7073095 [Info] User sets amplitude to 5.7.
+00:08:38.7253015 [Info] User sets amplitude to 5.4.
+00:08:38.7401674 [Info] User sets amplitude to 5.
+00:08:38.7568159 [Info] User sets amplitude to 4.9.
+00:08:38.7733083 [Info] User sets amplitude to 4.7.
+00:08:38.7919968 [Info] User sets amplitude to 4.6.
+00:08:38.8069387 [Info] User sets amplitude to 4.3.
+00:08:38.8291106 [Info] User sets amplitude to 4.1.
+00:08:38.8402746 [Info] User sets amplitude to 3.9.
+00:08:38.8547455 [Info] User sets amplitude to 3.7.
+00:08:38.8750312 [Info] User sets amplitude to 3.5.
+00:08:38.8890734 [Info] User sets amplitude to 3.3.
+00:08:38.9067987 [Info] User sets amplitude to 2.9.
+00:08:38.9220480 [Info] User sets amplitude to 2.6.
+00:08:38.9382536 [Info] User sets amplitude to 2.1.
+00:08:38.9554055 [Info] User sets amplitude to 1.7.
+00:08:38.9734814 [Info] User sets amplitude to 1.3.
+00:08:38.9917150 [Info] User sets amplitude to 0.9.
+00:08:39.0081124 [Info] User sets amplitude to 0.7.
+00:08:39.0253619 [Info] User sets amplitude to 0.6.
+00:08:39.0514376 [Info] User sets amplitude to 0.2.
+00:08:39.0587926 [Info] User sets amplitude to 0.1.
+00:08:39.0746413 [Info] User sets amplitude to 0.
+00:08:53.8218733 [Info] User 1 sets frequency to 0.6.
+00:08:53.9728235 [Info] User 1 sets frequency to 0.5.
+00:08:54.0059972 [Info] User 1 sets frequency to 0.3.
+00:08:54.0251022 [Info] User 1 sets frequency to 0.1.
+00:08:54.0407177 [Info] User 1 sets frequency to 0.
+00:10:30.4316783 [Info] C is no longer in control.

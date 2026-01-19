@@ -1,0 +1,120 @@
+{
+  "overall_accuracy": 0.3333333333333333,
+  "per_strategy_metrics": {
+    "incremental_adjustment": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 1
+    },
+    "random_trial_error": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 1
+    },
+    "iterative_finetuning": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 1
+    },
+    "systematic_parameter_sweep": {
+      "precision": 0.5,
+      "recall": 1.0,
+      "f1": 0.6666666666666666,
+      "support": 1
+    },
+    "goal_directed_tuning": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 1
+    },
+    "structured_exploration": {
+      "precision": 0.25,
+      "recall": 1.0,
+      "f1": 0.4,
+      "support": 1
+    }
+  },
+  "confusion_matrix": [
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      1
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      1,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      1,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      1,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      1,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      1
+    ]
+  ],
+  "confusion_matrix_labels": [
+    "goal_directed_tuning",
+    "incremental_adjustment",
+    "iterative_finetuning",
+    "random_trial_error",
+    "structured_exploration",
+    "systematic_parameter_sweep"
+  ],
+  "classification_report": "                            precision    recall  f1-score   support\n\n      goal_directed_tuning       0.00      0.00      0.00         1\n    incremental_adjustment       0.00      0.00      0.00         1\n      iterative_finetuning       0.00      0.00      0.00         1\n        random_trial_error       0.00      0.00      0.00         1\n    structured_exploration       0.25      1.00      0.40         1\nsystematic_parameter_sweep       0.50      1.00      0.67         1\n\n                  accuracy                           0.33         6\n                 macro avg       0.12      0.33      0.18         6\n              weighted avg       0.12      0.33      0.18         6\n",
+  "macro_f1": 0.17777777777777778,
+  "weighted_f1": 0.17777777777777778,
+  "macro_precision": 0.125,
+  "macro_recall": 0.3333333333333333,
+  "y_true": [
+    "goal_directed_tuning",
+    "incremental_adjustment",
+    "iterative_finetuning",
+    "random_trial_error",
+    "structured_exploration",
+    "systematic_parameter_sweep"
+  ],
+  "y_pred": [
+    "systematic_parameter_sweep",
+    "structured_exploration",
+    "structured_exploration",
+    "structured_exploration",
+    "structured_exploration",
+    "systematic_parameter_sweep"
+  ]
+}

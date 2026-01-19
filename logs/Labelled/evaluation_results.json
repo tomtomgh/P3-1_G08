@@ -1,0 +1,182 @@
+{
+  "timestamp": "2026-01-19T16:29:43.191184",
+  "labeled_dir": "logs/Labelled",
+  "num_labels": 6,
+  "metrics": {
+    "overall_accuracy": 0.16666666666666666,
+    "macro_f1": 0.06666666666666667,
+    "weighted_f1": 0.06666666666666667,
+    "macro_precision": 0.041666666666666664,
+    "macro_recall": 0.16666666666666666,
+    "per_strategy": {
+      "random_trial_error": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 1
+      },
+      "goal_directed_tuning": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 1
+      },
+      "structured_exploration": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 1
+      },
+      "incremental_adjustment": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 1
+      },
+      "systematic_parameter_sweep": {
+        "precision": 0.25,
+        "recall": 1.0,
+        "f1": 0.4,
+        "support": 1
+      },
+      "iterative_finetuning": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 1
+      }
+    },
+    "confusion_matrix_labels": [
+      "goal_directed_tuning",
+      "incremental_adjustment",
+      "iterative_finetuning",
+      "random_trial_error",
+      "structured_exploration",
+      "systematic_parameter_sweep"
+    ],
+    "y_true": [
+      "structured_exploration",
+      "systematic_parameter_sweep",
+      "iterative_finetuning",
+      "goal_directed_tuning",
+      "incremental_adjustment",
+      "random_trial_error"
+    ],
+    "y_pred": [
+      "iterative_finetuning",
+      "systematic_parameter_sweep",
+      "systematic_parameter_sweep",
+      "systematic_parameter_sweep",
+      "systematic_parameter_sweep",
+      "structured_exploration"
+    ]
+  },
+  "confusion_matrix": [
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      1
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      1
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      1
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      1,
+      0
+    ],
+    [
+      0,
+      0,
+      1,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      1
+    ]
+  ],
+  "confusion_matrix_labels": [
+    "goal_directed_tuning",
+    "incremental_adjustment",
+    "iterative_finetuning",
+    "random_trial_error",
+    "structured_exploration",
+    "systematic_parameter_sweep"
+  ],
+  "match_details": [
+    {
+      "true": "structured_exploration",
+      "pred": "iterative_finetuning",
+      "start": 38.5,
+      "end": 80.0,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "systematic_parameter_sweep",
+      "pred": "systematic_parameter_sweep",
+      "start": 90.0,
+      "end": 100.0,
+      "user_id": 0,
+      "match": true
+    },
+    {
+      "true": "iterative_finetuning",
+      "pred": "systematic_parameter_sweep",
+      "start": 94.0,
+      "end": 102.0,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "goal_directed_tuning",
+      "pred": "systematic_parameter_sweep",
+      "start": 98.0,
+      "end": 110.0,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "incremental_adjustment",
+      "pred": "systematic_parameter_sweep",
+      "start": 430.0,
+      "end": 450.0,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "random_trial_error",
+      "pred": "structured_exploration",
+      "start": 449.0,
+      "end": 470.0,
+      "user_id": 0,
+      "match": false
+    }
+  ]
+}

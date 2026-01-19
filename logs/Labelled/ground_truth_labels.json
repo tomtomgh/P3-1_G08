@@ -1,0 +1,44 @@
+[
+  {
+    "user_id": 0,
+    "strategy": "structured_exploration",
+    "start_time": 38.5,
+    "end_time": 80.0,
+    "notes": "Initial exploration: User adjusting offset and trying different parameter ranges (73-80s: offset adjustments from 103 to 177 to 94)"
+  },
+  {
+    "user_id": 0,
+    "strategy": "systematic_parameter_sweep",
+    "start_time": 90.0,
+    "end_time": 100.0,
+    "notes": "Rapid amplitude sweep: 12.8 -> 60.2 in continuous increments (01:30 to 01:33), single parameter focus"
+  },
+  {
+    "user_id": 0,
+    "strategy": "iterative_finetuning",
+    "start_time": 94.0,
+    "end_time": 102.0,
+    "notes": "Fine-tuning amplitude with small reversals: goes up to 65.4, then back down to 57.5"
+  },
+  {
+    "user_id": 0,
+    "strategy": "goal_directed_tuning",
+    "start_time": 98.0,
+    "end_time": 110.0,
+    "notes": "Consistent downward adjustment of amplitude from ~65 to ~25 - appears goal-directed toward a target value"
+  },
+  {
+    "user_id": 0,
+    "strategy": "incremental_adjustment",
+    "start_time": 430.0,
+    "end_time": 450.0,
+    "notes": "Small incremental changes to offset values around 07:10-07:30 time period"
+  },
+  {
+    "user_id": 0,
+    "strategy": "random_trial_error",
+    "start_time": 449.0,
+    "end_time": 470.0,
+    "notes": "End of session: larger jumps between different parameter values (offset jumps from 22 to 40 to 52, then amplitude and offset changes)"
+  }
+]

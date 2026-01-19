@@ -8,6 +8,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 plt.rcParams["font.family"] = "DejaVu Sans"  # avoid missing glyph warnings for control icons
 import matplotlib.colors as mcolors
+from matplotlib.animation import FuncAnimation
 import numpy as np
 from pathlib import Path
 import pandas as pd
@@ -19,6 +20,105 @@ from log_parser import parse_session  # already used in your runner
 from strategy_classifier.constants import ALL_STRATEGIES
 
 import re
+
+# --------------------------------------------------------------
+# Translations (EN / NL)
+# --------------------------------------------------------------
+TRANSLATIONS = {
+    'EN': {
+        'title': 'Robot Speed Timeline',
+        'speed_ylabel': 'Speed (px/s)',
+        'time_xlabel': 'Time (seconds)',
+        'user_title': 'User {user}: {strategy}',
+        'user_label': 'User {user}',
+        'strategies_legend': 'Strategies Used',
+        'no_strategy': 'No Strategy',
+        'play': '▶ Play',
+        'pause': '⏸ Pause',
+        'time_slider': 'Time',
+        'zoom_slider': 'Zoom',
+        'zoom_display': 'Zoom: {level:.1f}x',
+        # Strategy translations
+        'goal_directed_tuning': 'goal_directed_tuning',
+        'incremental_adjustment': 'incremental_adjustment',
+        'iterative_finetuning': 'iterative_finetuning',
+        'random_trial_error': 'random_trial_error',
+        'structured_exploration': 'structured_exploration',
+        'systematic_parameter_sweep': 'systematic_parameter_sweep',
+    },
+    'NL': {
+        'title': 'Robot Snelheid Tijdlijn',
+        'speed_ylabel': 'Snelheid (px/s)',
+        'time_xlabel': 'Tijd (seconden)',
+        'user_title': 'Gebruiker {user}: {strategy}',
+        'user_label': 'Gebruiker {user}',
+        'strategies_legend': 'Gebruikte Strategieën',
+        'no_strategy': 'Geen Strategie',
+        'play': '▶ Afspelen',
+        'pause': '⏸ Pauzeren',
+        'time_slider': 'Tijd',
+        'zoom_slider': 'Zoom',
+        'zoom_display': 'Zoom: {level:.1f}x',
+        # Strategy translations
+        'goal_directed_tuning': 'doelgerichte_afstemming',
+        'incremental_adjustment': 'incrementele_aanpassing',
+        'iterative_finetuning': 'iteratieve_fijnafstemming',
+        'random_trial_error': 'willekeurige_proef_fout',
+        'structured_exploration': 'gestructureerde_verkenning',
+        'systematic_parameter_sweep': 'systematische_parameter_sweep',
+    }
+}
+
+# Strategy definitions for hover tooltips
+STRATEGY_DEFINITIONS = {
+    'EN': {
+        'goal_directed_tuning': 'Goal-Directed Tuning: Sample definition - adjusting parameters with a specific target outcome in mind.',
+        'incremental_adjustment': 'Incremental Adjustment: Sample definition - making small, step-by-step changes to parameters.',
+        'iterative_finetuning': 'Iterative Finetuning: Sample definition - repeatedly refining parameters based on feedback.',
+        'random_trial_error': 'Random Trial & Error: Sample definition - exploring parameter space through random experimentation.',
+        'structured_exploration': 'Structured Exploration: Sample definition - systematically exploring different parameter combinations.',
+        'systematic_parameter_sweep': 'Systematic Parameter Sweep: Sample definition - methodically testing all parameter values in a range.',
+        'No Strategy': 'No Strategy: No specific tuning strategy detected in this segment.',
+    },
+    'NL': {
+        'goal_directed_tuning': 'Doelgerichte Afstemming: Voorbeelddefinitie - parameters aanpassen met een specifiek doelresultaat in gedachten.',
+        'incremental_adjustment': 'Incrementele Aanpassing: Voorbeelddefinitie - kleine, stapsgewijze wijzigingen aan parameters.',
+        'iterative_finetuning': 'Iteratieve Fijnafstemming: Voorbeelddefinitie - herhaaldelijk verfijnen van parameters op basis van feedback.',
+        'random_trial_error': 'Willekeurige Proef & Fout: Voorbeelddefinitie - parameterruimte verkennen door willekeurige experimenten.',
+        'structured_exploration': 'Gestructureerde Verkenning: Voorbeelddefinitie - systematisch verkennen van verschillende parametercombinaties.',
+        'systematic_parameter_sweep': 'Systematische Parameter Sweep: Voorbeelddefinitie - methodisch testen van alle parameterwaarden in een bereik.',
+        'No Strategy': 'Geen Strategie: Geen specifieke afstemmingsstrategie gedetecteerd in dit segment.',
+    }
+}
+
+# Current language state
+current_language = {'lang': 'EN'}
+
+def t(key, **kwargs):
+    """Get translated string for current language."""
+    lang = current_language['lang']
+    text = TRANSLATIONS.get(lang, TRANSLATIONS['EN']).get(key, key)
+    if kwargs:
+        return text.format(**kwargs)
+    return text
+
+def translate_strategy(strategy):
+    """Translate a strategy name to current language."""
+    lang = current_language['lang']
+    # Convert strategy name to lookup key (replace spaces with underscores)
+    key = strategy.replace(' ', '_').lower()
+    translations = TRANSLATIONS.get(lang, TRANSLATIONS['EN'])
+    return translations.get(key, strategy)
+
+def get_strategy_definition(strategy):
+    """Get the definition for a strategy in current language."""
+    lang = current_language['lang']
+    definitions = STRATEGY_DEFINITIONS.get(lang, STRATEGY_DEFINITIONS['EN'])
+    # Try exact match first, then lowercase with underscores
+    if strategy in definitions:
+        return definitions[strategy]
+    key = strategy.replace(' ', '_').lower()
+    return definitions.get(key, f"{strategy}: No definition available.")
 
 
 # --------------------------------------------------------------
@@ -253,7 +353,7 @@ def plot_timeline():
     # 1) SPEED PANEL
     # ----------------------------------------------------------
     ax_speed = axes[0]
-    ax_speed.set_title("Robot Speed Timeline", fontsize=16, pad=10)
+    ax_speed.set_title(t('title'), fontsize=16, pad=10)
 
     # Trend shading
     for _, row in df_trends.iterrows():
@@ -272,7 +372,7 @@ def plot_timeline():
         linewidth=2,
         label="speed_px/s"
     )
-    ax_speed.set_ylabel("Speed (px/s)")
+    ax_speed.set_ylabel(t('speed_ylabel'))
     ax_speed.grid(alpha=0.3)
 
     # Keep only speed curve legend here
@@ -333,9 +433,12 @@ def plot_timeline():
     # DEBUG: print counts so you can verify filtering
     print(f"[DEBUG] Plotting predictions: total_rows={len(df)} -> plotted_rows={len(df_plot)}; min_actions={MIN_ACTIONS_TO_PLOT}")
 
+    # Store all strategy patches for hover detection
+    strategy_patches = []  # List of (patch, strategy_name, user, start, end)
+
     for i, user in enumerate(users):
         ax = axes[i + 1]
-        ax.set_title(f"User {user} Strategy Timeline", fontsize=14, pad=6)
+        ax.set_title(t('user_title', user=user, strategy=t('no_strategy')), fontsize=14, pad=6)
 
         df_u = df_plot[df_plot["user_id"] == user]
         user_segments[user] = []  # Store segments for this user
@@ -355,20 +458,23 @@ def plot_timeline():
 
             # safe color lookup, fallback to neutral gray for unknown/no strategy
             color = colors.get(strat, "#CCCCCC")
-            ax.axvspan(
+            patch = ax.axvspan(
                 s, e,
                 color=color,
-                alpha=0.8
+                alpha=0.8,
+                picker=True  # Enable picking for hover detection
             )
+            # Store patch info for hover detection
+            strategy_patches.append((patch, strat, user, s, e, ax))
 
         ax.set_yticks([])
-        ax.set_ylabel(f"User {user}", rotation=0, labelpad=30)
+        ax.set_ylabel(t('user_label', user=user), rotation=0, labelpad=30)
         ax.grid(axis='x', alpha=0.2)
 
     # ----------------------------------------------------------
     # GLOBAL TIME AXIS
     # ----------------------------------------------------------
-    axes[-1].set_xlabel("Time (seconds)", fontsize=14)
+    axes[-1].set_xlabel(t('time_xlabel'), fontsize=14)
     axes[-1].set_xlim(t_min, t_max)
 
     # ----------------------------------------------------------
@@ -382,18 +488,102 @@ def plot_timeline():
         c = colors.get(strat, "#CCCCCC")
         patch = plt.Line2D([0], [0], color=c, linewidth=12)
         legend_handles.append(patch)
-        legend_labels.append(strat)
+        legend_labels.append(translate_strategy(strat))
 
+    # Store legend reference for updating
+    legend_ref = {'legend': None, 'strategies': sorted(used_strategies), 'expanded_strategy': None}
     if legend_handles:
-        fig.legend(
+        legend_ref['legend'] = fig.legend(
             legend_handles,
             legend_labels,
-            title="Strategies Used",
+            title=t('strategies_legend'),
             loc="upper left",
             bbox_to_anchor=(0.83, 0.75),
             frameon=True,
             fontsize=11
         )
+
+    # ----------------------------------------------------------
+    # HOVER TOOLTIP FOR STRATEGY DEFINITION
+    # ----------------------------------------------------------
+    # Create a text annotation for showing strategy definitions on hover
+    hover_annotation = fig.text(
+        0.83, 0.30, '', 
+        fontsize=9, 
+        verticalalignment='top',
+        bbox=dict(boxstyle='round,pad=0.5', facecolor='lightyellow', edgecolor='gray', alpha=0.95),
+        wrap=True,
+        visible=False
+    )
+    hover_state = {'current_strategy': None}
+
+    def update_legend_with_expansion(hovered_strategy=None):
+        """Update legend, expanding the hovered strategy with its definition."""
+        if legend_ref['legend'] is not None:
+            legend_ref['legend'].remove()
+        
+        legend_handles = []
+        legend_labels = []
+        
+        for strat in legend_ref['strategies']:
+            c = colors.get(strat, "#CCCCCC")
+            patch = plt.Line2D([0], [0], color=c, linewidth=12)
+            legend_handles.append(patch)
+            
+            translated = translate_strategy(strat)
+            if hovered_strategy and strat == hovered_strategy:
+                # Add arrow indicator for expanded strategy
+                legend_labels.append(f"► {translated}")
+            else:
+                legend_labels.append(translated)
+        
+        if legend_handles:
+            legend_ref['legend'] = fig.legend(
+                legend_handles,
+                legend_labels,
+                title=t('strategies_legend'),
+                loc="upper left",
+                bbox_to_anchor=(0.83, 0.75),
+                frameon=True,
+                fontsize=11
+            )
+        
+        # Show/hide definition tooltip
+        if hovered_strategy:
+            definition = get_strategy_definition(hovered_strategy)
+            # Wrap text manually for better display
+            wrapped = '\n'.join([definition[i:i+35] for i in range(0, len(definition), 35)])
+            hover_annotation.set_text(wrapped)
+            hover_annotation.set_visible(True)
+        else:
+            hover_annotation.set_visible(False)
+        
+        legend_ref['expanded_strategy'] = hovered_strategy
+        fig.canvas.draw_idle()
+
+    def on_hover(event):
+        """Handle mouse motion for hover detection on strategy bars."""
+        if event.inaxes is None:
+            if hover_state['current_strategy'] is not None:
+                hover_state['current_strategy'] = None
+                update_legend_with_expansion(None)
+            return
+        
+        # Check if mouse is over any strategy patch
+        found_strategy = None
+        for patch, strat, user, start, end, ax in strategy_patches:
+            if event.inaxes == ax:
+                # Check if x position is within the patch bounds
+                if start <= event.xdata <= end:
+                    found_strategy = strat
+                    break
+        
+        if found_strategy != hover_state['current_strategy']:
+            hover_state['current_strategy'] = found_strategy
+            update_legend_with_expansion(found_strategy)
+
+    # Connect hover event
+    fig.canvas.mpl_connect('motion_notify_event', on_hover)
 
     # ----------------------------------------------------------
     # INTERACTIVE TIMELINE SLIDER
@@ -405,7 +595,7 @@ def plot_timeline():
     slider_ax = plt.axes([0.15, 0.07, 0.65, 0.02])
     time_slider = Slider(
         slider_ax,
-        'Time',
+        t('time_slider'),
         t_min,
         t_max,
         valinit=t_min,
@@ -418,7 +608,7 @@ def plot_timeline():
     total_duration = t_max - t_min
     zoom_slider = Slider(
         zoom_ax,
-        'Zoom',
+        t('zoom_slider'),
         1.0,  # Min zoom: show full timeline
         20.0,  # Max zoom: 20x zoomed in
         valinit=1.0,
@@ -439,9 +629,6 @@ def plot_timeline():
     # Zoom level text display
     zoom_text = fig.text(0.85, 0.045, '', fontsize=10,
                          bbox=dict(boxstyle='round', facecolor='lightblue', alpha=0.8))
-    
-    # Autoplay state
-    autoplay_state = {'playing': False, 'timer_id': None, 'last_real_time': None}
     
     def update_view():
         """Update the view window based on current time and zoom level."""
@@ -468,20 +655,20 @@ def plot_timeline():
             ax.set_xlim(window_start, window_end)
         
         # Update zoom level display
-        zoom_text.set_text(f'Zoom: {zoom_level:.1f}x')
+        zoom_text.set_text(t('zoom_display', level=zoom_level))
         
         fig.canvas.draw_idle()
     
     def get_current_strategy(user, current_time):
         """Get the strategy for a user at the current time."""
         if user not in user_segments:
-            return "No Strategy"
+            return t('no_strategy')
         
         for start, end, strategy in user_segments[user]:
             if start <= current_time <= end:
-                return strategy
+                return translate_strategy(strategy)
         
-        return "No Strategy"
+        return t('no_strategy')
     
     def update_timeline(val):
         """Update vertical line position and timestamp when slider moves."""
@@ -503,7 +690,7 @@ def plot_timeline():
         for i, user in enumerate(users):
             ax = axes[i + 1]
             current_strategy = get_current_strategy(user, current_time)
-            ax.set_title(f"User {user}: {current_strategy}", fontsize=14, pad=6)
+            ax.set_title(t('user_title', user=user, strategy=current_strategy), fontsize=14, pad=6)
         
         # Update view to follow current time with current zoom
         update_view()
@@ -512,10 +699,13 @@ def plot_timeline():
         """Update zoom level and adjust view."""
         update_view()
     
-    def autoplay_step():
-        """Advance timeline by real-time seconds elapsed."""
+    # Autoplay state
+    autoplay_state = {'playing': False, 'last_real_time': None, 'anim': None}
+    
+    def animation_frame(frame):
+        """Animation frame function for autoplay."""
         if not autoplay_state['playing']:
-            return
+            return vertical_lines
         
         current_real_time = time.time()
         
@@ -533,38 +723,114 @@ def plot_timeline():
         if new_time >= t_max:
             # Reached end, stop autoplay
             autoplay_state['playing'] = False
-            play_button.label.set_text('▶ Play')
+            play_button.label.set_text(t('play'))
             time_slider.set_val(t_max)
             autoplay_state['last_real_time'] = None
-            return
+            return vertical_lines
         
         time_slider.set_val(new_time)
-        
-        # Schedule next update (approximately 30 FPS for smooth animation)
-        autoplay_state['timer_id'] = fig.canvas.new_timer(interval=33)
-        autoplay_state['timer_id'].add_callback(autoplay_step)
-        autoplay_state['timer_id'].start()
+        return vertical_lines
     
     def toggle_autoplay(event):
         """Toggle autoplay on/off."""
         if autoplay_state['playing']:
             # Stop autoplay
             autoplay_state['playing'] = False
-            play_button.label.set_text('▶ Play')
-            if autoplay_state['timer_id']:
-                autoplay_state['timer_id'].stop()
+            play_button.label.set_text(t('play'))
             autoplay_state['last_real_time'] = None
         else:
             # Start autoplay
             autoplay_state['playing'] = True
-            play_button.label.set_text('⏸ Pause')
+            play_button.label.set_text(t('pause'))
             autoplay_state['last_real_time'] = time.time()
-            autoplay_step()
+    
+    # Create animation for autoplay (runs continuously but only advances when playing)
+    anim = FuncAnimation(fig, animation_frame, interval=33, blit=False, cache_frame_data=False)
+    
+    def refresh_all_text():
+        """Refresh all translatable text elements after language change."""
+        # Update main title
+        axes[0].set_title(t('title'), fontsize=16, pad=10)
+        axes[0].set_ylabel(t('speed_ylabel'))
+        
+        # Update time axis label
+        axes[-1].set_xlabel(t('time_xlabel'), fontsize=14)
+        
+        # Update user panel labels and titles
+        current_time = time_slider.val
+        for i, user in enumerate(users):
+            ax = axes[i + 1]
+            current_strategy = get_current_strategy(user, current_time)
+            ax.set_title(t('user_title', user=user, strategy=current_strategy), fontsize=14, pad=6)
+            ax.set_ylabel(t('user_label', user=user), rotation=0, labelpad=30)
+        
+        # Update slider labels
+        slider_ax.set_xlabel(t('time_slider'))
+        zoom_ax.set_xlabel(t('zoom_slider'))
+        
+        # Update zoom text
+        zoom_text.set_text(t('zoom_display', level=zoom_slider.val))
+        
+        # Update play button
+        if autoplay_state['playing']:
+            play_button.label.set_text(t('pause'))
+        else:
+            play_button.label.set_text(t('play'))
+        
+        # Update legend
+        if legend_ref['legend'] is not None:
+            legend_ref['legend'].remove()
+        
+        legend_handles = []
+        legend_labels = []
+        for strat in legend_ref['strategies']:
+            c = colors.get(strat, "#CCCCCC")
+            patch = plt.Line2D([0], [0], color=c, linewidth=12)
+            legend_handles.append(patch)
+            legend_labels.append(translate_strategy(strat))
+        
+        if legend_handles:
+            legend_ref['legend'] = fig.legend(
+                legend_handles,
+                legend_labels,
+                title=t('strategies_legend'),
+                loc="upper left",
+                bbox_to_anchor=(0.83, 0.75),
+                frameon=True,
+                fontsize=11
+            )
+        
+        fig.canvas.draw_idle()
+    
+    def toggle_language(event):
+        """Toggle between EN and NL languages (NS app style)."""
+        if current_language['lang'] == 'EN':
+            current_language['lang'] = 'NL'
+            lang_button.label.set_text('NL')
+            lang_button.color = '#4e409f'  # NS blue
+        else:
+            current_language['lang'] = 'EN'
+            lang_button.label.set_text('EN')
+            lang_button.color = '#4e409f'  # NS yellow
+        
+        refresh_all_text()
     
     # Add Play/Pause button
     button_ax = plt.axes([0.02, 0.07, 0.08, 0.03])
-    play_button = Button(button_ax, '▶ Play', color='lightgreen', hovercolor='green')
+    play_button = Button(button_ax, t('play'), color='#4e409f', hovercolor='#64748b')
+    play_button.label.set_color('white')
+    play_button.label.set_fontweight('bold')
     play_button.on_clicked(toggle_autoplay)
+    
+    # ----------------------------------------------------------
+    # LANGUAGE TOGGLE BUTTON (NS app style)
+    # ----------------------------------------------------------
+    lang_button_ax = plt.axes([0.02, 0.02, 0.04, 0.03])
+    lang_button = Button(lang_button_ax, 'EN', color='#4e409f', hovercolor='#64748b')
+    lang_button.label.set_color('white')
+    lang_button.label.set_fontweight('bold')
+    lang_button.label.set_fontsize(11)
+    lang_button.on_clicked(toggle_language)
     
     # Connect sliders to update functions
     time_slider.on_changed(update_timeline)
