@@ -4,6 +4,10 @@
 # Speed Curve + Speed Trends + Strategy Timelines (per user)
 # --------------------------------------------------------------
 
+import argparse
+import math
+import subprocess
+import sys
 import pandas as pd
 import matplotlib.pyplot as plt
 plt.rcParams["font.family"] = "DejaVu Sans"  # avoid missing glyph warnings for control icons
@@ -24,6 +28,7 @@ import re
 DEFAULT_REPORT_CSV = "graphs/strategy_usage_summary.csv"
 DEFAULT_REPORT_FIGURE = "graphs/strategy_usage_report.png"
 DEFAULT_RADAR_FIGURE = "graphs/strategy_usage_radar.png"
+DASHBOARD_WINDOWS = []
 
 # --------------------------------------------------------------
 # Translations (EN / NL)
@@ -639,12 +644,19 @@ def _display_insights(ax, roles):
             break
 
 
-def show_strategy_dashboard(summary_df, bar_figure_path, radar_figure_path, show=True):
+def show_strategy_dashboard(summary_df, bar_figure_path, radar_figure_path, show=True, block=True):
     """
     Display a second 'page' with menu controls to view bar chart, radar chart, or insights.
     """
     roles = derive_player_roles(summary_df)
     fig = plt.figure(figsize=(12, 6))
+    DASHBOARD_WINDOWS.append(fig)
+
+    def _on_close(_event):
+        if fig in DASHBOARD_WINDOWS:
+            DASHBOARD_WINDOWS.remove(fig)
+
+    fig.canvas.mpl_connect("close_event", _on_close)
     fig.suptitle("Strategy Dashboard", fontsize=16)
 
     menu_ax = plt.axes([0.02, 0.25, 0.15, 0.45])
@@ -667,7 +679,9 @@ def show_strategy_dashboard(summary_df, bar_figure_path, radar_figure_path, show
     update_display(options[0])
 
     if show:
-        plt.show()
+        plt.show(block=block)
+        if not block:
+            plt.pause(0.05)
     else:
         plt.close(fig)
 
@@ -1227,23 +1241,18 @@ def plot_timeline():
     play_button.on_clicked(toggle_autoplay)
 
     def open_dashboard(event):
-        summary_df_local = generate_strategy_usage_report(
-            df,
-            csv_path=DEFAULT_REPORT_CSV,
-            figure_path=DEFAULT_REPORT_FIGURE,
-            label_column=None,
-            min_actions=1,
-            show_plot=False,
-        )
-        generate_strategy_usage_radar(
-            df,
-            figure_path=DEFAULT_RADAR_FIGURE,
-            label_column=None,
-            min_actions=1,
-            value_col="percent",
-            show_plot=False,
-        )
-        show_strategy_dashboard(summary_df_local, DEFAULT_REPORT_FIGURE, DEFAULT_RADAR_FIGURE, show=True)
+        script_path = Path(__file__).resolve()
+        python_exe = sys.executable or "python3"
+        cmd = [
+            python_exe,
+            str(script_path),
+            "--dashboard",
+            "--show-dashboard",
+        ]
+        try:
+            subprocess.Popen(cmd, cwd=str(script_path.parent))
+        except Exception as exc:
+            print(f"[WARN] Failed to launch dashboard process: {exc}")
 
     nav_button_ax = plt.axes([0.82, 0.94, 0.12, 0.035])
     nav_button = Button(nav_button_ax, t('dashboard_button'), color='#0d9488', hovercolor='#14b8a6')
@@ -1512,110 +1521,5 @@ def main():
         _legacy_debug_snippet(log_dir=args.debug_log_dir, t_start=args.debug_start, t_end=args.debug_end)
 
 
-
 if __name__ == "__main__":
-    plot_timeline()
-
-# debug snippet — run in project root (no filepath header so you can paste/run directly)
-from pathlib import Path
-import json
-
-# debug: load events for inspecting the suspect time window
-session_path = Path("logs")  # adapt if you pass a different path
-
-try:
-    # If a directory, expand to a list of matching log files
-    if session_path.is_dir():
-        log_paths = list(session_path.glob("User*.log"))
-    else:
-        # if a file or pattern string was passed, wrap into a list
-        log_paths = [session_path]
-
-    # call parse_session with an iterable of paths
-    events = parse_session(log_paths, session_id="default")
-except TypeError:
-    # last-resort: try calling without session_id if signature differs
-    try:
-        events = parse_session(log_paths)
-    except Exception as e:
-        raise
-
-t_start = 155.0
-t_end = 205.0
-
-def event_ts(e):
-    return e.get("timestamp_sec") or e.get("timestamp") or e.get("time") or 0.0
-
-evs_window = [e for e in events if t_start <= event_ts(e) < t_end]
-print(f"Total raw events in window {t_start}-{t_end}: {len(evs_window)}")
-for e in evs_window:
-    print(json.dumps({
-        "user_id": e.get("user_id"),
-        "ts": event_ts(e),
-        "type": e.get("type") or e.get("event") or e.get("action"),
-        "payload": {k: e.get(k) for k in ("param","value","description") if k in e}
-    }))
-
-from collections import Counter
-cnt = Counter(e.get("user_id") for e in evs_window)
-print("per-user counts:", cnt)
-
-# run: python - <<'PY'
-import os
-from pathlib import Path
-print("cwd:", os.getcwd())
-for p in Path('.').glob('segment_strategy*.csv'):
-    print(p.name, p.stat().st_size)
-
-# run: python - <<'PY'
-from strategy_classifier.segmentation import build_segments_from_speed_csv
-from pathlib import Path
-s = Path("speed/trends.csv")
-segs = build_segments_from_speed_csv(s, 20.0, 10.0)
-print("segments:", len(segs))
-for seg in segs:
-    if seg.start <= 158 and seg.end >= 156:
-        print("SEG:", getattr(seg,'segment_id',None), seg.start, seg.end, getattr(seg,'trend',None), "dur=", getattr(seg,'duration',None))
-
-# python - <<'PY'
-import pandas as pd, sys
-from pathlib import Path
-
-p = Path("segment_strategy_with_global_label.csv")
-if not p.exists():
-    print("MISSING:", p); sys.exit(1)
-
-df = pd.read_csv(p)
-print("FILE:", p, "rows:", len(df))
-print("COLUMNS:", df.columns.tolist())
-
-# find candidate start/end column names
-candidates = {c.lower():c for c in df.columns}
-def col(*names):
-    for n in names:
-        if n.lower() in candidates:
-            return candidates[n.lower()]
-    return None
-
-startc = col("seg_start","starttime","start","seg_start_sec")
-endc   = col("seg_end","endtime","end","seg_end_sec")
-userc  = col("user_id","user","userid","uid")
-predc  = col("pred_strategy","pred","strategy","label")
-print("mapped:", startc, endc, userc, predc)
-
-if not (startc and endc):
-    print("No start/end columns found; show head:")
-    print(df.head().to_string(index=False))
-    sys.exit(0)
-
-tmin,tmax = 156.0,158.0
-mask = (pd.to_numeric(df[startc],errors='coerce') <= tmax) & (pd.to_numeric(df[endc],errors='coerce') >= tmin)
-sel = df[mask].sort_values([userc or startc, startc])
-print("ROWS overlapping 156-158s:", len(sel))
-if len(sel)>0:
-    print(sel[[c for c in (userc,startc,endc,predc) if c in sel.columns]].to_string(index=False))
-else:
-    print("No predictions overlap that window.")
-
-
-
+    main()
