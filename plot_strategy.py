@@ -4,8 +4,6 @@
 # Speed Curve + Speed Trends + Strategy Timelines (per user)
 # --------------------------------------------------------------
 
-import argparse
-import math
 import pandas as pd
 import matplotlib.pyplot as plt
 plt.rcParams["font.family"] = "DejaVu Sans"  # avoid missing glyph warnings for control icons
@@ -13,6 +11,7 @@ import matplotlib.colors as mcolors
 from matplotlib.animation import FuncAnimation
 import numpy as np
 from pathlib import Path
+import pandas as pd
 from matplotlib.widgets import Slider, Button
 import time
 import json
@@ -319,7 +318,6 @@ def build_strategy_colors():
         list(mcolors.XKCD_COLORS.values())
     )
     return {s: base[i % len(base)] for i, s in enumerate(ALL_STRATEGIES)}
-
 
 def _resolve_strategy_color(label, colors):
     """Map a label (with spaces) to a color from ALL_STRATEGIES palette."""
@@ -741,18 +739,23 @@ def plot_timeline():
     # ----------------------------------------------------------
     # HOVER TOOLTIP FOR STRATEGY DEFINITION
     # ----------------------------------------------------------
-    # Create a text annotation for showing strategy definitions on hover
-    hover_annotation = fig.text(
-        0.83, 0.30, '', 
-        fontsize=9, 
-        verticalalignment='top',
-        bbox=dict(boxstyle='round,pad=0.5', facecolor='lightyellow', edgecolor='gray', alpha=0.95),
-        wrap=True,
-        visible=False
-    )
-    hover_state = {'current_strategy': None}
+    # Create a text annotation for showing strategy definitions on hover (follows mouse)
+    # Store in a dict so we can update reference without nonlocal issues
+    hover_annotation_ref = {
+        'annot': axes[1].annotate(
+            '', 
+            xy=(0, 0),
+            xytext=(15, 15),
+            textcoords='offset points',
+            fontsize=9,
+            bbox=dict(boxstyle='round,pad=0.5', facecolor='lightyellow', edgecolor='gray', alpha=0.95),
+            visible=False,
+            zorder=1000
+        )
+    }
+    hover_state = {'current_strategy': None, 'current_ax': None}
 
-    def update_legend_with_expansion(hovered_strategy=None):
+    def update_legend_with_expansion(hovered_strategy=None, mouse_x=None, mouse_y=None, ax=None):
         """Update legend, expanding the hovered strategy with its definition."""
         if legend_ref['legend'] is not None:
             legend_ref['legend'].remove()
@@ -783,15 +786,34 @@ def plot_timeline():
                 fontsize=11
             )
         
-        # Show/hide definition tooltip
-        if hovered_strategy:
+        # Show/hide definition tooltip next to mouse
+        if hovered_strategy and mouse_x is not None and mouse_y is not None and ax is not None:
             definition = get_strategy_definition(hovered_strategy)
             # Wrap text manually for better display
-            wrapped = '\n'.join([definition[i:i+35] for i in range(0, len(definition), 35)])
-            hover_annotation.set_text(wrapped)
-            hover_annotation.set_visible(True)
+            wrapped = '\n'.join([definition[i:i+40] for i in range(0, len(definition), 40)])
+            
+            # Move annotation to the correct axes if needed
+            if hover_state['current_ax'] != ax:
+                hover_annotation_ref['annot'].remove()
+                hover_state['current_ax'] = ax
+                # Recreate annotation on the new axes
+                hover_annotation_ref['annot'] = ax.annotate(
+                    wrapped,
+                    xy=(mouse_x, mouse_y),
+                    xytext=(15, 15),
+                    textcoords='offset points',
+                    fontsize=9,
+                    bbox=dict(boxstyle='round,pad=0.5', facecolor='lightyellow', edgecolor='gray', alpha=0.95),
+                    visible=True,
+                    zorder=1000
+                )
+            else:
+                # Update annotation position and text
+                hover_annotation_ref['annot'].xy = (mouse_x, mouse_y)
+                hover_annotation_ref['annot'].set_text(wrapped)
+                hover_annotation_ref['annot'].set_visible(True)
         else:
-            hover_annotation.set_visible(False)
+            hover_annotation_ref['annot'].set_visible(False)
         
         legend_ref['expanded_strategy'] = hovered_strategy
         fig.canvas.draw_idle()
@@ -806,16 +828,44 @@ def plot_timeline():
         
         # Check if mouse is over any strategy patch
         found_strategy = None
+        found_ax = None
+        mouse_x, mouse_y = event.xdata, event.ydata
+        
         for patch, strat, user, start, end, ax in strategy_patches:
             if event.inaxes == ax:
                 # Check if x position is within the patch bounds
                 if start <= event.xdata <= end:
                     found_strategy = strat
+                    found_ax = ax
                     break
         
-        if found_strategy != hover_state['current_strategy']:
-            hover_state['current_strategy'] = found_strategy
-            update_legend_with_expansion(found_strategy)
+        # Always update position when hovering on a strategy bar
+        if found_strategy is not None:
+            # Strategy changed - update legend and recreate annotation
+            if found_strategy != hover_state['current_strategy'] or hover_state['current_ax'] != found_ax:
+                hover_state['current_strategy'] = found_strategy
+                update_legend_with_expansion(found_strategy, mouse_x, mouse_y, found_ax)
+            else:
+                # Same strategy, same axes - just update position
+                # Remove old annotation and recreate at new position for smooth following
+                hover_annotation_ref['annot'].remove()
+                definition = get_strategy_definition(found_strategy)
+                wrapped = '\n'.join([definition[i:i+40] for i in range(0, len(definition), 40)])
+                hover_annotation_ref['annot'] = found_ax.annotate(
+                    wrapped,
+                    xy=(mouse_x, mouse_y),
+                    xytext=(15, 15),
+                    textcoords='offset points',
+                    fontsize=9,
+                    bbox=dict(boxstyle='round,pad=0.5', facecolor='lightyellow', edgecolor='gray', alpha=0.95),
+                    visible=True,
+                    zorder=1000
+                )
+                fig.canvas.draw_idle()
+        elif hover_state['current_strategy'] is not None:
+            # Mouse moved off a bar
+            hover_state['current_strategy'] = None
+            update_legend_with_expansion(None)
 
     # Connect hover event
     fig.canvas.mpl_connect('motion_notify_event', on_hover)
@@ -1132,172 +1182,112 @@ def _print_pred_rows_for_window(preds_df, view_start, view_end):
 # Example insertion point (inside plot_timeline or equivalent):
 # view_start, view_end should be the current x-axis limits or the time window you inspect
 
-def _legacy_debug_snippet(log_dir="logs", t_start=155.0, t_end=205.0):
-    """
-    Legacy verbose diagnostics that previously ran unconditionally.
-    Trigger with --debug-snippet if you still need that workflow.
-    """
-    from collections import Counter
-    import os
-    try:
-        from strategy_classifier.segmentation import build_segments_from_speed_csv
-    except Exception:
-        build_segments_from_speed_csv = None
-
-    session_path = Path(log_dir)
-    print(f"[DEBUG] Inspecting logs in {session_path.resolve()}")
-    try:
-        if session_path.is_dir():
-            log_paths = list(session_path.glob("User*.log"))
-        else:
-            log_paths = [session_path]
-        try:
-            events = parse_session(log_paths, session_id="default")
-        except TypeError:
-            events = parse_session(log_paths)
-    except Exception as exc:
-        print(f"[WARN] Failed to parse logs: {exc}")
-        events = []
-
-    def event_ts(e):
-        return e.get("timestamp_sec") or e.get("timestamp") or e.get("time") or 0.0
-
-    evs_window = [e for e in events if t_start <= event_ts(e) < t_end]
-    print(f"Total raw events in window {t_start}-{t_end}: {len(evs_window)}")
-    for e in evs_window:
-        print(json.dumps({
-            "user_id": e.get("user_id"),
-            "ts": event_ts(e),
-            "type": e.get("type") or e.get("event") or e.get("action"),
-            "payload": {k: e.get(k) for k in ("param","value","description") if k in e}
-        }))
-
-    cnt = Counter(e.get("user_id") for e in evs_window)
-    print("per-user counts:", cnt)
-
-    print("cwd:", os.getcwd())
-    for p in Path(".").glob("segment_strategy*.csv"):
-        print(p.name, p.stat().st_size)
-
-    if build_segments_from_speed_csv:
-        try:
-            s = Path("speed/trends.csv")
-            segs = build_segments_from_speed_csv(s, 20.0, 10.0)
-            print("segments:", len(segs))
-            for seg in segs:
-                if seg.start <= 158 and seg.end >= 156:
-                    print("SEG:", getattr(seg, 'segment_id', None), seg.start, seg.end,
-                          getattr(seg, 'trend', None), "dur=", getattr(seg, 'duration', None))
-        except Exception as exc:
-            print(f"[WARN] Segment debug failed: {exc}")
-
-    try:
-        p = Path("segment_strategy_with_global_label.csv")
-        if not p.exists():
-            print(f"[WARN] Missing {p}")
-            return
-
-        df = pd.read_csv(p)
-        print("FILE:", p, "rows:", len(df))
-        print("COLUMNS:", df.columns.tolist())
-
-        candidates = {c.lower(): c for c in df.columns}
-
-        def col(*names):
-            for n in names:
-                if n.lower() in candidates:
-                    return candidates[n.lower()]
-            return None
-
-        startc = col("seg_start", "starttime", "start", "seg_start_sec")
-        endc = col("seg_end", "endtime", "end", "seg_end_sec")
-        userc = col("user_id", "user", "userid", "uid")
-        predc = col("pred_strategy", "pred", "strategy", "label")
-        print("mapped:", startc, endc, userc, predc)
-
-        if not (startc and endc):
-            print("No start/end columns found; head preview:")
-            print(df.head().to_string(index=False))
-            return
-
-        tmin, tmax = 156.0, 158.0
-        mask = (pd.to_numeric(df[startc], errors="coerce") <= tmax) & \
-               (pd.to_numeric(df[endc], errors="coerce") >= tmin)
-        sel = df[mask].sort_values([userc or startc, startc])
-        print("ROWS overlapping 156-158s:", len(sel))
-        if len(sel) > 0:
-            cols = [c for c in (userc, startc, endc, predc) if c in sel.columns]
-            print(sel[cols].to_string(index=False))
-        else:
-            print("No predictions overlap that window.")
-    except Exception as exc:
-        print(f"[WARN] CSV inspection failed: {exc}")
-
-
-def main():
-    parser = argparse.ArgumentParser(description="Strategy timeline, reporting, and radar tools.")
-    parser.add_argument(
-        "--report",
-        action="store_true",
-        help="Generate the per-user strategy usage report instead of the interactive timeline."
-    )
-    parser.add_argument("--report-csv", default="graphs/strategy_usage_summary.csv", help="CSV path for the summary.")
-    parser.add_argument("--report-figure", default="graphs/strategy_usage_report.png",
-                        help="Image path for the per-user bar plots.")
-    parser.add_argument("--report-min-actions", type=int, default=1,
-                        help="Minimum actions required for a segment to count in the report.")
-    parser.add_argument("--label-column", default=None,
-                        help="Override the label column used for aggregation (default: pred_strategy/global_label).")
-    parser.add_argument("--show-report", action="store_true", help="Display the generated report figure interactively.")
-    parser.add_argument("--radar", action="store_true", help="Generate radar chart(s) of per-user strategy usage.")
-    parser.add_argument("--radar-figure", default="graphs/strategy_usage_radar.png",
-                        help="Image path for the radar visualization.")
-    parser.add_argument("--radar-min-actions", type=int, default=1,
-                        help="Minimum actions required for radar aggregation.")
-    parser.add_argument("--radar-value", choices=("percent", "count"), default="percent",
-                        help="Metric plotted on the radar chart.")
-    parser.add_argument("--show-radar", action="store_true", help="Display the radar chart interactively.")
-    parser.add_argument("--debug-snippet", action="store_true",
-                        help="Run the legacy verbose debugging snippet after the main task.")
-    parser.add_argument("--debug-log-dir", default="logs", help="Log directory used by the debug snippet.")
-    parser.add_argument("--debug-start", type=float, default=155.0, help="Start time for debug snippet window.")
-    parser.add_argument("--debug-end", type=float, default=205.0, help="End time for debug snippet window.")
-    parser.add_argument("--language", choices=list(TRANSLATIONS.keys()), default="EN",
-                        help="Interface language for the timeline plot.")
-
-    args = parser.parse_args()
-    current_language["lang"] = args.language
-
-    df = None
-    if args.report or args.radar:
-        df = load_predictions()
-
-    if args.report:
-        generate_strategy_usage_report(
-            df,
-            csv_path=args.report_csv,
-            figure_path=args.report_figure,
-            label_column=args.label_column,
-            min_actions=args.report_min_actions,
-            show_plot=args.show_report,
-        )
-
-    if args.radar:
-        generate_strategy_usage_radar(
-            df,
-            figure_path=args.radar_figure,
-            label_column=args.label_column,
-            min_actions=args.radar_min_actions,
-            value_col=args.radar_value,
-            show_plot=args.show_radar,
-        )
-
-    if not args.report and not args.radar:
-        plot_timeline()
-
-    if args.debug_snippet:
-        _legacy_debug_snippet(log_dir=args.debug_log_dir, t_start=args.debug_start, t_end=args.debug_end)
-
-
+# --------------------------------------------------------------
+# Run as script
+# --------------------------------------------------------------
 if __name__ == "__main__":
-    main()
+    plot_timeline()
+
+# debug snippet — run in project root (no filepath header so you can paste/run directly)
+from pathlib import Path
+import json
+
+# debug: load events for inspecting the suspect time window
+session_path = Path("logs")  # adapt if you pass a different path
+
+try:
+    # If a directory, expand to a list of matching log files
+    if session_path.is_dir():
+        log_paths = list(session_path.glob("User*.log"))
+    else:
+        # if a file or pattern string was passed, wrap into a list
+        log_paths = [session_path]
+
+    # call parse_session with an iterable of paths
+    events = parse_session(log_paths, session_id="default")
+except TypeError:
+    # last-resort: try calling without session_id if signature differs
+    try:
+        events = parse_session(log_paths)
+    except Exception as e:
+        raise
+
+t_start = 155.0
+t_end = 205.0
+
+def event_ts(e):
+    return e.get("timestamp_sec") or e.get("timestamp") or e.get("time") or 0.0
+
+evs_window = [e for e in events if t_start <= event_ts(e) < t_end]
+print(f"Total raw events in window {t_start}-{t_end}: {len(evs_window)}")
+for e in evs_window:
+    print(json.dumps({
+        "user_id": e.get("user_id"),
+        "ts": event_ts(e),
+        "type": e.get("type") or e.get("event") or e.get("action"),
+        "payload": {k: e.get(k) for k in ("param","value","description") if k in e}
+    }))
+
+from collections import Counter
+cnt = Counter(e.get("user_id") for e in evs_window)
+print("per-user counts:", cnt)
+
+# run: python - <<'PY'
+import os
+from pathlib import Path
+print("cwd:", os.getcwd())
+for p in Path('.').glob('segment_strategy*.csv'):
+    print(p.name, p.stat().st_size)
+
+# run: python - <<'PY'
+from strategy_classifier.segmentation import build_segments_from_speed_csv
+from pathlib import Path
+s = Path("speed/trends.csv")
+segs = build_segments_from_speed_csv(s, 20.0, 10.0)
+print("segments:", len(segs))
+for seg in segs:
+    if seg.start <= 158 and seg.end >= 156:
+        print("SEG:", getattr(seg,'segment_id',None), seg.start, seg.end, getattr(seg,'trend',None), "dur=", getattr(seg,'duration',None))
+
+# python - <<'PY'
+import pandas as pd, sys
+from pathlib import Path
+
+p = Path("segment_strategy_with_global_label.csv")
+if not p.exists():
+    print("MISSING:", p); sys.exit(1)
+
+df = pd.read_csv(p)
+print("FILE:", p, "rows:", len(df))
+print("COLUMNS:", df.columns.tolist())
+
+# find candidate start/end column names
+candidates = {c.lower():c for c in df.columns}
+def col(*names):
+    for n in names:
+        if n.lower() in candidates:
+            return candidates[n.lower()]
+    return None
+
+startc = col("seg_start","starttime","start","seg_start_sec")
+endc   = col("seg_end","endtime","end","seg_end_sec")
+userc  = col("user_id","user","userid","uid")
+predc  = col("pred_strategy","pred","strategy","label")
+print("mapped:", startc, endc, userc, predc)
+
+if not (startc and endc):
+    print("No start/end columns found; show head:")
+    print(df.head().to_string(index=False))
+    sys.exit(0)
+
+tmin,tmax = 156.0,158.0
+mask = (pd.to_numeric(df[startc],errors='coerce') <= tmax) & (pd.to_numeric(df[endc],errors='coerce') >= tmin)
+sel = df[mask].sort_values([userc or startc, startc])
+print("ROWS overlapping 156-158s:", len(sel))
+if len(sel)>0:
+    print(sel[[c for c in (userc,startc,endc,predc) if c in sel.columns]].to_string(index=False))
+else:
+    print("No predictions overlap that window.")
+
+
+
