@@ -13,14 +13,19 @@ import matplotlib.colors as mcolors
 from matplotlib.animation import FuncAnimation
 import numpy as np
 from pathlib import Path
-from matplotlib.widgets import Slider, Button
+from matplotlib.widgets import Slider, Button, RadioButtons
 import time
 import json
+import matplotlib.image as mpimg
 from log_parser import parse_session  # already used in your runner
 
 from strategy_classifier.constants import ALL_STRATEGIES
 
 import re
+
+DEFAULT_REPORT_CSV = "graphs/strategy_usage_summary.csv"
+DEFAULT_REPORT_FIGURE = "graphs/strategy_usage_report.png"
+DEFAULT_RADAR_FIGURE = "graphs/strategy_usage_radar.png"
 
 # --------------------------------------------------------------
 # Translations (EN / NL)
@@ -38,9 +43,10 @@ TRANSLATIONS = {
         'pause': '⏸ Pause',
         'time_slider': 'Time',
         'zoom_slider': 'Zoom',
-        'zoom_display': 'Zoom: {level:.1f}x',
-        # Strategy translations
-        'goal_directed_tuning': 'goal_directed_tuning',
+    'zoom_display': 'Zoom: {level:.1f}x',
+    'dashboard_button': 'Open Dashboard',
+    # Strategy translations
+    'goal_directed_tuning': 'goal_directed_tuning',
         'incremental_adjustment': 'incremental_adjustment',
         'iterative_finetuning': 'iterative_finetuning',
         'random_trial_error': 'random_trial_error',
@@ -59,7 +65,8 @@ TRANSLATIONS = {
         'pause': '⏸ Pauzeren',
         'time_slider': 'Tijd',
         'zoom_slider': 'Zoom',
-        'zoom_display': 'Zoom: {level:.1f}x',
+    'zoom_display': 'Zoom: {level:.1f}x',
+    'dashboard_button': 'Dashboard openen',
         # Strategy translations
         'goal_directed_tuning': 'doelgerichte_afstemming',
         'incremental_adjustment': 'incrementele_aanpassing',
@@ -553,6 +560,119 @@ def generate_strategy_usage_radar(
     )
     print(f"[INFO] Saved strategy usage radar chart to {figure_path}")
     return summary_df
+
+
+STRATEGY_ROLE_MAP = {
+    "goal_directed_tuning": "Leader",
+    "iterative_finetuning": "Leader",
+    "systematic_parameter_sweep": "Explorer",
+    "structured_exploration": "Explorer",
+    "random_trial_error": "Explorer",
+    "incremental_adjustment": "Follower",
+    "repetition_practice": "Follower",
+    "backtracking_recovery": "Support",
+    "inactivity_wait": "Observer",
+}
+
+ROLE_DESCRIPTIONS = {
+    "Leader": "Optimizes toward a clear goal and guides the team toward refined solutions.",
+    "Explorer": "Covers new parameter space broadly to discover possibilities.",
+    "Follower": "Builds on existing ideas with cautious adjustments and repetitions.",
+    "Support": "Keeps the team on track by undoing mistakes or recovering prior states.",
+    "Observer": "Pauses or monitors rather than acting, often waiting for others.",
+}
+
+
+def derive_player_roles(summary_df):
+    """Return list of {user_id, strategy, role, percent, count} records."""
+    roles = []
+    for user, group in summary_df.groupby("user_id"):
+        if group.empty:
+            continue
+        top = group.sort_values("percent", ascending=False).iloc[0]
+        strategy = top["strategy"]
+        role = STRATEGY_ROLE_MAP.get(strategy, "Explorer")
+        roles.append({
+            "user_id": user,
+            "strategy": strategy,
+            "role": role,
+            "percent": float(top["percent"]),
+            "count": int(top["count"]),
+        })
+    return roles
+
+
+def _display_image(ax, image_path, title):
+    ax.clear()
+    p = Path(image_path)
+    if not p.exists():
+        ax.text(0.5, 0.5, f"Image not found:\n{p}", ha="center", va="center", fontsize=12)
+        ax.axis("off")
+        return
+    img = mpimg.imread(p)
+    ax.imshow(img)
+    ax.set_title(title, fontsize=14)
+    ax.axis("off")
+
+
+def _display_insights(ax, roles):
+    ax.clear()
+    ax.axis("off")
+    if not roles:
+        ax.text(0.5, 0.5, "No player insights available.", ha="center", va="center", fontsize=12)
+        return
+    y = 0.95
+    ax.text(0.0, 0.98, "Player Roles & Insights", fontsize=14, fontweight="bold", transform=ax.transAxes)
+    for role_info in roles:
+        role = role_info["role"]
+        desc = ROLE_DESCRIPTIONS.get(role, "")
+        line = (
+            f"User {role_info['user_id']}: {role} "
+            f"(dominant: {role_info['strategy']} "
+            f"{role_info['percent'] * 100:.1f}% of segments)"
+        )
+        ax.text(0.0, y, line, fontsize=11, transform=ax.transAxes)
+        if desc:
+            ax.text(0.02, y - 0.05, desc, fontsize=9, color="dimgray", transform=ax.transAxes)
+            y -= 0.12
+        else:
+            y -= 0.08
+        if y < 0.05:
+            ax.text(0.0, y, "...", fontsize=12, transform=ax.transAxes)
+            break
+
+
+def show_strategy_dashboard(summary_df, bar_figure_path, radar_figure_path, show=True):
+    """
+    Display a second 'page' with menu controls to view bar chart, radar chart, or insights.
+    """
+    roles = derive_player_roles(summary_df)
+    fig = plt.figure(figsize=(12, 6))
+    fig.suptitle("Strategy Dashboard", fontsize=16)
+
+    menu_ax = plt.axes([0.02, 0.25, 0.15, 0.45])
+    menu_ax.set_title("Views", fontsize=11)
+    display_ax = plt.axes([0.25, 0.1, 0.7, 0.8])
+
+    options = ["Bar Chart", "Radar Chart", "Insights"]
+    radio = RadioButtons(menu_ax, options)
+
+    def update_display(label):
+        if label == "Bar Chart":
+            _display_image(display_ax, bar_figure_path, "Per-User Strategy Counts")
+        elif label == "Radar Chart":
+            _display_image(display_ax, radar_figure_path, "Strategy Usage Radar")
+        else:
+            _display_insights(display_ax, roles)
+        fig.canvas.draw_idle()
+
+    radio.on_clicked(update_display)
+    update_display(options[0])
+
+    if show:
+        plt.show()
+    else:
+        plt.close(fig)
 
 
 # --------------------------------------------------------------
@@ -1056,6 +1176,31 @@ def plot_timeline():
     play_button.label.set_color('white')
     play_button.label.set_fontweight('bold')
     play_button.on_clicked(toggle_autoplay)
+
+    def open_dashboard(event):
+        summary_df_local = generate_strategy_usage_report(
+            df,
+            csv_path=DEFAULT_REPORT_CSV,
+            figure_path=DEFAULT_REPORT_FIGURE,
+            label_column=None,
+            min_actions=1,
+            show_plot=False,
+        )
+        generate_strategy_usage_radar(
+            df,
+            figure_path=DEFAULT_RADAR_FIGURE,
+            label_column=None,
+            min_actions=1,
+            value_col="percent",
+            show_plot=False,
+        )
+        show_strategy_dashboard(summary_df_local, DEFAULT_REPORT_FIGURE, DEFAULT_RADAR_FIGURE, show=True)
+
+    nav_button_ax = plt.axes([0.82, 0.94, 0.12, 0.035])
+    nav_button = Button(nav_button_ax, t('dashboard_button'), color='#0d9488', hovercolor='#14b8a6')
+    nav_button.label.set_color('white')
+    nav_button.label.set_fontweight('bold')
+    nav_button.on_clicked(open_dashboard)
     
     # ----------------------------------------------------------
     # LANGUAGE TOGGLE BUTTON (NS app style)
@@ -1257,6 +1402,10 @@ def main():
     parser.add_argument("--radar-value", choices=("percent", "count"), default="percent",
                         help="Metric plotted on the radar chart.")
     parser.add_argument("--show-radar", action="store_true", help="Display the radar chart interactively.")
+    parser.add_argument("--dashboard", action="store_true",
+                        help="Open a second page with menu-driven charts and player insights.")
+    parser.add_argument("--show-dashboard", action="store_true",
+                        help="Display the dashboard interactively when --dashboard is used.")
     parser.add_argument("--debug-snippet", action="store_true",
                         help="Run the legacy verbose debugging snippet after the main task.")
     parser.add_argument("--debug-log-dir", default="logs", help="Log directory used by the debug snippet.")
@@ -1269,11 +1418,12 @@ def main():
     current_language["lang"] = args.language
 
     df = None
-    if args.report or args.radar:
+    summary_df = None
+    if args.report or args.radar or args.dashboard:
         df = load_predictions()
 
-    if args.report:
-        generate_strategy_usage_report(
+    if args.report or args.dashboard:
+        summary_df = generate_strategy_usage_report(
             df,
             csv_path=args.report_csv,
             figure_path=args.report_figure,
@@ -1282,8 +1432,8 @@ def main():
             show_plot=args.show_report,
         )
 
-    if args.radar:
-        generate_strategy_usage_radar(
+    if args.radar or args.dashboard:
+        radar_summary = generate_strategy_usage_radar(
             df,
             figure_path=args.radar_figure,
             label_column=args.label_column,
@@ -1291,8 +1441,21 @@ def main():
             value_col=args.radar_value,
             show_plot=args.show_radar,
         )
+        if summary_df is None:
+            summary_df = radar_summary
 
-    if not args.report and not args.radar:
+    if args.dashboard:
+        if summary_df is None:
+            min_actions = min(args.report_min_actions, args.radar_min_actions)
+            summary_df_raw, used_label = summarize_strategy_usage(
+                df,
+                label_column=args.label_column,
+                min_actions=min_actions,
+            )
+            summary_df = summary_df_raw.rename(columns={used_label: "strategy"})
+        show_strategy_dashboard(summary_df, args.report_figure, args.radar_figure, show=args.show_dashboard)
+
+    if not args.report and not args.radar and not args.dashboard:
         plot_timeline()
 
     if args.debug_snippet:
