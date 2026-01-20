@@ -4,6 +4,8 @@
 # Speed Curve + Speed Trends + Strategy Timelines (per user)
 # --------------------------------------------------------------
 
+import argparse
+import math
 import pandas as pd
 import matplotlib.pyplot as plt
 plt.rcParams["font.family"] = "DejaVu Sans"  # avoid missing glyph warnings for control icons
@@ -11,7 +13,6 @@ import matplotlib.colors as mcolors
 from matplotlib.animation import FuncAnimation
 import numpy as np
 from pathlib import Path
-import pandas as pd
 from matplotlib.widgets import Slider, Button
 import time
 import json
@@ -318,6 +319,240 @@ def build_strategy_colors():
         list(mcolors.XKCD_COLORS.values())
     )
     return {s: base[i % len(base)] for i, s in enumerate(ALL_STRATEGIES)}
+
+
+def _resolve_strategy_color(label, colors):
+    """Map a label (with spaces) to a color from ALL_STRATEGIES palette."""
+    if label is None:
+        return "#BBBBBB"
+    normalized = str(label).strip().lower().replace(" ", "_")
+    for strat, color in colors.items():
+        key = strat.lower()
+        if key == normalized or key.replace("_", " ") == normalized.replace("_", " "):
+            return color
+    return "#BBBBBB"
+
+
+def summarize_strategy_usage(df, label_column=None, min_actions=1):
+    """
+    Aggregate number of segments per user/strategy.
+    Returns (summary_df, label_column_used).
+    """
+    df = df.copy()
+    if label_column is None:
+        if "pred_strategy" in df.columns:
+            label_column = "pred_strategy"
+        elif "global_label" in df.columns:
+            label_column = "global_label"
+        else:
+            label_column = "pred_strategy"
+
+    if label_column not in df.columns:
+        raise ValueError(f"Label column '{label_column}' not found.")
+
+    df["num_actions"] = pd.to_numeric(df.get("num_actions", 0), errors="coerce").fillna(0).astype(int)
+    if "has_events" in df.columns:
+        df = df[df["has_events"].astype(int) > 0]
+    if min_actions > 1:
+        df = df[df["num_actions"] >= int(min_actions)]
+
+    df = df[pd.notna(df["user_id"])]
+    if df.empty:
+        raise ValueError("No rows available after filtering.")
+
+    summary = (
+        df.groupby(["user_id", label_column])
+        .size()
+        .reset_index(name="count")
+    )
+    summary["total_segments"] = summary.groupby("user_id")["count"].transform("sum")
+    summary["percent"] = summary["count"] / summary["total_segments"]
+    summary = summary.sort_values(["user_id", "count"], ascending=[True, False]).reset_index(drop=True)
+    return summary, label_column
+
+
+def plot_strategy_usage_page(summary_df, label_column, output_path, colors=None, cols=2, show=False):
+    """Render multi-panel bar charts summarizing strategy counts per user."""
+    if colors is None:
+        colors = build_strategy_colors()
+
+    users = summary_df["user_id"].unique()
+    if len(users) == 0:
+        raise ValueError("Summary dataframe has no users.")
+
+    cols = max(1, min(cols, len(users)))
+    rows = math.ceil(len(users) / cols)
+    fig, axes = plt.subplots(rows, cols, figsize=(cols * 5.5, rows * 4), squeeze=False)
+    axes = axes.flatten()
+
+    for idx, user in enumerate(users):
+        ax = axes[idx]
+        subset = summary_df[summary_df["user_id"] == user].sort_values("count", ascending=False)
+        positions = np.arange(len(subset))
+        bar_colors = [_resolve_strategy_color(label, colors) for label in subset[label_column]]
+        bars = ax.bar(positions, subset["count"], color=bar_colors, edgecolor="#333333", alpha=0.9)
+        ax.set_xticks(positions)
+        ax.set_xticklabels(subset[label_column], rotation=35, ha="right")
+        ax.set_ylabel("Segments")
+        ax.set_title(f"User {user}", fontsize=12)
+        for bar, count in zip(bars, subset["count"]):
+            ax.text(
+                bar.get_x() + bar.get_width() / 2,
+                bar.get_height() + 0.05,
+                f"{int(count)}",
+                ha="center",
+                va="bottom",
+                fontsize=9,
+            )
+        ax.grid(axis="y", alpha=0.2, linestyle="--")
+
+    for j in range(len(users), len(axes)):
+        axes[j].axis("off")
+
+    fig.suptitle("Strategy Usage per User", fontsize=16, y=0.98)
+    fig.tight_layout(rect=(0, 0, 1, 0.95))
+
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(output_path, dpi=200)
+
+    if show:
+        plt.show()
+    else:
+        plt.close(fig)
+
+
+def generate_strategy_usage_report(
+    df,
+    csv_path="graphs/strategy_usage_summary.csv",
+    figure_path="graphs/strategy_usage_report.png",
+    label_column=None,
+    min_actions=1,
+    show_plot=False,
+):
+    """Build the per-user summary CSV and bar-chart visualization."""
+    summary_df, label_column = summarize_strategy_usage(df, label_column=label_column, min_actions=min_actions)
+    summary_df = summary_df.rename(columns={label_column: "strategy"})
+
+    csv_path = Path(csv_path)
+    csv_path.parent.mkdir(parents=True, exist_ok=True)
+    summary_df.to_csv(csv_path, index=False)
+    print(f"[INFO] Wrote strategy usage summary to {csv_path}")
+
+    colors = build_strategy_colors()
+    plot_strategy_usage_page(
+        summary_df,
+        "strategy",
+        figure_path,
+        colors=colors,
+        show=show_plot,
+    )
+    print(f"[INFO] Saved per-user strategy usage figure to {figure_path}")
+    return summary_df
+
+
+def plot_strategy_usage_radar(
+    summary_df,
+    figure_path,
+    strategies=None,
+    value_col="percent",
+    show=False,
+    cols=2,
+):
+    """Render radar (spider) charts summarizing strategy usage per user."""
+    if "strategy" not in summary_df.columns:
+        raise ValueError("summary_df must contain a 'strategy' column.")
+    if value_col not in summary_df.columns:
+        raise ValueError(f"summary_df must contain '{value_col}'.")
+
+    users = summary_df["user_id"].unique()
+    if len(users) == 0:
+        raise ValueError("Summary dataframe has no users.")
+
+    if strategies is None:
+        observed = list(summary_df["strategy"].unique())
+        strategies = [s for s in ALL_STRATEGIES if s in observed]
+        if not strategies:
+            strategies = observed
+
+    num_strats = len(strategies)
+    if num_strats < 3:
+        raise ValueError("Radar chart needs at least 3 strategies.")
+
+    angles = np.linspace(0, 2 * np.pi, num_strats, endpoint=False).tolist()
+    angles += angles[:1]
+
+    cols = max(1, min(cols, len(users)))
+    rows = math.ceil(len(users) / cols)
+    fig, axes = plt.subplots(rows, cols, subplot_kw=dict(polar=True), figsize=(cols * 5, rows * 4), squeeze=False)
+    axes = axes.flatten()
+
+    scale = 100.0 if value_col == "percent" else 1.0
+    max_value = (summary_df[value_col].max() or 1.0) * scale
+    max_value = max(1e-6, max_value)
+
+    for idx, user in enumerate(users):
+        ax = axes[idx]
+        user_df = summary_df[summary_df["user_id"] == user]
+        values = []
+        for strat in strategies:
+            row = user_df[user_df["strategy"] == strat]
+            val = row[value_col].iloc[0] if not row.empty else 0.0
+            val *= scale
+            values.append(val)
+        values += values[:1]
+
+        ax.plot(angles, values, linewidth=2, label=f"User {user}")
+        ax.fill(angles, values, alpha=0.25)
+        ax.set_title(f"User {user}", fontsize=12, pad=12)
+        ax.set_xticks(np.linspace(0, 2 * np.pi, num_strats, endpoint=False))
+        ax.set_xticklabels([s.replace("_", " ") for s in strategies], fontsize=9)
+        ax.set_ylim(0, max_value)
+        ax.set_yticks(np.linspace(0, max_value, 4))
+        if value_col == "percent":
+            ax.set_yticklabels([f"{v:.0f}%" for v in np.linspace(0, max_value, 4)], fontsize=8)
+        else:
+            ax.set_yticklabels([f"{int(round(v))}" for v in np.linspace(0, max_value, 4)], fontsize=8)
+        ax.grid(True, linestyle="--", alpha=0.4)
+
+    for j in range(len(users), len(axes)):
+        axes[j].axis("off")
+
+    ylabel = "Percent of segments" if value_col == "percent" else "Segment count"
+    fig.suptitle(f"Strategy Usage Radar ({ylabel})", fontsize=16, y=0.98)
+    fig.tight_layout(rect=(0, 0, 1, 0.95))
+
+    figure_path = Path(figure_path)
+    figure_path.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(figure_path, dpi=200)
+
+    if show:
+        plt.show()
+    else:
+        plt.close(fig)
+
+
+def generate_strategy_usage_radar(
+    df,
+    figure_path="graphs/strategy_usage_radar.png",
+    label_column=None,
+    min_actions=1,
+    value_col="percent",
+    strategies=None,
+    show_plot=False,
+):
+    """Prepare radar visualization for per-user strategy usage."""
+    summary_df, label_column = summarize_strategy_usage(df, label_column=label_column, min_actions=min_actions)
+    summary_df = summary_df.rename(columns={label_column: "strategy"})
+    plot_strategy_usage_radar(
+        summary_df,
+        figure_path,
+        strategies=strategies,
+        value_col=value_col,
+        show=show_plot,
+    )
+    print(f"[INFO] Saved strategy usage radar chart to {figure_path}")
+    return summary_df
 
 
 # --------------------------------------------------------------
@@ -897,112 +1132,172 @@ def _print_pred_rows_for_window(preds_df, view_start, view_end):
 # Example insertion point (inside plot_timeline or equivalent):
 # view_start, view_end should be the current x-axis limits or the time window you inspect
 
-# --------------------------------------------------------------
-# Run as script
-# --------------------------------------------------------------
-if __name__ == "__main__":
-    plot_timeline()
-
-# debug snippet — run in project root (no filepath header so you can paste/run directly)
-from pathlib import Path
-import json
-
-# debug: load events for inspecting the suspect time window
-session_path = Path("logs")  # adapt if you pass a different path
-
-try:
-    # If a directory, expand to a list of matching log files
-    if session_path.is_dir():
-        log_paths = list(session_path.glob("User*.log"))
-    else:
-        # if a file or pattern string was passed, wrap into a list
-        log_paths = [session_path]
-
-    # call parse_session with an iterable of paths
-    events = parse_session(log_paths, session_id="default")
-except TypeError:
-    # last-resort: try calling without session_id if signature differs
+def _legacy_debug_snippet(log_dir="logs", t_start=155.0, t_end=205.0):
+    """
+    Legacy verbose diagnostics that previously ran unconditionally.
+    Trigger with --debug-snippet if you still need that workflow.
+    """
+    from collections import Counter
+    import os
     try:
-        events = parse_session(log_paths)
-    except Exception as e:
-        raise
+        from strategy_classifier.segmentation import build_segments_from_speed_csv
+    except Exception:
+        build_segments_from_speed_csv = None
 
-t_start = 155.0
-t_end = 205.0
+    session_path = Path(log_dir)
+    print(f"[DEBUG] Inspecting logs in {session_path.resolve()}")
+    try:
+        if session_path.is_dir():
+            log_paths = list(session_path.glob("User*.log"))
+        else:
+            log_paths = [session_path]
+        try:
+            events = parse_session(log_paths, session_id="default")
+        except TypeError:
+            events = parse_session(log_paths)
+    except Exception as exc:
+        print(f"[WARN] Failed to parse logs: {exc}")
+        events = []
 
-def event_ts(e):
-    return e.get("timestamp_sec") or e.get("timestamp") or e.get("time") or 0.0
+    def event_ts(e):
+        return e.get("timestamp_sec") or e.get("timestamp") or e.get("time") or 0.0
 
-evs_window = [e for e in events if t_start <= event_ts(e) < t_end]
-print(f"Total raw events in window {t_start}-{t_end}: {len(evs_window)}")
-for e in evs_window:
-    print(json.dumps({
-        "user_id": e.get("user_id"),
-        "ts": event_ts(e),
-        "type": e.get("type") or e.get("event") or e.get("action"),
-        "payload": {k: e.get(k) for k in ("param","value","description") if k in e}
-    }))
+    evs_window = [e for e in events if t_start <= event_ts(e) < t_end]
+    print(f"Total raw events in window {t_start}-{t_end}: {len(evs_window)}")
+    for e in evs_window:
+        print(json.dumps({
+            "user_id": e.get("user_id"),
+            "ts": event_ts(e),
+            "type": e.get("type") or e.get("event") or e.get("action"),
+            "payload": {k: e.get(k) for k in ("param","value","description") if k in e}
+        }))
 
-from collections import Counter
-cnt = Counter(e.get("user_id") for e in evs_window)
-print("per-user counts:", cnt)
+    cnt = Counter(e.get("user_id") for e in evs_window)
+    print("per-user counts:", cnt)
 
-# run: python - <<'PY'
-import os
-from pathlib import Path
-print("cwd:", os.getcwd())
-for p in Path('.').glob('segment_strategy*.csv'):
-    print(p.name, p.stat().st_size)
+    print("cwd:", os.getcwd())
+    for p in Path(".").glob("segment_strategy*.csv"):
+        print(p.name, p.stat().st_size)
 
-# run: python - <<'PY'
-from strategy_classifier.segmentation import build_segments_from_speed_csv
-from pathlib import Path
-s = Path("speed/trends.csv")
-segs = build_segments_from_speed_csv(s, 20.0, 10.0)
-print("segments:", len(segs))
-for seg in segs:
-    if seg.start <= 158 and seg.end >= 156:
-        print("SEG:", getattr(seg,'segment_id',None), seg.start, seg.end, getattr(seg,'trend',None), "dur=", getattr(seg,'duration',None))
+    if build_segments_from_speed_csv:
+        try:
+            s = Path("speed/trends.csv")
+            segs = build_segments_from_speed_csv(s, 20.0, 10.0)
+            print("segments:", len(segs))
+            for seg in segs:
+                if seg.start <= 158 and seg.end >= 156:
+                    print("SEG:", getattr(seg, 'segment_id', None), seg.start, seg.end,
+                          getattr(seg, 'trend', None), "dur=", getattr(seg, 'duration', None))
+        except Exception as exc:
+            print(f"[WARN] Segment debug failed: {exc}")
 
-# python - <<'PY'
-import pandas as pd, sys
-from pathlib import Path
+    try:
+        p = Path("segment_strategy_with_global_label.csv")
+        if not p.exists():
+            print(f"[WARN] Missing {p}")
+            return
 
-p = Path("segment_strategy_with_global_label.csv")
-if not p.exists():
-    print("MISSING:", p); sys.exit(1)
+        df = pd.read_csv(p)
+        print("FILE:", p, "rows:", len(df))
+        print("COLUMNS:", df.columns.tolist())
 
-df = pd.read_csv(p)
-print("FILE:", p, "rows:", len(df))
-print("COLUMNS:", df.columns.tolist())
+        candidates = {c.lower(): c for c in df.columns}
 
-# find candidate start/end column names
-candidates = {c.lower():c for c in df.columns}
-def col(*names):
-    for n in names:
-        if n.lower() in candidates:
-            return candidates[n.lower()]
-    return None
+        def col(*names):
+            for n in names:
+                if n.lower() in candidates:
+                    return candidates[n.lower()]
+            return None
 
-startc = col("seg_start","starttime","start","seg_start_sec")
-endc   = col("seg_end","endtime","end","seg_end_sec")
-userc  = col("user_id","user","userid","uid")
-predc  = col("pred_strategy","pred","strategy","label")
-print("mapped:", startc, endc, userc, predc)
+        startc = col("seg_start", "starttime", "start", "seg_start_sec")
+        endc = col("seg_end", "endtime", "end", "seg_end_sec")
+        userc = col("user_id", "user", "userid", "uid")
+        predc = col("pred_strategy", "pred", "strategy", "label")
+        print("mapped:", startc, endc, userc, predc)
 
-if not (startc and endc):
-    print("No start/end columns found; show head:")
-    print(df.head().to_string(index=False))
-    sys.exit(0)
+        if not (startc and endc):
+            print("No start/end columns found; head preview:")
+            print(df.head().to_string(index=False))
+            return
 
-tmin,tmax = 156.0,158.0
-mask = (pd.to_numeric(df[startc],errors='coerce') <= tmax) & (pd.to_numeric(df[endc],errors='coerce') >= tmin)
-sel = df[mask].sort_values([userc or startc, startc])
-print("ROWS overlapping 156-158s:", len(sel))
-if len(sel)>0:
-    print(sel[[c for c in (userc,startc,endc,predc) if c in sel.columns]].to_string(index=False))
-else:
-    print("No predictions overlap that window.")
+        tmin, tmax = 156.0, 158.0
+        mask = (pd.to_numeric(df[startc], errors="coerce") <= tmax) & \
+               (pd.to_numeric(df[endc], errors="coerce") >= tmin)
+        sel = df[mask].sort_values([userc or startc, startc])
+        print("ROWS overlapping 156-158s:", len(sel))
+        if len(sel) > 0:
+            cols = [c for c in (userc, startc, endc, predc) if c in sel.columns]
+            print(sel[cols].to_string(index=False))
+        else:
+            print("No predictions overlap that window.")
+    except Exception as exc:
+        print(f"[WARN] CSV inspection failed: {exc}")
 
 
+def main():
+    parser = argparse.ArgumentParser(description="Strategy timeline, reporting, and radar tools.")
+    parser.add_argument(
+        "--report",
+        action="store_true",
+        help="Generate the per-user strategy usage report instead of the interactive timeline."
+    )
+    parser.add_argument("--report-csv", default="graphs/strategy_usage_summary.csv", help="CSV path for the summary.")
+    parser.add_argument("--report-figure", default="graphs/strategy_usage_report.png",
+                        help="Image path for the per-user bar plots.")
+    parser.add_argument("--report-min-actions", type=int, default=1,
+                        help="Minimum actions required for a segment to count in the report.")
+    parser.add_argument("--label-column", default=None,
+                        help="Override the label column used for aggregation (default: pred_strategy/global_label).")
+    parser.add_argument("--show-report", action="store_true", help="Display the generated report figure interactively.")
+    parser.add_argument("--radar", action="store_true", help="Generate radar chart(s) of per-user strategy usage.")
+    parser.add_argument("--radar-figure", default="graphs/strategy_usage_radar.png",
+                        help="Image path for the radar visualization.")
+    parser.add_argument("--radar-min-actions", type=int, default=1,
+                        help="Minimum actions required for radar aggregation.")
+    parser.add_argument("--radar-value", choices=("percent", "count"), default="percent",
+                        help="Metric plotted on the radar chart.")
+    parser.add_argument("--show-radar", action="store_true", help="Display the radar chart interactively.")
+    parser.add_argument("--debug-snippet", action="store_true",
+                        help="Run the legacy verbose debugging snippet after the main task.")
+    parser.add_argument("--debug-log-dir", default="logs", help="Log directory used by the debug snippet.")
+    parser.add_argument("--debug-start", type=float, default=155.0, help="Start time for debug snippet window.")
+    parser.add_argument("--debug-end", type=float, default=205.0, help="End time for debug snippet window.")
+    parser.add_argument("--language", choices=list(TRANSLATIONS.keys()), default="EN",
+                        help="Interface language for the timeline plot.")
 
+    args = parser.parse_args()
+    current_language["lang"] = args.language
+
+    df = None
+    if args.report or args.radar:
+        df = load_predictions()
+
+    if args.report:
+        generate_strategy_usage_report(
+            df,
+            csv_path=args.report_csv,
+            figure_path=args.report_figure,
+            label_column=args.label_column,
+            min_actions=args.report_min_actions,
+            show_plot=args.show_report,
+        )
+
+    if args.radar:
+        generate_strategy_usage_radar(
+            df,
+            figure_path=args.radar_figure,
+            label_column=args.label_column,
+            min_actions=args.radar_min_actions,
+            value_col=args.radar_value,
+            show_plot=args.show_radar,
+        )
+
+    if not args.report and not args.radar:
+        plot_timeline()
+
+    if args.debug_snippet:
+        _legacy_debug_snippet(log_dir=args.debug_log_dir, t_start=args.debug_start, t_end=args.debug_end)
+
+
+if __name__ == "__main__":
+    main()
