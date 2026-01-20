@@ -86,36 +86,36 @@
     "user_id": 0,
     "strategy": "iterative_finetuning",
     "start_time": 29.999999999999996,
-    "end_time": 35.34046180395007,
+    "end_time": 37.3039536934019,
     "num_events": 6,
     "events": [
       {
-        "timestamp_sec": 32.74574748210827,
+        "timestamp_sec": 32.871041716184656,
         "param": "amplitude",
         "value": 55.300000000000004
       },
       {
-        "timestamp_sec": 32.8570192684733,
+        "timestamp_sec": 33.363195177679586,
         "param": "amplitude",
         "value": 55.2
       },
       {
-        "timestamp_sec": 33.2328260566939,
+        "timestamp_sec": 33.55075254905757,
         "param": "amplitude",
         "value": 55.14
       },
       {
-        "timestamp_sec": 34.94861108005599,
+        "timestamp_sec": 36.475753996485125,
         "param": "amplitude",
         "value": 55.09
       },
       {
-        "timestamp_sec": 35.21011328873598,
+        "timestamp_sec": 36.82207868239426,
         "param": "amplitude",
         "value": 55.190000000000005
       },
       {
-        "timestamp_sec": 35.34046180395007,
+        "timestamp_sec": 37.3039536934019,
         "param": "amplitude",
         "value": 55.1
       }
@@ -124,172 +124,172 @@
   {
     "user_id": 0,
     "strategy": "random_trial_error",
-    "start_time": 36.34046180395007,
-    "end_time": 52.65793321266037,
+    "start_time": 38.3039536934019,
+    "end_time": 56.66861373038585,
     "num_events": 10,
     "events": [
       {
-        "timestamp_sec": 37.847531524168296,
+        "timestamp_sec": 39.45841709309743,
         "param": "frequency",
         "value": 0.0
       },
       {
-        "timestamp_sec": 39.14081238683321,
+        "timestamp_sec": 42.04491850168391,
         "param": "amplitude",
-        "value": 47.1
+        "value": 63.1
       },
       {
-        "timestamp_sec": 41.71431725474403,
+        "timestamp_sec": 44.584079986856025,
         "param": "offset",
         "value": 103.0
       },
       {
-        "timestamp_sec": 43.56093423622919,
+        "timestamp_sec": 45.96034996202869,
         "param": "frequency",
         "value": 0.0
       },
       {
-        "timestamp_sec": 45.78245571034673,
+        "timestamp_sec": 46.507496523486665,
         "param": "amplitude",
-        "value": 40.1
+        "value": 56.1
       },
       {
-        "timestamp_sec": 47.46311446845103,
-        "param": "offset",
-        "value": 108.0
-      },
-      {
-        "timestamp_sec": 48.90817766684362,
-        "param": "frequency",
-        "value": 0.0
-      },
-      {
-        "timestamp_sec": 50.5005725192134,
-        "param": "amplitude",
-        "value": 43.1
-      },
-      {
-        "timestamp_sec": 52.05871201631397,
+        "timestamp_sec": 48.94591854499427,
         "param": "offset",
         "value": 98.0
       },
       {
-        "timestamp_sec": 52.65793321266037,
+        "timestamp_sec": 51.89160792002119,
         "param": "frequency",
         "value": 2.0
+      },
+      {
+        "timestamp_sec": 53.81852658029595,
+        "param": "amplitude",
+        "value": 53.1
+      },
+      {
+        "timestamp_sec": 55.955194686674496,
+        "param": "offset",
+        "value": 88.0
+      },
+      {
+        "timestamp_sec": 56.66861373038585,
+        "param": "frequency",
+        "value": 0.0
       }
     ]
   },
   {
     "user_id": 0,
     "strategy": "structured_exploration",
-    "start_time": 53.65793321266037,
-    "end_time": 78.65793321266034,
+    "start_time": 57.66861373038585,
+    "end_time": 82.66861373038581,
     "num_events": 12,
     "events": [
       {
-        "timestamp_sec": 55.7412665459937,
+        "timestamp_sec": 59.751947063719186,
         "param": "frequency",
         "value": 2.0
       },
       {
-        "timestamp_sec": 57.82459987932704,
+        "timestamp_sec": 61.83528039705252,
         "param": "amplitude",
-        "value": 45.1
+        "value": 55.1
       },
       {
-        "timestamp_sec": 59.907933212660375,
+        "timestamp_sec": 63.91861373038586,
         "param": "offset",
-        "value": 100.0
+        "value": 90.0
       },
       {
-        "timestamp_sec": 61.99126654599371,
+        "timestamp_sec": 66.00194706371919,
         "param": "frequency",
         "value": 2.0
       },
       {
-        "timestamp_sec": 64.07459987932704,
+        "timestamp_sec": 68.08528039705251,
         "param": "amplitude",
-        "value": 47.1
+        "value": 57.1
       },
       {
-        "timestamp_sec": 66.15793321266037,
+        "timestamp_sec": 70.16861373038584,
         "param": "offset",
-        "value": 102.0
+        "value": 92.0
       },
       {
-        "timestamp_sec": 68.2412665459937,
+        "timestamp_sec": 72.25194706371917,
         "param": "frequency",
         "value": 2.0
       },
       {
-        "timestamp_sec": 70.32459987932702,
+        "timestamp_sec": 74.3352803970525,
         "param": "amplitude",
-        "value": 49.1
+        "value": 59.1
       },
       {
-        "timestamp_sec": 72.40793321266035,
+        "timestamp_sec": 76.41861373038583,
         "param": "offset",
-        "value": 104.0
+        "value": 94.0
       },
       {
-        "timestamp_sec": 74.49126654599368,
+        "timestamp_sec": 78.50194706371916,
         "param": "frequency",
         "value": 2.0
       },
       {
-        "timestamp_sec": 76.57459987932701,
+        "timestamp_sec": 80.58528039705249,
         "param": "amplitude",
-        "value": 51.1
+        "value": 61.1
       },
       {
-        "timestamp_sec": 78.65793321266034,
+        "timestamp_sec": 82.66861373038581,
         "param": "offset",
-        "value": 106.0
+        "value": 96.0
       }
     ]
   },
   {
     "user_id": 0,
     "strategy": "systematic_parameter_sweep",
-    "start_time": 79.65793321266034,
-    "end_time": 94.65793321266031,
+    "start_time": 83.66861373038581,
+    "end_time": 98.66861373038579,
     "num_events": 7,
     "events": [
       {
-        "timestamp_sec": 81.80079035551748,
-        "param": "amplitude",
-        "value": 56.1
-      },
-      {
-        "timestamp_sec": 83.94364749837462,
-        "param": "amplitude",
-        "value": 61.1
-      },
-      {
-        "timestamp_sec": 86.08650464123176,
+        "timestamp_sec": 85.81147087324295,
         "param": "amplitude",
         "value": 66.1
       },
       {
-        "timestamp_sec": 88.2293617840889,
+        "timestamp_sec": 87.95432801610009,
         "param": "amplitude",
         "value": 71.1
       },
       {
-        "timestamp_sec": 90.37221892694603,
+        "timestamp_sec": 90.09718515895723,
         "param": "amplitude",
         "value": 76.1
       },
       {
-        "timestamp_sec": 92.51507606980317,
+        "timestamp_sec": 92.24004230181437,
         "param": "amplitude",
         "value": 81.1
       },
       {
-        "timestamp_sec": 94.65793321266031,
+        "timestamp_sec": 94.38289944467151,
         "param": "amplitude",
         "value": 86.1
+      },
+      {
+        "timestamp_sec": 96.52575658752865,
+        "param": "amplitude",
+        "value": 91.1
+      },
+      {
+        "timestamp_sec": 98.66861373038579,
+        "param": "amplitude",
+        "value": 96.1
       }
     ]
   }
