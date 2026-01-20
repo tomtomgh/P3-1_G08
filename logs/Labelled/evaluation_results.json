@@ -1,60 +1,145 @@
 {
-  "timestamp": "2026-01-19T16:29:43.191184",
+  "timestamp": "2026-01-20T12:30:57.991691",
   "labeled_dir": "logs/Labelled",
-  "num_labels": 6,
+  "num_labels": 76,
   "metrics": {
-    "overall_accuracy": 0.16666666666666666,
-    "macro_f1": 0.06666666666666667,
-    "weighted_f1": 0.06666666666666667,
-    "macro_precision": 0.041666666666666664,
-    "macro_recall": 0.16666666666666666,
+    "overall_accuracy": 0.19736842105263158,
+    "macro_f1": 0.18392255892255893,
+    "weighted_f1": 0.21301834130781497,
+    "macro_precision": 0.25783475783475784,
+    "macro_recall": 0.1703703703703704,
     "per_strategy": {
-      "random_trial_error": {
-        "precision": 0.0,
-        "recall": 0.0,
-        "f1": 0.0,
-        "support": 1
-      },
-      "goal_directed_tuning": {
-        "precision": 0.0,
-        "recall": 0.0,
-        "f1": 0.0,
-        "support": 1
-      },
       "structured_exploration": {
         "precision": 0.0,
         "recall": 0.0,
         "f1": 0.0,
-        "support": 1
+        "support": 9
       },
-      "incremental_adjustment": {
+      "curiosity_broad_exploration": {
         "precision": 0.0,
         "recall": 0.0,
         "f1": 0.0,
-        "support": 1
+        "support": 9
       },
       "systematic_parameter_sweep": {
-        "precision": 0.25,
-        "recall": 1.0,
-        "f1": 0.4,
-        "support": 1
+        "precision": 0.15384615384615385,
+        "recall": 0.2222222222222222,
+        "f1": 0.18181818181818182,
+        "support": 9
       },
       "iterative_finetuning": {
+        "precision": 0.5,
+        "recall": 0.1111111111111111,
+        "f1": 0.18181818181818182,
+        "support": 9
+      },
+      "inactivity_wait": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 10
+      },
+      "goal_directed_tuning": {
+        "precision": 0.5,
+        "recall": 0.1,
+        "f1": 0.16666666666666666,
+        "support": 10
+      },
+      "random_trial_error": {
         "precision": 0.0,
         "recall": 0.0,
         "f1": 0.0,
-        "support": 1
+        "support": 10
+      },
+      "incremental_adjustment": {
+        "precision": 0.16666666666666666,
+        "recall": 0.1,
+        "f1": 0.125,
+        "support": 10
       }
     },
     "confusion_matrix_labels": [
+      "curiosity_broad_exploration",
       "goal_directed_tuning",
+      "inactivity_wait",
       "incremental_adjustment",
       "iterative_finetuning",
+      "no_prediction",
       "random_trial_error",
       "structured_exploration",
       "systematic_parameter_sweep"
     ],
     "y_true": [
+      "inactivity_wait",
+      "inactivity_wait",
+      "inactivity_wait",
+      "inactivity_wait",
+      "inactivity_wait",
+      "inactivity_wait",
+      "inactivity_wait",
+      "inactivity_wait",
+      "inactivity_wait",
+      "inactivity_wait",
+      "goal_directed_tuning",
+      "incremental_adjustment",
+      "random_trial_error",
+      "curiosity_broad_exploration",
+      "structured_exploration",
+      "systematic_parameter_sweep",
+      "iterative_finetuning",
+      "goal_directed_tuning",
+      "incremental_adjustment",
+      "random_trial_error",
+      "curiosity_broad_exploration",
+      "structured_exploration",
+      "systematic_parameter_sweep",
+      "iterative_finetuning",
+      "goal_directed_tuning",
+      "incremental_adjustment",
+      "random_trial_error",
+      "curiosity_broad_exploration",
+      "structured_exploration",
+      "systematic_parameter_sweep",
+      "iterative_finetuning",
+      "goal_directed_tuning",
+      "incremental_adjustment",
+      "random_trial_error",
+      "curiosity_broad_exploration",
+      "structured_exploration",
+      "systematic_parameter_sweep",
+      "iterative_finetuning",
+      "goal_directed_tuning",
+      "incremental_adjustment",
+      "random_trial_error",
+      "curiosity_broad_exploration",
+      "structured_exploration",
+      "systematic_parameter_sweep",
+      "iterative_finetuning",
+      "goal_directed_tuning",
+      "incremental_adjustment",
+      "random_trial_error",
+      "curiosity_broad_exploration",
+      "structured_exploration",
+      "systematic_parameter_sweep",
+      "iterative_finetuning",
+      "goal_directed_tuning",
+      "incremental_adjustment",
+      "random_trial_error",
+      "curiosity_broad_exploration",
+      "structured_exploration",
+      "systematic_parameter_sweep",
+      "iterative_finetuning",
+      "goal_directed_tuning",
+      "incremental_adjustment",
+      "random_trial_error",
+      "curiosity_broad_exploration",
+      "structured_exploration",
+      "systematic_parameter_sweep",
+      "iterative_finetuning",
+      "goal_directed_tuning",
+      "incremental_adjustment",
+      "random_trial_error",
+      "curiosity_broad_exploration",
       "structured_exploration",
       "systematic_parameter_sweep",
       "iterative_finetuning",
@@ -63,51 +148,114 @@
       "random_trial_error"
     ],
     "y_pred": [
+      "inactivity_wait",
+      "inactivity_wait",
+      "inactivity_wait",
+      "inactivity_wait",
+      "inactivity_wait",
+      "inactivity_wait",
+      "inactivity_wait",
+      "inactivity_wait",
+      "inactivity_wait",
+      "inactivity_wait",
+      "no_prediction",
+      "no_prediction",
+      "structured_exploration",
+      "no_prediction",
+      "no_prediction",
+      "no_prediction",
+      "no_prediction",
+      "no_prediction",
+      "systematic_parameter_sweep",
+      "no_prediction",
+      "no_prediction",
+      "no_prediction",
+      "no_prediction",
+      "structured_exploration",
+      "no_prediction",
+      "no_prediction",
+      "incremental_adjustment",
+      "no_prediction",
+      "incremental_adjustment",
+      "no_prediction",
+      "no_prediction",
+      "no_prediction",
+      "incremental_adjustment",
+      "no_prediction",
+      "incremental_adjustment",
+      "systematic_parameter_sweep",
+      "systematic_parameter_sweep",
       "iterative_finetuning",
+      "incremental_adjustment",
+      "systematic_parameter_sweep",
+      "structured_exploration",
+      "goal_directed_tuning",
+      "no_prediction",
+      "no_prediction",
+      "no_prediction",
+      "systematic_parameter_sweep",
+      "systematic_parameter_sweep",
+      "no_prediction",
+      "iterative_finetuning",
+      "no_prediction",
+      "no_prediction",
+      "random_trial_error",
+      "no_prediction",
+      "no_prediction",
+      "no_prediction",
+      "no_prediction",
+      "no_prediction",
+      "no_prediction",
       "systematic_parameter_sweep",
       "systematic_parameter_sweep",
       "systematic_parameter_sweep",
+      "no_prediction",
+      "incremental_adjustment",
+      "no_prediction",
+      "no_prediction",
       "systematic_parameter_sweep",
-      "structured_exploration"
+      "systematic_parameter_sweep",
+      "no_prediction",
+      "no_prediction",
+      "no_prediction",
+      "no_prediction",
+      "systematic_parameter_sweep",
+      "systematic_parameter_sweep",
+      "goal_directed_tuning",
+      "structured_exploration",
+      "no_prediction"
     ]
   },
   "confusion_matrix": [
     [
       0,
-      0,
-      0,
-      0,
-      0,
-      1
-    ],
-    [
-      0,
-      0,
-      0,
-      0,
-      0,
-      1
-    ],
-    [
-      0,
-      0,
-      0,
-      0,
-      0,
-      1
-    ],
-    [
-      0,
-      0,
-      0,
-      0,
       1,
+      0,
+      2,
+      1,
+      5,
+      0,
+      0,
       0
     ],
     [
       0,
+      1,
       0,
       1,
+      0,
+      5,
+      0,
+      0,
+      3
+    ],
+    [
+      0,
+      0,
+      10,
+      0,
+      0,
+      0,
       0,
       0,
       0
@@ -116,65 +264,686 @@
       0,
       0,
       0,
+      1,
+      0,
+      4,
+      0,
+      1,
+      4
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      1,
+      3,
+      1,
+      1,
+      3
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      1,
+      0,
+      7,
+      0,
+      2,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      1,
+      0,
+      7,
       0,
       0,
       1
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      7,
+      0,
+      0,
+      2
     ]
   ],
   "confusion_matrix_labels": [
+    "curiosity_broad_exploration",
     "goal_directed_tuning",
+    "inactivity_wait",
     "incremental_adjustment",
     "iterative_finetuning",
+    "no_prediction",
     "random_trial_error",
     "structured_exploration",
     "systematic_parameter_sweep"
   ],
   "match_details": [
     {
-      "true": "structured_exploration",
-      "pred": "iterative_finetuning",
-      "start": 38.5,
-      "end": 80.0,
-      "user_id": 0,
-      "match": false
-    },
-    {
-      "true": "systematic_parameter_sweep",
-      "pred": "systematic_parameter_sweep",
-      "start": 90.0,
-      "end": 100.0,
+      "true": "inactivity_wait",
+      "pred": "no_prediction",
+      "start": 0.033,
+      "end": 19.72,
       "user_id": 0,
       "match": true
     },
     {
-      "true": "iterative_finetuning",
-      "pred": "systematic_parameter_sweep",
-      "start": 94.0,
-      "end": 102.0,
+      "true": "inactivity_wait",
+      "pred": "no_prediction",
+      "start": 19.753,
+      "end": 26.393,
       "user_id": 0,
-      "match": false
+      "match": true
+    },
+    {
+      "true": "inactivity_wait",
+      "pred": "no_prediction",
+      "start": 26.426,
+      "end": 46.446,
+      "user_id": 0,
+      "match": true
+    },
+    {
+      "true": "inactivity_wait",
+      "pred": "no_prediction",
+      "start": 46.48,
+      "end": 77.444,
+      "user_id": 0,
+      "match": true
+    },
+    {
+      "true": "inactivity_wait",
+      "pred": "no_prediction",
+      "start": 77.477,
+      "end": 88.822,
+      "user_id": 0,
+      "match": true
+    },
+    {
+      "true": "inactivity_wait",
+      "pred": "no_prediction",
+      "start": 88.855,
+      "end": 101.301,
+      "user_id": 0,
+      "match": true
+    },
+    {
+      "true": "inactivity_wait",
+      "pred": "no_prediction",
+      "start": 101.334,
+      "end": 109.042,
+      "user_id": 0,
+      "match": true
+    },
+    {
+      "true": "inactivity_wait",
+      "pred": "no_prediction",
+      "start": 109.076,
+      "end": 123.29,
+      "user_id": 0,
+      "match": true
+    },
+    {
+      "true": "inactivity_wait",
+      "pred": "no_prediction",
+      "start": 123.323,
+      "end": 130.63,
+      "user_id": 0,
+      "match": true
+    },
+    {
+      "true": "inactivity_wait",
+      "pred": "no_prediction",
+      "start": 130.664,
+      "end": 139.773,
+      "user_id": 0,
+      "match": true
     },
     {
       "true": "goal_directed_tuning",
-      "pred": "systematic_parameter_sweep",
-      "start": 98.0,
-      "end": 110.0,
+      "pred": "no_prediction",
+      "start": 139.806,
+      "end": 145.845,
       "user_id": 0,
       "match": false
     },
     {
       "true": "incremental_adjustment",
-      "pred": "systematic_parameter_sweep",
-      "start": 430.0,
-      "end": 450.0,
+      "pred": "no_prediction",
+      "start": 145.879,
+      "end": 157.19,
       "user_id": 0,
       "match": false
     },
     {
       "true": "random_trial_error",
       "pred": "structured_exploration",
-      "start": 449.0,
-      "end": 470.0,
+      "start": 157.224,
+      "end": 203.403,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "curiosity_broad_exploration",
+      "pred": "no_prediction",
+      "start": 203.436,
+      "end": 236.136,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "structured_exploration",
+      "pred": "no_prediction",
+      "start": 236.169,
+      "end": 249.916,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "systematic_parameter_sweep",
+      "pred": "no_prediction",
+      "start": 249.949,
+      "end": 282.949,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "iterative_finetuning",
+      "pred": "no_prediction",
+      "start": 282.982,
+      "end": 295.528,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "goal_directed_tuning",
+      "pred": "no_prediction",
+      "start": 295.562,
+      "end": 305.038,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "incremental_adjustment",
+      "pred": "systematic_parameter_sweep",
+      "start": 305.071,
+      "end": 332.398,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "random_trial_error",
+      "pred": "no_prediction",
+      "start": 332.432,
+      "end": 372.471,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "curiosity_broad_exploration",
+      "pred": "no_prediction",
+      "start": 372.505,
+      "end": 410.409,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "structured_exploration",
+      "pred": "no_prediction",
+      "start": 410.443,
+      "end": 418.384,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "systematic_parameter_sweep",
+      "pred": "no_prediction",
+      "start": 418.417,
+      "end": 427.293,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "iterative_finetuning",
+      "pred": "structured_exploration",
+      "start": 427.326,
+      "end": 462.161,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "goal_directed_tuning",
+      "pred": "no_prediction",
+      "start": 462.194,
+      "end": 479.011,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "incremental_adjustment",
+      "pred": "no_prediction",
+      "start": 479.045,
+      "end": 486.519,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "random_trial_error",
+      "pred": "incremental_adjustment",
+      "start": 486.552,
+      "end": 496.495,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "curiosity_broad_exploration",
+      "pred": "no_prediction",
+      "start": 496.529,
+      "end": 509.575,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "structured_exploration",
+      "pred": "incremental_adjustment",
+      "start": 509.608,
+      "end": 540.873,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "systematic_parameter_sweep",
+      "pred": "no_prediction",
+      "start": 540.906,
+      "end": 552.618,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "iterative_finetuning",
+      "pred": "no_prediction",
+      "start": 552.651,
+      "end": 566.832,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "goal_directed_tuning",
+      "pred": "no_prediction",
+      "start": 566.865,
+      "end": 572.638,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "incremental_adjustment",
+      "pred": "incremental_adjustment",
+      "start": 572.671,
+      "end": 587.886,
+      "user_id": 0,
+      "match": true
+    },
+    {
+      "true": "random_trial_error",
+      "pred": "no_prediction",
+      "start": 587.92,
+      "end": 605.871,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "curiosity_broad_exploration",
+      "pred": "incremental_adjustment",
+      "start": 605.904,
+      "end": 613.912,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "structured_exploration",
+      "pred": "systematic_parameter_sweep",
+      "start": 613.946,
+      "end": 620.819,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "systematic_parameter_sweep",
+      "pred": "systematic_parameter_sweep",
+      "start": 620.853,
+      "end": 629.128,
+      "user_id": 0,
+      "match": true
+    },
+    {
+      "true": "iterative_finetuning",
+      "pred": "iterative_finetuning",
+      "start": 629.161,
+      "end": 636.702,
+      "user_id": 0,
+      "match": true
+    },
+    {
+      "true": "goal_directed_tuning",
+      "pred": "incremental_adjustment",
+      "start": 636.735,
+      "end": 643.542,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "incremental_adjustment",
+      "pred": "systematic_parameter_sweep",
+      "start": 643.575,
+      "end": 659.591,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "random_trial_error",
+      "pred": "structured_exploration",
+      "start": 659.625,
+      "end": 669.601,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "curiosity_broad_exploration",
+      "pred": "goal_directed_tuning",
+      "start": 669.635,
+      "end": 676.875,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "structured_exploration",
+      "pred": "no_prediction",
+      "start": 676.909,
+      "end": 698.864,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "systematic_parameter_sweep",
+      "pred": "no_prediction",
+      "start": 698.897,
+      "end": 718.483,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "iterative_finetuning",
+      "pred": "no_prediction",
+      "start": 718.517,
+      "end": 735.1,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "goal_directed_tuning",
+      "pred": "systematic_parameter_sweep",
+      "start": 735.133,
+      "end": 754.086,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "incremental_adjustment",
+      "pred": "systematic_parameter_sweep",
+      "start": 754.119,
+      "end": 770.101,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "random_trial_error",
+      "pred": "no_prediction",
+      "start": 770.135,
+      "end": 786.184,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "curiosity_broad_exploration",
+      "pred": "iterative_finetuning",
+      "start": 786.218,
+      "end": 797.062,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "structured_exploration",
+      "pred": "no_prediction",
+      "start": 797.095,
+      "end": 814.512,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "systematic_parameter_sweep",
+      "pred": "no_prediction",
+      "start": 814.546,
+      "end": 822.721,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "iterative_finetuning",
+      "pred": "random_trial_error",
+      "start": 822.754,
+      "end": 831.029,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "goal_directed_tuning",
+      "pred": "no_prediction",
+      "start": 831.062,
+      "end": 850.215,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "incremental_adjustment",
+      "pred": "no_prediction",
+      "start": 850.248,
+      "end": 857.489,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "random_trial_error",
+      "pred": "no_prediction",
+      "start": 857.522,
+      "end": 863.595,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "curiosity_broad_exploration",
+      "pred": "no_prediction",
+      "start": 863.628,
+      "end": 894.426,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "structured_exploration",
+      "pred": "no_prediction",
+      "start": 894.459,
+      "end": 921.352,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "systematic_parameter_sweep",
+      "pred": "no_prediction",
+      "start": 921.386,
+      "end": 932.096,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "iterative_finetuning",
+      "pred": "systematic_parameter_sweep",
+      "start": 932.13,
+      "end": 952.817,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "goal_directed_tuning",
+      "pred": "systematic_parameter_sweep",
+      "start": 952.85,
+      "end": 960.958,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "incremental_adjustment",
+      "pred": "systematic_parameter_sweep",
+      "start": 960.992,
+      "end": 970.001,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "random_trial_error",
+      "pred": "no_prediction",
+      "start": 970.034,
+      "end": 976.474,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "curiosity_broad_exploration",
+      "pred": "incremental_adjustment",
+      "start": 976.507,
+      "end": 994.726,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "structured_exploration",
+      "pred": "no_prediction",
+      "start": 994.759,
+      "end": 1001.933,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "systematic_parameter_sweep",
+      "pred": "no_prediction",
+      "start": 1001.966,
+      "end": 1012.61,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "iterative_finetuning",
+      "pred": "systematic_parameter_sweep",
+      "start": 1012.643,
+      "end": 1029.56,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "goal_directed_tuning",
+      "pred": "systematic_parameter_sweep",
+      "start": 1029.594,
+      "end": 1048.913,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "incremental_adjustment",
+      "pred": "no_prediction",
+      "start": 1048.946,
+      "end": 1063.895,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "random_trial_error",
+      "pred": "no_prediction",
+      "start": 1063.928,
+      "end": 1074.839,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "curiosity_broad_exploration",
+      "pred": "no_prediction",
+      "start": 1074.872,
+      "end": 1084.649,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "structured_exploration",
+      "pred": "no_prediction",
+      "start": 1084.682,
+      "end": 1092.223,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "systematic_parameter_sweep",
+      "pred": "systematic_parameter_sweep",
+      "start": 1092.256,
+      "end": 1098.295,
+      "user_id": 0,
+      "match": true
+    },
+    {
+      "true": "iterative_finetuning",
+      "pred": "systematic_parameter_sweep",
+      "start": 1098.329,
+      "end": 1107.538,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "goal_directed_tuning",
+      "pred": "goal_directed_tuning",
+      "start": 1107.571,
+      "end": 1116.046,
+      "user_id": 0,
+      "match": true
+    },
+    {
+      "true": "incremental_adjustment",
+      "pred": "structured_exploration",
+      "start": 1116.08,
+      "end": 1135.866,
+      "user_id": 0,
+      "match": false
+    },
+    {
+      "true": "random_trial_error",
+      "pred": "no_prediction",
+      "start": 1135.9,
+      "end": 1147.545,
       "user_id": 0,
       "match": false
     }

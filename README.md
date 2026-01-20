@@ -12,3 +12,17 @@
 There's a consideration:
 
 The current implementation is correct for measuring "time in control" - it accurately tracks how long each user's frequency setting was active. 
+
+### How to Test Classfifer Accuracy
+1. Evaluate existing labeled data:
+```
+python tests/evaluate_classifier.py --labeled-dir logs/Labelled
+```
+2. Run synthetic test:
+```
+python tests/evaluate_classifier.py --synthetic
+```
+3. Create labels for new data:
+```
+python tests/ground_truth_format.py --create-template path/to/ground_truth_labels.json
+```

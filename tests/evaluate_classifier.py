@@ -118,6 +118,92 @@ class ClassifierEvaluator:
         
         return events, ground_truth, speed_trends_path
     
+    def load_predictions_from_csv(self) -> pd.DataFrame:
+        """
+        Load predictions from the same CSV that plot_strategy.py uses.
+        This ensures evaluation matches what's shown on the plot.
+        """
+        self.log(f"🔄 Loading predictions from CSV (same as plot)...")
+        
+        # Use the same loading logic as plot_strategy.py
+        candidates = []
+        for d in (PROJECT_ROOT, Path(".")):
+            candidates.extend(list(d.glob("*with_global_label*.csv")))
+        
+        if not candidates:
+            for d in (PROJECT_ROOT, Path(".")):
+                candidates.extend(list(d.glob("segment_strategy*.csv")))
+        
+        candidates = [p for p in candidates if p.exists() and p.stat().st_size > 0]
+        candidates.sort(key=lambda p: p.stat().st_size, reverse=True)
+        
+        if not candidates:
+            raise FileNotFoundError(
+                "No segment_strategy*.csv found. Run the classifier pipeline first."
+            )
+        
+        chosen = candidates[0]
+        self.log(f"📂 Loading predictions from: {chosen}")
+        
+        predictions_df = pd.read_csv(chosen)
+        
+        # Normalize columns (same as plot_strategy.py)
+        col_map = {}
+        cols_lower = {c.lower(): c for c in predictions_df.columns}
+        
+        def find(*names):
+            for n in names:
+                k = cols_lower.get(n.lower())
+                if k:
+                    return k
+            return None
+        
+        # Map common column names
+        u = find("user_id", "user", "userid", "uid")
+        if u and u != "user_id":
+            col_map[u] = "user_id"
+        
+        s = find("seg_start", "start", "segment_start", "starttime")
+        if s and s != "seg_start":
+            col_map[s] = "seg_start"
+        
+        e = find("seg_end", "end", "segment_end", "endtime")
+        if e and e != "seg_end":
+            col_map[e] = "seg_end"
+        
+        if col_map:
+            predictions_df = predictions_df.rename(columns=col_map)
+        
+        # Ensure required columns exist
+        if "user_id" not in predictions_df.columns:
+            predictions_df["user_id"] = 0
+        if "num_actions" not in predictions_df.columns:
+            predictions_df["num_actions"] = 0
+        
+        predictions_df["num_actions"] = pd.to_numeric(
+            predictions_df["num_actions"], errors="coerce"
+        ).fillna(0).astype(int)
+        
+        # Get pred_strategy using the same logic as plot_strategy.py
+        def get_dominant_strategy(row):
+            best_strat = None
+            best_prob = -1
+            for strat in ALL_STRATEGIES:
+                prob_col = f"{strat}_prob"
+                if prob_col in row.index:
+                    prob = row[prob_col]
+                    if pd.notna(prob) and prob > best_prob:
+                        best_prob = prob
+                        best_strat = strat
+            # Return "no_prediction" if no strategy found (matches "No Strategy" in plot)
+            return best_strat if best_strat and best_prob > 0 else "no_prediction"
+        
+        predictions_df["pred_strategy"] = predictions_df.apply(get_dominant_strategy, axis=1)
+        
+        self.log(f"✅ Loaded {len(predictions_df)} prediction rows from CSV")
+        
+        return predictions_df
+    
     def run_classifier(
         self,
         events: List[Dict[str, Any]],
@@ -161,9 +247,16 @@ class ClassifierEvaluator:
         self,
         predictions_df: pd.DataFrame,
         ground_truth: List[Dict[str, Any]],
+        min_actions_to_plot: int = 2,
     ) -> Tuple[List[str], List[str], List[Dict]]:
         """
         Match classifier predictions to ground truth labels.
+        
+        Args:
+            predictions_df: DataFrame with classifier predictions
+            ground_truth: List of ground truth label dicts
+            min_actions_to_plot: Minimum actions for a segment to be considered
+                                 (matches MIN_ACTIONS_TO_PLOT in plot_strategy.py)
         
         Returns:
             Tuple of (y_true, y_pred, match_details)
@@ -172,6 +265,13 @@ class ClassifierEvaluator:
         y_pred = []
         match_details = []
         
+        # Ensure num_actions column exists
+        if "num_actions" not in predictions_df.columns:
+            predictions_df["num_actions"] = 0
+        predictions_df["num_actions"] = pd.to_numeric(
+            predictions_df["num_actions"], errors="coerce"
+        ).fillna(0).astype(int)
+        
         for label in ground_truth:
             user_id = label["user_id"]
             start = label["start_time"]
@@ -179,22 +279,26 @@ class ClassifierEvaluator:
             true_strategy = label["strategy"]
             
             # Find predictions overlapping this time window
+            # Apply same filter as plot_strategy.py: only segments with >= min_actions
             mask = (
                 (predictions_df["user_id"] == user_id) &
                 (predictions_df["seg_start"] < end) &
-                (predictions_df["seg_end"] > start)
+                (predictions_df["seg_end"] > start) &
+                (predictions_df["num_actions"] >= min_actions_to_plot)
             )
             matching_preds = predictions_df[mask]
             
             if len(matching_preds) == 0:
                 pred_strategy = "no_prediction"
                 confidence = 0.0
+                # Map no_prediction to inactivity_wait for comparison
+                is_match = (true_strategy == "inactivity_wait")
                 match_details.append({
                     "label": label,
                     "prediction": pred_strategy,
                     "confidence": confidence,
                     "num_matching_segments": 0,
-                    "match": False,
+                    "match": is_match,
                 })
             else:
                 # Get mode prediction, weighted by segment overlap duration
@@ -208,16 +312,21 @@ class ClassifierEvaluator:
                 else:
                     confidence = 0.5
                 
+                is_match = (pred_strategy == true_strategy)
                 match_details.append({
                     "label": label,
                     "prediction": pred_strategy,
                     "confidence": confidence,
                     "num_matching_segments": len(matching_preds),
-                    "match": pred_strategy == true_strategy,
+                    "match": is_match,
                 })
             
+            # For metric calculation, map no_prediction to inactivity_wait
             y_true.append(true_strategy)
-            y_pred.append(pred_strategy)
+            if pred_strategy == "no_prediction" and true_strategy == "inactivity_wait":
+                y_pred.append("inactivity_wait")
+            else:
+                y_pred.append(pred_strategy)
         
         return y_true, y_pred, match_details
     
@@ -344,6 +453,7 @@ class ClassifierEvaluator:
         labeled_dir: Path = None,
         speed_trends_path: Path = None,
         save_results: bool = True,
+        use_csv_predictions: bool = True,
     ) -> Dict[str, Any]:
         """
         Run full evaluation pipeline.
@@ -352,6 +462,8 @@ class ClassifierEvaluator:
             labeled_dir: Directory with labeled logs and ground truth
             speed_trends_path: Path to speed trends CSV
             save_results: Whether to save results to JSON
+            use_csv_predictions: If True, load predictions from CSV (matches plot).
+                                 If False, run classifier pipeline fresh.
         
         Returns:
             Evaluation results dictionary
@@ -361,17 +473,30 @@ class ClassifierEvaluator:
         
         labeled_dir = Path(labeled_dir)
         
-        # Load data
-        events, ground_truth, trends_path = self.load_labeled_data(
-            labeled_dir=labeled_dir,
-            speed_trends_path=speed_trends_path,
-        )
+        # Load ground truth labels
+        labels_path = labeled_dir / "ground_truth_labels.json"
+        if not labels_path.exists():
+            labels_path = labeled_dir / "ground_truth_labels.csv"
         
-        # Run classifier
-        predictions_df = self.run_classifier(
-            events=events,
-            speed_trends_path=trends_path,
-        )
+        if labels_path.exists():
+            ground_truth = validate_ground_truth_labels(labels_path)
+            self.log(f"📋 Loaded {len(ground_truth)} ground truth labels")
+        else:
+            raise FileNotFoundError(f"No ground truth labels found at {labels_path}")
+        
+        # Get predictions - either from CSV or by running pipeline
+        if use_csv_predictions:
+            predictions_df = self.load_predictions_from_csv()
+        else:
+            # Load events and run classifier
+            events, ground_truth, trends_path = self.load_labeled_data(
+                labeled_dir=labeled_dir,
+                speed_trends_path=speed_trends_path,
+            )
+            predictions_df = self.run_classifier(
+                events=events,
+                speed_trends_path=trends_path,
+            )
         
         # Match predictions to labels
         y_true, y_pred, match_details = self.match_predictions_to_labels(
