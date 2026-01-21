@@ -1122,10 +1122,12 @@ def plot_timeline():
     t_max = max(df_trends["endtime"].max(), df_speed["timestamp_sec"].max())
 
     # ----------------------------------------------------------
-    # Build figure
+    # Build figure - Start with just 1 player lane (simplified default)
+    # Robot speed is hidden by default, additional players can be toggled
     # ----------------------------------------------------------
-    n_rows = len(users) + 1
-    fig, axes = plt.subplots(nrows=n_rows, sharex=True, figsize=(12, 2 * n_rows))
+    # We create all axes but hide most by default
+    n_rows = len(users) + 1  # speed + all user lanes
+    fig, axes = plt.subplots(nrows=n_rows, sharex=True, figsize=(12, 6))
 
     # Ensure axes is iterable and 1-D so axes[...] indexing always works
     if not isinstance(axes, (list, tuple, np.ndarray)):
@@ -1134,8 +1136,14 @@ def plot_timeline():
         # flatten any 2D axes array to 1D list
         axes = list(np.array(axes).reshape(-1))
 
+    # Track visibility state for each panel
+    visibility_state = {
+        'speed': False,  # Robot speed hidden by default
+        'players': {user: (i == 0) for i, user in enumerate(users)}  # Only first player visible
+    }
+
     # ----------------------------------------------------------
-    # 1) SPEED PANEL
+    # 1) SPEED PANEL (hidden by default)
     # ----------------------------------------------------------
     ax_speed = axes[0]
     ax_speed.set_title(t('title'), fontsize=16, pad=10)
@@ -1162,6 +1170,9 @@ def plot_timeline():
 
     # Keep only speed curve legend here
     ax_speed.legend(loc="upper right", fontsize=10)
+    
+    # Hide speed panel by default
+    ax_speed.set_visible(False)
 
     # ----------------------------------------------------------
     # 2) USER PANELS
@@ -1223,7 +1234,7 @@ def plot_timeline():
 
     for i, user in enumerate(users):
         ax = axes[i + 1]
-        ax.set_title(t('user_title', user=user, strategy=t('no_strategy')), fontsize=14, pad=6)
+        ax.set_title(t('user_title', user=user, strategy=t('no_strategy')), fontsize=11, pad=2)
 
         df_u = df_plot[df_plot["user_id"] == user]
         user_segments[user] = []  # Store segments for this user
@@ -1255,6 +1266,10 @@ def plot_timeline():
         ax.set_yticks([])
         ax.set_ylabel(t('user_label', user=user), rotation=0, labelpad=30)
         ax.grid(axis='x', alpha=0.2)
+        
+        # Hide all player lanes except the first one by default
+        if i > 0:
+            ax.set_visible(False)
 
     # ----------------------------------------------------------
     # GLOBAL TIME AXIS
@@ -1283,7 +1298,7 @@ def plot_timeline():
             legend_labels,
             title=t('strategies_legend'),
             loc="upper left",
-            bbox_to_anchor=(0.83, 0.75),
+            bbox_to_anchor=(0.83, 0.92),
             frameon=True,
             fontsize=11
         )
@@ -1333,7 +1348,7 @@ def plot_timeline():
                 legend_labels,
                 title=t('strategies_legend'),
                 loc="upper left",
-                bbox_to_anchor=(0.83, 0.75),
+                bbox_to_anchor=(0.83, 0.92),
                 frameon=True,
                 fontsize=11
             )
@@ -1423,13 +1438,107 @@ def plot_timeline():
     fig.canvas.mpl_connect('motion_notify_event', on_hover)
 
     # ----------------------------------------------------------
+    # VISIBILITY CHECKBOXES (toggle player lanes and robot speed)
+    # ----------------------------------------------------------
+    from matplotlib.widgets import CheckButtons
+    
+    # Build checkbox labels: Robot Speed + all players
+    checkbox_labels = ['Robot Speed'] + [f'Player {u}' for u in users]
+    # Initial visibility: speed=off, first player=on, others=off
+    checkbox_initial = [False] + [(i == 0) for i in range(len(users))]
+    
+    # Create checkbox axes on the left side
+    checkbox_ax = plt.axes([0.01, 0.35, 0.10, 0.25])
+    checkbox_ax.set_title('Show/Hide', fontsize=9, pad=2)
+    checkboxes = CheckButtons(checkbox_ax, checkbox_labels, checkbox_initial)
+    
+    # Style the checkboxes
+    for label in checkboxes.labels:
+        label.set_fontsize(8)
+    
+    def update_visibility(label):
+        """Toggle visibility of panels based on checkbox state."""
+        if label == 'Robot Speed':
+            visibility_state['speed'] = not visibility_state['speed']
+            ax_speed.set_visible(visibility_state['speed'])
+        else:
+            # Extract user id from label "Player X"
+            user_str = label.replace('Player ', '')
+            try:
+                user_id = int(user_str)
+            except ValueError:
+                user_id = user_str
+            
+            if user_id in visibility_state['players']:
+                visibility_state['players'][user_id] = not visibility_state['players'][user_id]
+                user_idx = users.index(user_id)
+                axes[user_idx + 1].set_visible(visibility_state['players'][user_id])
+        
+        # Adjust the layout based on visible panels
+        adjust_layout()
+    
+    def adjust_layout():
+        """Dynamically resize and reposition visible axes."""
+        # Count visible panels
+        visible_axes = []
+        if visibility_state['speed']:
+            visible_axes.append(ax_speed)
+        for user in users:
+            if visibility_state['players'].get(user, False):
+                user_idx = users.index(user)
+                visible_axes.append(axes[user_idx + 1])
+        
+        n_visible = len(visible_axes)
+        if n_visible == 0:
+            return
+        
+        # Calculate new positions for visible axes
+        # Leave space for sliders at bottom and checkboxes on left
+        plot_left = 0.12
+        plot_right = 0.82
+        plot_bottom = 0.18  # More space for sliders and buttons
+        plot_top = 0.92
+        plot_height = plot_top - plot_bottom
+        
+        # Maximum height per panel (limit lane height)
+        max_panel_height = 0.12  # Limit each lane to this height
+        gap = 0.06  # Increased gap between panels for title spacing
+        
+        # Calculate actual panel height (use max if panels would be too tall)
+        available_per_panel = plot_height / n_visible
+        panel_height = min(available_per_panel - gap, max_panel_height)
+        
+        # Total height needed
+        total_needed = n_visible * (panel_height + gap) - gap
+        
+        # Start from top, centered if there's extra space
+        start_top = plot_top if total_needed >= plot_height else plot_top - (plot_height - total_needed) / 2
+        
+        # Hide all axes first (move to invisible position)
+        for ax in axes:
+            ax.set_position([0, 0, 0, 0])
+        
+        # Position visible axes from top to bottom with proper spacing
+        for i, ax in enumerate(visible_axes):
+            top = start_top - i * (panel_height + gap)
+            bottom = top - panel_height
+            ax.set_position([plot_left, bottom, plot_right - plot_left, panel_height])
+        
+        fig.canvas.draw_idle()
+    
+    checkboxes.on_clicked(update_visibility)
+
+    # ----------------------------------------------------------
     # INTERACTIVE TIMELINE SLIDER
     # ----------------------------------------------------------
-    # Create space for slider and buttons at the bottom
-    plt.tight_layout(rect=(0, 0.12, 0.82, 1))
+    # Create space for slider and buttons at the bottom, checkboxes on left
+    plt.tight_layout(rect=(0.12, 0.18, 0.82, 0.95))
     
-    # Add time slider axis
-    slider_ax = plt.axes([0.15, 0.07, 0.65, 0.02])
+    # Apply initial layout for visible panels
+    adjust_layout()
+    
+    # Add time slider axis - leave space on left for play button
+    slider_ax = plt.axes([0.18, 0.10, 0.50, 0.02])
     time_slider = Slider(
         slider_ax,
         t('time_slider'),
@@ -1441,7 +1550,7 @@ def plot_timeline():
     )
     
     # Add zoom slider axis
-    zoom_ax = plt.axes([0.15, 0.04, 0.65, 0.02])
+    zoom_ax = plt.axes([0.18, 0.05, 0.50, 0.02])
     total_duration = t_max - t_min
     zoom_slider = Slider(
         zoom_ax,
@@ -1459,12 +1568,12 @@ def plot_timeline():
         line = ax.axvline(t_min, color='black', linewidth=2, linestyle='-', alpha=0.8)
         vertical_lines.append(line)
     
-    # Add timestamp text display
-    time_text = fig.text(0.85, 0.075, '', fontsize=12, fontweight='bold', 
+    # Add timestamp text display - to the right of sliders
+    time_text = fig.text(0.78, 0.10, '', fontsize=10, fontweight='bold', 
                          bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.8))
     
     # Zoom level text display
-    zoom_text = fig.text(0.85, 0.045, '', fontsize=10,
+    zoom_text = fig.text(0.78, 0.05, '', fontsize=9,
                          bbox=dict(boxstyle='round', facecolor='lightblue', alpha=0.8))
     
     def update_view():
@@ -1527,7 +1636,7 @@ def plot_timeline():
         for i, user in enumerate(users):
             ax = axes[i + 1]
             current_strategy = get_current_strategy(user, current_time)
-            ax.set_title(t('user_title', user=user, strategy=current_strategy), fontsize=14, pad=6)
+            ax.set_title(t('user_title', user=user, strategy=current_strategy), fontsize=11, pad=2)
         
         # Update view to follow current time with current zoom
         update_view()
@@ -1598,7 +1707,7 @@ def plot_timeline():
         for i, user in enumerate(users):
             ax = axes[i + 1]
             current_strategy = get_current_strategy(user, current_time)
-            ax.set_title(t('user_title', user=user, strategy=current_strategy), fontsize=14, pad=6)
+            ax.set_title(t('user_title', user=user, strategy=current_strategy), fontsize=11, pad=2)
             ax.set_ylabel(t('user_label', user=user), rotation=0, labelpad=30)
         
         # Update slider labels
@@ -1632,7 +1741,7 @@ def plot_timeline():
                 legend_labels,
                 title=t('strategies_legend'),
                 loc="upper left",
-                bbox_to_anchor=(0.83, 0.75),
+                bbox_to_anchor=(0.83, 0.92),
                 frameon=True,
                 fontsize=11
             )
@@ -1652,8 +1761,8 @@ def plot_timeline():
         
         refresh_all_text()
     
-    # Add Play/Pause button
-    button_ax = plt.axes([0.02, 0.07, 0.08, 0.03])
+    # Add Play/Pause button - positioned to the left of the time slider
+    button_ax = plt.axes([0.02, 0.06, 0.08, 0.04])
     play_button = Button(button_ax, t('play'), color='#4e409f', hovercolor='#64748b')
     play_button.label.set_color('white')
     play_button.label.set_fontweight('bold')
@@ -1673,16 +1782,17 @@ def plot_timeline():
         except Exception as exc:
             print(f"[WARN] Failed to launch dashboard process: {exc}")
 
-    nav_button_ax = plt.axes([0.82, 0.94, 0.12, 0.035])
+    # Dashboard button - closer below the legend on the right side
+    nav_button_ax = plt.axes([0.83, 0.52, 0.12, 0.035])
     nav_button = Button(nav_button_ax, t('dashboard_button'), color='#0d9488', hovercolor='#14b8a6')
     nav_button.label.set_color('white')
     nav_button.label.set_fontweight('bold')
     nav_button.on_clicked(open_dashboard)
     
     # ----------------------------------------------------------
-    # LANGUAGE TOGGLE BUTTON (NS app style)
+    # LANGUAGE TOGGLE BUTTON - below dashboard button
     # ----------------------------------------------------------
-    lang_button_ax = plt.axes([0.02, 0.02, 0.04, 0.03])
+    lang_button_ax = plt.axes([0.83, 0.47, 0.05, 0.035])
     lang_button = Button(lang_button_ax, 'EN', color='#4e409f', hovercolor='#64748b')
     lang_button.label.set_color('white')
     lang_button.label.set_fontweight('bold')
