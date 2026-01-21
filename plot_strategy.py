@@ -46,8 +46,16 @@ TRANSLATIONS = {
         'pause': '⏸ Pause',
         'time_slider': 'Time',
         'zoom_slider': 'Zoom',
-    'zoom_display': 'Zoom: {level:.1f}x',
-    'dashboard_button': 'Open Dashboard',
+        'zoom_display': 'Zoom: {level:.1f}x',
+        'dashboard_button': 'Open Dashboard',
+        'dashboard_title': 'Strategy Dashboard',
+        'views_title': 'Views',
+        'bar_chart': 'Bar Chart',
+        'radar_chart': 'Radar Chart',
+        'insights': 'Insights',
+        'per_user_counts': 'Per-User Strategy Counts',
+        'strategy_radar': 'Strategy Usage Radar',
+        'player_roles': 'Player Roles & Insights',
     # Strategy translations
     'goal_directed_tuning': 'goal_directed_tuning',
         'incremental_adjustment': 'incremental_adjustment',
@@ -68,8 +76,16 @@ TRANSLATIONS = {
         'pause': '⏸ Pauzeren',
         'time_slider': 'Tijd',
         'zoom_slider': 'Zoom',
-    'zoom_display': 'Zoom: {level:.1f}x',
-    'dashboard_button': 'Dashboard openen',
+        'zoom_display': 'Zoom: {level:.1f}x',
+        'dashboard_button': 'Dashboard openen',
+        'dashboard_title': 'Strategie Dashboard',
+        'views_title': 'Weergaven',
+        'bar_chart': 'Staafdiagram',
+        'radar_chart': 'Radardiagram',
+        'insights': 'Inzichten',
+        'per_user_counts': 'Strategie-aantallen per gebruiker',
+        'strategy_radar': 'Strategiegebruik Radar',
+        'player_roles': 'Spelerrollen & inzichten',
         # Strategy translations
         'goal_directed_tuning': 'doelgerichte_afstemming',
         'incremental_adjustment': 'incrementele_aanpassing',
@@ -617,36 +633,381 @@ def _display_image(ax, image_path, title):
     ax.axis("off")
 
 
-def _display_insights(ax, roles):
+STRATEGY_FRIENDLY = {
+    "structured_exploration": "Structured exploration",
+    "random_trial_error": "Random trial-and-error",
+    "systematic_parameter_sweep": "Systematic parameter sweep",
+    "goal_directed_tuning": "Goal-directed tuning",
+    "iterative_finetuning": "Iterative fine-tuning",
+    "incremental_adjustment": "Incremental adjustment",
+    "inactivity_wait": "Inactivity",
+    "No Strategy": "No clear strategy",
+}
+STRATEGY_FEEDBACK = {
+    "structured_exploration": {
+        "observation": "They try different settings in an organized way across multiple controls.",
+        "strength": "Good for discovering options and learning what the robot can do.",
+        "growth": "Sometimes ideas stay broad; they may learn faster by isolating one change at a time.",
+        "next_steps": [
+            "Pick one setting to change while keeping the rest the same.",
+            "After each test, ask: “What changed and what happened?”",
+        ],
+    },
+    "random_trial_error": {
+        "observation": "They change many things quickly, sometimes reversing direction.",
+        "strength": "Shows curiosity and willingness to experiment.",
+        "growth": "Learning can be slower if too many settings change at once.",
+        "next_steps": [
+            "Try “one change per run” for 3 runs to see cause and effect.",
+            "Before pressing start, ask them to predict what will happen.",
+        ],
+    },
+    "systematic_parameter_sweep": {
+        "observation": "They focus on one control and vary it step-by-step while keeping others steady.",
+        "strength": "Excellent for understanding exactly what one setting does.",
+        "growth": "They may miss interactions between settings if they never combine changes.",
+        "next_steps": [
+            "After a sweep, choose the best value and test it with one other setting.",
+            "Keep a simple note: value tried → outcome.",
+        ],
+    },
+    "goal_directed_tuning": {
+        "observation": "They make targeted changes toward a clear goal (e.g., faster, straighter, smoother).",
+        "strength": "Efficient when close to a working solution.",
+        "growth": "If the goal isn’t clear, changes can become guessy or inconsistent.",
+        "next_steps": [
+            "Ask them to say the goal out loud before changing anything.",
+            "Ask for a short reason: “Why this change?”",
+        ],
+    },
+    "iterative_finetuning": {
+        "observation": "They make very small adjustments and often correct or undo earlier changes.",
+        "strength": "Careful refinement and precision near a solution.",
+        "growth": "Progress can stall if they never try a bigger step to explore.",
+        "next_steps": [
+            "If stuck, try one bigger change once, then return to small steps.",
+            "Ask: “Why did you undo that change?”",
+        ],
+    },
+    "incremental_adjustment": {
+        "observation": "They make moderate, careful changes that usually avoid big drops in performance.",
+        "strength": "Stable progress and fewer “bad runs.”",
+        "growth": "They might learn faster by briefly testing extremes to see boundaries.",
+        "next_steps": [
+            "Try one quick “high vs low” test to learn faster, then choose a middle value.",
+            "Ask them to write one sentence: change → expected effect.",
+        ],
+    },
+    "inactivity_wait": {
+        "observation": "They pause for a while without changing settings.",
+        "strength": "They may be thinking or planning before acting.",
+        "growth": "If they’re unsure, they may need a clear next step to restart.",
+        "next_steps": [
+            "Ask: “What will you try next, and why?”",
+            "Use a routine: goal → one change → test → explain.",
+        ],
+    },
+    "No Strategy": {
+        "observation": "There is not enough consistent behavior to label a clear strategy here.",
+        "strength": "This can happen when students are exploring controls or still learning the task.",
+        "growth": "More structure can help their actions become purposeful and easier to reflect on.",
+        "next_steps": [
+            "Clarify the goal and what each control changes.",
+            "Use: goal → one change → test → explain.",
+        ],
+    },
+}
+
+def _feedback_for(strategy: str):
+    """Safe access to STRATEGY_FEEDBACK with fallback."""
+    if strategy in STRATEGY_FEEDBACK:
+        return STRATEGY_FEEDBACK[strategy]
+    return STRATEGY_FEEDBACK["No Strategy"]
+
+STRATEGY_WHAT_IT_LOOKS_LIKE = {
+    "structured_exploration": "Tries different settings in a fairly organized way across multiple controls.",
+    "random_trial_error": "Changes many things quickly, often reversing direction, with little consistent improvement.",
+    "systematic_parameter_sweep": "Focuses on one control and varies it step-by-step while keeping others steady.",
+    "goal_directed_tuning": "Makes targeted changes toward a clear goal and improves faster when close to success.",
+    "iterative_finetuning": "Makes very small adjustments and often corrects/undoes earlier changes.",
+    "incremental_adjustment": "Makes moderate, careful changes that usually avoid performance drops.",
+    "inactivity_wait": "Few or no changes for a while (thinking, waiting, or uncertainty).",
+    "No Strategy": "Not enough consistent behavior in this time window to label a clear strategy.",
+}
+
+STRATEGY_COACHING_TIPS = {
+    "structured_exploration": [
+        "Turn exploration into mini-experiments: keep everything the same except one setting.",
+        "Limit to 3 planned tests, then reflect on what changed.",
+    ],
+    "random_trial_error": [
+        "Ask them to pause after each run: “What changed, and what did it do?”",
+        "Encourage one-change-at-a-time testing to learn cause-and-effect.",
+    ],
+    "systematic_parameter_sweep": [
+        "Ask: “What did you learn about this one setting?” before changing another.",
+        "Keep a simple notes table: setting → value tried → outcome.",
+    ],
+    "goal_directed_tuning": [
+        "Have them say the goal out loud before changing anything (“We’re optimizing for…”).",
+        "Ask for a short prediction before each change (“I think this will…”).",
+    ],
+    "iterative_finetuning": [
+        "If progress stalls, try one deliberate larger test once, then return to small steps.",
+        "Ask them to explain why they reverted/undid a change.",
+    ],
+    "incremental_adjustment": [
+        "Encourage a hypothesis: “I changed X because I expected Y.”",
+        "If improvement is slow, suggest a short sweep on one parameter to learn faster.",
+    ],
+    "inactivity_wait": [
+        "Check if they are planning: ask them to explain what they will try next.",
+        "If unsure, give a starting routine: goal → one change → test → explain.",
+    ],
+    "No Strategy": [
+        "Clarify the task and controls; confusion can hide real strategy.",
+        "Use a guided routine: goal → one change → test → explain.",
+    ],
+}
+
+def _friendly(strategy: str) -> str:
+    return STRATEGY_FRIENDLY.get(strategy, str(strategy).replace("_", " ").title())
+
+
+def _build_insight_lines(top1, top2, bottom):
+    """
+    Returns a list of lines that are always valid and teacher-friendly.
+    top1/top2/bottom are rows with: strategy, percent, count
+    """
+    def fmt_row(label, row):
+        if row is None:
+            return f"{label}: (not enough data)"
+        return f"{label}: {_friendly(row['strategy'])} — {float(row['percent'])*100:.1f}% ({int(row['count'])} segments)"
+
+    s1 = top1["strategy"]
+    s2 = top2["strategy"] if top2 is not None else None
+    sb = bottom["strategy"] if bottom is not None else None
+
+    f1 = _feedback_for(s1)
+    lines = []
+
+    # A) Data-based observation
+    lines.append(fmt_row("Most used", top1))
+    lines.append(fmt_row("Second most", top2))
+    lines.append(fmt_row("Least used", bottom))
+    lines.append("")  # spacer
+
+    # B) Explain what the most-used strategy looks like (teacher friendly)
+    lines.append(f"What we observed: {f1['observation']}")
+    lines.append(f"Strength: {f1['strength']}")
+
+    # C) Growth: prefer least-used strategy as “growth idea” if present and different
+    if sb is not None and sb != s1:
+        fb = _feedback_for(sb)
+        lines.append(f"Growth opportunity (less practiced): {_friendly(sb)}")
+        lines.append(f"Why it helps: {fb['strength']}")
+        # Use 1–2 next steps from the least-used strategy as targeted growth
+        tips = fb["next_steps"][:2]
+    else:
+        # otherwise use growth from the most-used strategy
+        lines.append(f"Growth opportunity: {f1['growth']}")
+        tips = f1["next_steps"][:2]
+
+    lines.append("Try next lesson:")
+    for tip in tips:
+        lines.append(f"• {tip}")
+
+    return lines
+
+
+def _pick_top2_bottom_used(group_df: pd.DataFrame):
+    """
+    group_df columns: strategy, count, percent
+    Returns (top1_row, top2_row_or_None, bottom_row_or_None)
+    Bottom is least-used among strategies with count>0.
+    """
+    g = group_df.copy()
+    g = g[pd.to_numeric(g["count"], errors="coerce").fillna(0).astype(int) > 0]
+    if g.empty:
+        return None, None, None
+
+    g = g.sort_values(["percent", "count"], ascending=False)
+    top1 = g.iloc[0]
+    top2 = g.iloc[1] if len(g) > 1 else None
+
+    bottom = None
+    if len(g) > 1:
+        bottom = g.sort_values(["percent", "count"], ascending=True).iloc[0]
+
+    return top1, top2, bottom
+
+def _profile_text(top1, top2, bottom):
+    """
+    Build a teacher-friendly profile narrative + 2–3 coaching tips.
+    """
+    # Primary narrative driven by top1
+    s1 = top1["strategy"]
+    narrative = STRATEGY_WHAT_IT_LOOKS_LIKE.get(s1, "")
+
+    # Tips: mostly from top1, plus one "growth idea" from bottom if different
+    tips = list(STRATEGY_COACHING_TIPS.get(s1, []))[:2]
+
+    if bottom is not None:
+        sb = bottom["strategy"]
+        if sb != s1:
+            tips.append(f"Growth idea: practice more '{_friendly(sb)}' moments (small, controlled tests).")
+
+    tips = tips[:3]
+    return narrative, tips
+
+def _display_insights(ax, summary_df):
+    """
+    Scrollable teacher-facing insights view.
+    Uses a vertical slider + mouse wheel scrolling.
+    """
+    fig = ax.figure
     ax.clear()
     ax.axis("off")
-    if not roles:
-        ax.text(0.5, 0.5, "No player insights available.", ha="center", va="center", fontsize=12)
+
+    if summary_df is None or not hasattr(summary_df, "empty") or summary_df.empty:
+        ax.text(0.5, 0.5, "No insights available.", ha="center", va="center", fontsize=12)
         return
-    y = 0.95
-    ax.text(0.0, 0.98, "Player Roles & Insights", fontsize=14, fontweight="bold", transform=ax.transAxes)
-    for role_info in roles:
-        role = role_info["role"]
-        desc = ROLE_DESCRIPTIONS.get(role, "")
-        line = (
-            f"User {role_info['user_id']}: {role} "
-            f"(dominant: {role_info['strategy']} "
-            f"{role_info['percent'] * 100:.1f}% of segments)"
+
+    needed = {"user_id", "strategy", "count", "percent"}
+    if not needed.issubset(set(summary_df.columns)):
+        ax.text(0.5, 0.5, f"Insights need columns: {sorted(needed)}", ha="center", va="center", fontsize=11)
+        return
+
+    # Build ALL text lines first (for all users)
+    lines = []
+    lines.append("Student Strategy Feedback (Teacher View)")
+    lines.append("Based on the detected strategies in this session. Use as a starting point for constructive feedback.")
+    lines.append("")  # spacer
+
+    for user_id, group in summary_df.groupby("user_id"):
+        top1, top2, bottom = _pick_top2_bottom_used(group)
+        if top1 is None:
+            continue
+
+        lines.append(f"User {user_id}")
+        lines.append("-" * 40)
+        lines.extend(_build_insight_lines(top1, top2, bottom))
+        lines.append("")  # spacer between students
+
+    # ----- Rendering parameters -----
+    # How many lines fit in the panel:
+    max_visible = 26  # adjust if you want more/less text density
+    total = len(lines)
+    scroll_max = max(0, total - max_visible)
+
+    # Keep scroll state on the figure so it persists when toggling views/language
+    if not hasattr(fig, "_insights_scroll"):
+        fig._insights_scroll = {"offset": 0, "slider_ax": None, "slider": None, "cid_scroll": None}
+
+    state = fig._insights_scroll
+    state["offset"] = min(max(0, state["offset"]), scroll_max)
+
+    # Create / reuse a vertical slider at the right side of the display panel
+    # We place it relative to the figure, so it stays aligned.
+    # If it already exists from a previous Insights render, reuse it.
+    if state["slider_ax"] is None or state["slider"] is None:
+        slider_ax = fig.add_axes([0.94, 0.12, 0.02, 0.76])  # x,y,w,h in fig coords
+        slider = Slider(
+            slider_ax,
+            "",
+            0,
+            max(1, scroll_max),
+            valinit=state["offset"],
+            valstep=1,
+            orientation="vertical",
         )
-        ax.text(0.0, y, line, fontsize=11, transform=ax.transAxes)
-        if desc:
-            ax.text(0.02, y - 0.05, desc, fontsize=9, color="dimgray", transform=ax.transAxes)
-            y -= 0.12
-        else:
-            y -= 0.08
-        if y < 0.05:
-            ax.text(0.0, y, "...", fontsize=12, transform=ax.transAxes)
-            break
+        state["slider_ax"] = slider_ax
+        state["slider"] = slider
+
+        def _on_slider(val):
+            state["offset"] = int(val)
+            _render()
+
+        slider.on_changed(_on_slider)
+    else:
+        # Update slider bounds if number of lines changed
+        slider = state["slider"]
+        slider.valmin = 0
+        slider.valmax = max(1, scroll_max)
+        slider.ax.set_ylim(slider.valmin, slider.valmax)
+        slider.set_val(state["offset"])
+
+    # Mouse wheel scroll support
+    if state.get("cid_scroll") is None:
+        def _on_scroll(event):
+            # Only scroll when mouse is over the insights axes
+            if event.inaxes != ax:
+                return
+            step = 3  # lines per wheel tick
+            if event.button == "up":
+                state["offset"] = max(0, state["offset"] - step)
+            elif event.button == "down":
+                state["offset"] = min(scroll_max, state["offset"] + step)
+            # sync slider
+            try:
+                state["slider"].set_val(state["offset"])
+            except Exception:
+                pass
+            _render()
+
+        state["cid_scroll"] = fig.canvas.mpl_connect("scroll_event", _on_scroll)
+
+    def _render():
+        ax.clear()
+        ax.axis("off")
+
+        # Title block (fixed)
+        ax.text(0.0, 0.98, lines[0], fontsize=14, fontweight="bold", transform=ax.transAxes)
+        ax.text(0.0, 0.93, lines[1], fontsize=9, color="dimgray", transform=ax.transAxes)
+
+        # Visible window into the lines (skip first 3 "header" lines in scrolling)
+        body = lines[3:]
+        offset = state["offset"]
+        view = body[offset: offset + max_visible]
+
+        y = 0.88
+        line_h = 0.032  # tighter for more content
+
+        for L in view:
+            if L.startswith("User "):
+                ax.text(0.0, y, L, fontsize=11.5, fontweight="bold", transform=ax.transAxes)
+            elif L.startswith("-" * 5):
+                ax.text(0.0, y, L, fontsize=9, color="gray", transform=ax.transAxes)
+            elif L.startswith("Try next lesson:"):
+                ax.text(0.02, y, L, fontsize=9.5, fontweight="bold", transform=ax.transAxes)
+            elif L.startswith("• "):
+                ax.text(0.04, y, L, fontsize=9.2, color="dimgray", transform=ax.transAxes)
+            elif L.strip() == "":
+                # spacer line
+                pass
+            else:
+                ax.text(0.02, y, L, fontsize=9.2, transform=ax.transAxes)
+
+            y -= line_h
+            if y < 0.06:
+                break
+
+        # Hint
+        if scroll_max > 0:
+            ax.text(0.0, 0.02, "Scroll to see more students (mouse wheel or slider).", fontsize=9, color="dimgray",
+                    transform=ax.transAxes)
+
+        fig.canvas.draw_idle()
+
+    _render()
+
+
 
 
 def show_strategy_dashboard(summary_df, bar_figure_path, radar_figure_path, show=True, block=True):
     """
     Display a second 'page' with menu controls to view bar chart, radar chart, or insights.
+    Includes a language toggle button (EN/NL) just like the main window.
     """
     roles = derive_player_roles(summary_df)
     fig = plt.figure(figsize=(12, 6))
@@ -657,26 +1018,84 @@ def show_strategy_dashboard(summary_df, bar_figure_path, radar_figure_path, show
             DASHBOARD_WINDOWS.remove(fig)
 
     fig.canvas.mpl_connect("close_event", _on_close)
-    fig.suptitle("Strategy Dashboard", fontsize=16)
 
+    # --- layout axes ---
     menu_ax = plt.axes([0.02, 0.25, 0.15, 0.45])
-    menu_ax.set_title("Views", fontsize=11)
     display_ax = plt.axes([0.25, 0.1, 0.7, 0.8])
 
-    options = ["Bar Chart", "Radar Chart", "Insights"]
+    # --- translated option labels ---
+    def _option_labels():
+        return [t('bar_chart'), t('radar_chart'), t('insights')]
+
+    options = _option_labels()
     radio = RadioButtons(menu_ax, options)
 
-    def update_display(label):
-        if label == "Bar Chart":
-            _display_image(display_ax, bar_figure_path, "Per-User Strategy Counts")
-        elif label == "Radar Chart":
-            _display_image(display_ax, radar_figure_path, "Strategy Usage Radar")
+    def _which_view(label):
+        labels = _option_labels()
+        if label == labels[0]:
+            return "bar"
+        if label == labels[1]:
+            return "radar"
+        return "insights"
+
+    dashboard_state = {"view": "bar"}  # remember last view across language toggles
+
+    def update_display(label_or_view):
+        # accept either "bar"/"radar"/"insights" or a radio label
+        view = label_or_view
+        if view not in ("bar", "radar", "insights"):
+            view = _which_view(label_or_view)
+
+        dashboard_state["view"] = view
+
+        if view == "bar":
+            _display_image(display_ax, bar_figure_path, t('per_user_counts'))
+        elif view == "radar":
+            _display_image(display_ax, radar_figure_path, t('strategy_radar'))
         else:
-            _display_insights(display_ax, roles)
+
+            _display_insights(display_ax, summary_df)
+
+
         fig.canvas.draw_idle()
 
+    # initial titles
+    fig.suptitle(t('dashboard_title'), fontsize=16)
+    menu_ax.set_title(t('views_title'), fontsize=11)
+
     radio.on_clicked(update_display)
-    update_display(options[0])
+    update_display("bar")  # default view
+
+    # ----------------------------------------------------------
+    # LANGUAGE TOGGLE BUTTON (add to dashboard)
+    # ----------------------------------------------------------
+    lang_button_ax = plt.axes([0.02, 0.02, 0.04, 0.04])
+    lang_button = Button(lang_button_ax, current_language['lang'], color='#4e409f', hovercolor='#64748b')
+    lang_button.label.set_color('white')
+    lang_button.label.set_fontweight('bold')
+    lang_button.label.set_fontsize(11)
+
+    def refresh_dashboard_text():
+        # Update suptitle + menu title
+        fig.suptitle(t('dashboard_title'), fontsize=16)
+        menu_ax.set_title(t('views_title'), fontsize=11)
+
+        # Update radio button labels (RadioButtons doesn't have a "set_labels" API,
+        # easiest is: rewrite the Text objects in-place)
+        new_labels = _option_labels()
+        for txt, new in zip(radio.labels, new_labels):
+            txt.set_text(new)
+
+        # Re-render current view title in the display panel
+        update_display(dashboard_state["view"])
+        fig.canvas.draw_idle()
+
+    def toggle_language_dashboard(_event):
+        current_language['lang'] = 'NL' if current_language['lang'] == 'EN' else 'EN'
+        lang_button.label.set_text(current_language['lang'])
+        refresh_dashboard_text()
+
+    lang_button.on_clicked(toggle_language_dashboard)
 
     if show:
         plt.show(block=block)
