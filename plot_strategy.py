@@ -96,6 +96,85 @@ TRANSLATIONS = {
     }
 }
 
+# --------------------------------------------------------------
+# Insights translations (EN / NL)
+# --------------------------------------------------------------
+INSIGHTS_I18N = {
+    "EN": {
+        "insights_title": "Student Strategy Feedback (Teacher View)",
+        "insights_subtitle": "Based on the detected strategies in this session. Use as a starting point for constructive feedback.",
+        "user_header": "User {user}",
+        "most_used": "Most used",
+        "second_most": "Second most",
+        "least_used": "Least used",
+        "not_enough_data": "(not enough data)",
+        "observed": "What we observed",
+        "strength": "Strength",
+        "growth_less_practiced": "Growth opportunity (less practiced)",
+        "why_it_helps": "Why it helps",
+        "growth_opportunity": "Growth opportunity",
+        "try_next_lesson": "Try next lesson:",
+        "scroll_hint": "Scroll to see more students (mouse wheel or slider).",
+        "segments_word": "segments",
+        "no_insights": "No insights available.",
+    },
+    "NL": {
+        "insights_title": "Feedback op Strategie (Docentweergave)",
+        "insights_subtitle": "Gebaseerd op de gedetecteerde strategieën in deze sessie. Gebruik dit als startpunt voor constructieve feedback.",
+        "user_header": "Gebruiker {user}",
+        "most_used": "Meest gebruikt",
+        "second_most": "Op één na meest",
+        "least_used": "Minst gebruikt",
+        "not_enough_data": "(onvoldoende data)",
+        "observed": "Wat we zagen",
+        "strength": "Sterkte",
+        "growth_less_practiced": "Groeikans (minder geoefend)",
+        "why_it_helps": "Waarom dit helpt",
+        "growth_opportunity": "Groeikans",
+        "try_next_lesson": "Probeer in de volgende les:",
+        "scroll_hint": "Scroll om meer leerlingen te zien (muiswiel of slider).",
+        "segments_word": "segmenten",
+        "no_insights": "Geen inzichten beschikbaar.",
+    },
+}
+
+def it(key, **kwargs):
+    """Insights translation helper."""
+    lang = current_language["lang"]
+    text = INSIGHTS_I18N.get(lang, INSIGHTS_I18N["EN"]).get(key, key)
+    return text.format(**kwargs) if kwargs else text
+
+# Nicely formatted strategy display names per language (for Insights)
+STRATEGY_DISPLAY = {
+    "EN": {
+        "structured_exploration": "Structured exploration",
+        "random_trial_error": "Random trial-and-error",
+        "systematic_parameter_sweep": "Systematic parameter sweep",
+        "goal_directed_tuning": "Goal-directed tuning",
+        "iterative_finetuning": "Iterative fine-tuning",
+        "incremental_adjustment": "Incremental adjustment",
+        "inactivity_wait": "Inactivity",
+        "No Strategy": "No clear strategy",
+    },
+    "NL": {
+        "structured_exploration": "Gestructureerde verkenning",
+        "random_trial_error": "Willekeurige proef & fout",
+        "systematic_parameter_sweep": "Systematische parameter-sweep",
+        "goal_directed_tuning": "Doelgerichte afstemming",
+        "iterative_finetuning": "Iteratieve fijnafstemming",
+        "incremental_adjustment": "Incrementele aanpassing",
+        "inactivity_wait": "Inactiviteit",
+        "No Strategy": "Geen duidelijke strategie",
+    },
+}
+
+def _strategy_display(strategy: str) -> str:
+    lang = current_language["lang"]
+    return STRATEGY_DISPLAY.get(lang, STRATEGY_DISPLAY["EN"]).get(
+        strategy, str(strategy).replace("_", " ").title()
+    )
+
+
 # Strategy definitions for hover tooltips
 STRATEGY_DEFINITIONS = {
     'EN': {
@@ -644,85 +723,165 @@ STRATEGY_FRIENDLY = {
     "No Strategy": "No clear strategy",
 }
 STRATEGY_FEEDBACK = {
-    "structured_exploration": {
-        "observation": "They try different settings in an organized way across multiple controls.",
-        "strength": "Good for discovering options and learning what the robot can do.",
-        "growth": "Sometimes ideas stay broad; they may learn faster by isolating one change at a time.",
-        "next_steps": [
-            "Pick one setting to change while keeping the rest the same.",
-            "After each test, ask: “What changed and what happened?”",
-        ],
+    "EN": {
+        "structured_exploration": {
+            "observation": "They try different settings in an organized way across multiple controls.",
+            "strength": "Good for discovering options and learning what the robot can do.",
+            "growth": "Sometimes ideas stay broad; they may learn faster by isolating one change at a time.",
+            "next_steps": [
+                "Pick one setting to change while keeping the rest the same.",
+                "After each test, ask: “What changed and what happened?”",
+            ],
+        },
+        "random_trial_error": {
+            "observation": "They change many things quickly, sometimes reversing direction.",
+            "strength": "Shows curiosity and willingness to experiment.",
+            "growth": "Learning can be slower if too many settings change at once.",
+            "next_steps": [
+                "Try “one change per run” for 3 runs to see cause and effect.",
+                "Before pressing start, ask them to predict what will happen.",
+            ],
+        },
+        "systematic_parameter_sweep": {
+            "observation": "They focus on one control and vary it step-by-step while keeping others steady.",
+            "strength": "Excellent for understanding exactly what one setting does.",
+            "growth": "They may miss interactions between settings if they never combine changes.",
+            "next_steps": [
+                "After a sweep, choose the best value and test it with one other setting.",
+                "Keep a simple note: value tried → outcome.",
+            ],
+        },
+        "goal_directed_tuning": {
+            "observation": "They make targeted changes toward a clear goal (e.g., faster, straighter, smoother).",
+            "strength": "Efficient when close to a working solution.",
+            "growth": "If the goal isn’t clear, changes can become guessy or inconsistent.",
+            "next_steps": [
+                "Ask them to say the goal out loud before changing anything.",
+                "Ask for a short reason: “Why this change?”",
+            ],
+        },
+        "iterative_finetuning": {
+            "observation": "They make very small adjustments and often correct or undo earlier changes.",
+            "strength": "Careful refinement and precision near a solution.",
+            "growth": "Progress can stall if they never try a bigger step to explore.",
+            "next_steps": [
+                "If stuck, try one bigger change once, then return to small steps.",
+                "Ask: “Why did you undo that change?”",
+            ],
+        },
+        "incremental_adjustment": {
+            "observation": "They make moderate, careful changes that usually avoid big drops in performance.",
+            "strength": "Stable progress and fewer “bad runs.”",
+            "growth": "They might learn faster by briefly testing extremes to see boundaries.",
+            "next_steps": [
+                "Try one quick “high vs low” test to learn faster, then choose a middle value.",
+                "Ask them to write one sentence: change → expected effect.",
+            ],
+        },
+        "inactivity_wait": {
+            "observation": "They pause for a while without changing settings.",
+            "strength": "They may be thinking or planning before acting.",
+            "growth": "If they’re unsure, they may need a clear next step to restart.",
+            "next_steps": [
+                "Ask: “What will you try next, and why?”",
+                "Use a routine: goal → one change → test → explain.",
+            ],
+        },
+        "No Strategy": {
+            "observation": "There is not enough consistent behavior to label a clear strategy here.",
+            "strength": "This can happen when students are exploring controls or still learning the task.",
+            "growth": "More structure can help their actions become purposeful and easier to reflect on.",
+            "next_steps": [
+                "Clarify the goal and what each control changes.",
+                "Use: goal → one change → test → explain.",
+            ],
+        },
     },
-    "random_trial_error": {
-        "observation": "They change many things quickly, sometimes reversing direction.",
-        "strength": "Shows curiosity and willingness to experiment.",
-        "growth": "Learning can be slower if too many settings change at once.",
-        "next_steps": [
-            "Try “one change per run” for 3 runs to see cause and effect.",
-            "Before pressing start, ask them to predict what will happen.",
-        ],
-    },
-    "systematic_parameter_sweep": {
-        "observation": "They focus on one control and vary it step-by-step while keeping others steady.",
-        "strength": "Excellent for understanding exactly what one setting does.",
-        "growth": "They may miss interactions between settings if they never combine changes.",
-        "next_steps": [
-            "After a sweep, choose the best value and test it with one other setting.",
-            "Keep a simple note: value tried → outcome.",
-        ],
-    },
-    "goal_directed_tuning": {
-        "observation": "They make targeted changes toward a clear goal (e.g., faster, straighter, smoother).",
-        "strength": "Efficient when close to a working solution.",
-        "growth": "If the goal isn’t clear, changes can become guessy or inconsistent.",
-        "next_steps": [
-            "Ask them to say the goal out loud before changing anything.",
-            "Ask for a short reason: “Why this change?”",
-        ],
-    },
-    "iterative_finetuning": {
-        "observation": "They make very small adjustments and often correct or undo earlier changes.",
-        "strength": "Careful refinement and precision near a solution.",
-        "growth": "Progress can stall if they never try a bigger step to explore.",
-        "next_steps": [
-            "If stuck, try one bigger change once, then return to small steps.",
-            "Ask: “Why did you undo that change?”",
-        ],
-    },
-    "incremental_adjustment": {
-        "observation": "They make moderate, careful changes that usually avoid big drops in performance.",
-        "strength": "Stable progress and fewer “bad runs.”",
-        "growth": "They might learn faster by briefly testing extremes to see boundaries.",
-        "next_steps": [
-            "Try one quick “high vs low” test to learn faster, then choose a middle value.",
-            "Ask them to write one sentence: change → expected effect.",
-        ],
-    },
-    "inactivity_wait": {
-        "observation": "They pause for a while without changing settings.",
-        "strength": "They may be thinking or planning before acting.",
-        "growth": "If they’re unsure, they may need a clear next step to restart.",
-        "next_steps": [
-            "Ask: “What will you try next, and why?”",
-            "Use a routine: goal → one change → test → explain.",
-        ],
-    },
-    "No Strategy": {
-        "observation": "There is not enough consistent behavior to label a clear strategy here.",
-        "strength": "This can happen when students are exploring controls or still learning the task.",
-        "growth": "More structure can help their actions become purposeful and easier to reflect on.",
-        "next_steps": [
-            "Clarify the goal and what each control changes.",
-            "Use: goal → one change → test → explain.",
-        ],
+    "NL": {
+        "structured_exploration": {
+            "observation": "Ze proberen verschillende instellingen op een georganiseerde manier uit over meerdere knoppen/parameters.",
+            "strength": "Goed om opties te ontdekken en te leren wat de robot kan.",
+            "growth": "Soms blijft het te breed; sneller leren lukt vaak door één wijziging per keer te isoleren.",
+            "next_steps": [
+                "Kies één instelling om te veranderen en houd de rest hetzelfde.",
+                "Vraag na elke test: “Wat veranderde je en wat gebeurde er?”",
+            ],
+        },
+        "random_trial_error": {
+            "observation": "Ze veranderen veel dingen snel achter elkaar en draaien soms weer terug.",
+            "strength": "Toont nieuwsgierigheid en bereidheid om te experimenteren.",
+            "growth": "Leren kan trager zijn als er te veel instellingen tegelijk veranderen.",
+            "next_steps": [
+                "Probeer 3 runs lang: “één wijziging per run” om oorzaak-gevolg te zien.",
+                "Vraag vóór start: “Wat denk je dat er gaat gebeuren?”",
+            ],
+        },
+        "systematic_parameter_sweep": {
+            "observation": "Ze focussen op één instelling en variëren die stap-voor-stap terwijl de rest gelijk blijft.",
+            "strength": "Uitstekend om precies te begrijpen wat één instelling doet.",
+            "growth": "Ze kunnen interacties tussen instellingen missen als ze veranderingen nooit combineren.",
+            "next_steps": [
+                "Na een sweep: kies de beste waarde en test die met één extra instelling.",
+                "Houd een simpel lijstje bij: waarde → uitkomst.",
+            ],
+        },
+        "goal_directed_tuning": {
+            "observation": "Ze doen gerichte aanpassingen richting een duidelijk doel (bv. sneller, rechter, smoother).",
+            "strength": "Efficiënt als je dicht bij een werkende oplossing zit.",
+            "growth": "Als het doel niet helder is, worden veranderingen sneller ‘gokjes’ of inconsistent.",
+            "next_steps": [
+                "Laat ze het doel hardop noemen vóórdat ze iets veranderen.",
+                "Vraag om een korte reden: “Waarom deze verandering?”",
+            ],
+        },
+        "iterative_finetuning": {
+            "observation": "Ze doen hele kleine aanpassingen en corrigeren/undo’en vaak eerdere veranderingen.",
+            "strength": "Zorgvuldige verfijning en precisie vlak bij een oplossing.",
+            "growth": "Voortgang kan stagneren als ze nooit één keer een grotere stap proberen om te verkennen.",
+            "next_steps": [
+                "Als je vastzit: probeer één keer een grotere wijziging en ga daarna terug naar kleine stapjes.",
+                "Vraag: “Waarom heb je die verandering teruggedraaid?”",
+            ],
+        },
+        "incremental_adjustment": {
+            "observation": "Ze doen gematigde, voorzichtige wijzigingen en vermijden vaak grote prestatiedalingen.",
+            "strength": "Stabiele vooruitgang en minder ‘slechte runs’.",
+            "growth": "Sneller leren kan door kort extremen te testen om grenzen te zien.",
+            "next_steps": [
+                "Doe één snelle ‘hoog vs laag’ test om sneller te leren, kies daarna een middenwaarde.",
+                "Laat ze één zin opschrijven: wijziging → verwacht effect.",
+            ],
+        },
+        "inactivity_wait": {
+            "observation": "Ze pauzeren een tijdje zonder instellingen te veranderen.",
+            "strength": "Ze denken mogelijk na of plannen eerst.",
+            "growth": "Als ze onzeker zijn, helpt een duidelijke volgende stap om weer op gang te komen.",
+            "next_steps": [
+                "Vraag: “Wat ga je hierna proberen, en waarom?”",
+                "Gebruik een routine: doel → één wijziging → test → leg uit.",
+            ],
+        },
+        "No Strategy": {
+            "observation": "Er is niet genoeg consistent gedrag om hier een duidelijke strategie te labelen.",
+            "strength": "Dit kan gebeuren als leerlingen nog aan het oriënteren zijn of de taak nog leren.",
+            "growth": "Meer structuur helpt om acties doelgerichter te maken en beter te kunnen reflecteren.",
+            "next_steps": [
+                "Maak het doel en effect van elke instelling duidelijk.",
+                "Gebruik: doel → één wijziging → test → leg uit.",
+            ],
+        },
     },
 }
 
+
 def _feedback_for(strategy: str):
-    """Safe access to STRATEGY_FEEDBACK with fallback."""
-    if strategy in STRATEGY_FEEDBACK:
-        return STRATEGY_FEEDBACK[strategy]
-    return STRATEGY_FEEDBACK["No Strategy"]
+    """Safe access to STRATEGY_FEEDBACK with fallback, per language."""
+    lang = current_language["lang"]
+    fb = STRATEGY_FEEDBACK.get(lang, STRATEGY_FEEDBACK["EN"])
+    if strategy in fb:
+        return fb[strategy]
+    return fb["No Strategy"]
+
 
 STRATEGY_WHAT_IT_LOOKS_LIKE = {
     "structured_exploration": "Tries different settings in a fairly organized way across multiple controls.",
@@ -771,53 +930,48 @@ STRATEGY_COACHING_TIPS = {
 }
 
 def _friendly(strategy: str) -> str:
-    return STRATEGY_FRIENDLY.get(strategy, str(strategy).replace("_", " ").title())
+    return _strategy_display(strategy)
+
 
 
 def _build_insight_lines(top1, top2, bottom):
-    """
-    Returns a list of lines that are always valid and teacher-friendly.
-    top1/top2/bottom are rows with: strategy, percent, count
-    """
-    def fmt_row(label, row):
+    def fmt_row(label_key, row):
         if row is None:
-            return f"{label}: (not enough data)"
-        return f"{label}: {_friendly(row['strategy'])} — {float(row['percent'])*100:.1f}% ({int(row['count'])} segments)"
+            return f"{it(label_key)}: {it('not_enough_data')}"
+        return (
+            f"{it(label_key)}: {_friendly(row['strategy'])} — "
+            f"{float(row['percent'])*100:.1f}% ({int(row['count'])} {it('segments_word')})"
+        )
 
     s1 = top1["strategy"]
-    s2 = top2["strategy"] if top2 is not None else None
     sb = bottom["strategy"] if bottom is not None else None
 
     f1 = _feedback_for(s1)
     lines = []
 
-    # A) Data-based observation
-    lines.append(fmt_row("Most used", top1))
-    lines.append(fmt_row("Second most", top2))
-    lines.append(fmt_row("Least used", bottom))
-    lines.append("")  # spacer
+    lines.append(fmt_row("most_used", top1))
+    lines.append(fmt_row("second_most", top2))
+    lines.append(fmt_row("least_used", bottom))
+    lines.append("")
 
-    # B) Explain what the most-used strategy looks like (teacher friendly)
-    lines.append(f"What we observed: {f1['observation']}")
-    lines.append(f"Strength: {f1['strength']}")
+    lines.append(f"{it('observed')}: {f1['observation']}")
+    lines.append(f"{it('strength')}: {f1['strength']}")
 
-    # C) Growth: prefer least-used strategy as “growth idea” if present and different
     if sb is not None and sb != s1:
         fb = _feedback_for(sb)
-        lines.append(f"Growth opportunity (less practiced): {_friendly(sb)}")
-        lines.append(f"Why it helps: {fb['strength']}")
-        # Use 1–2 next steps from the least-used strategy as targeted growth
+        lines.append(f"{it('growth_less_practiced')}: {_friendly(sb)}")
+        lines.append(f"{it('why_it_helps')}: {fb['strength']}")
         tips = fb["next_steps"][:2]
     else:
-        # otherwise use growth from the most-used strategy
-        lines.append(f"Growth opportunity: {f1['growth']}")
+        lines.append(f"{it('growth_opportunity')}: {f1['growth']}")
         tips = f1["next_steps"][:2]
 
-    lines.append("Try next lesson:")
+    lines.append(it("try_next_lesson"))
     for tip in tips:
         lines.append(f"• {tip}")
 
     return lines
+
 
 
 def _pick_top2_bottom_used(group_df: pd.DataFrame):
@@ -870,7 +1024,7 @@ def _display_insights(ax, summary_df):
     ax.axis("off")
 
     if summary_df is None or not hasattr(summary_df, "empty") or summary_df.empty:
-        ax.text(0.5, 0.5, "No insights available.", ha="center", va="center", fontsize=12)
+        ax.text(0.5, 0.5, it("no_insights"), ha="center", va="center", fontsize=12)
         return
 
     needed = {"user_id", "strategy", "count", "percent"}
@@ -880,8 +1034,9 @@ def _display_insights(ax, summary_df):
 
     # Build ALL text lines first (for all users)
     lines = []
-    lines.append("Student Strategy Feedback (Teacher View)")
-    lines.append("Based on the detected strategies in this session. Use as a starting point for constructive feedback.")
+    lines.append(it("insights_title"))
+    lines.append(it("insights_subtitle"))
+
     lines.append("")  # spacer
 
     for user_id, group in summary_df.groupby("user_id"):
@@ -889,7 +1044,7 @@ def _display_insights(ax, summary_df):
         if top1 is None:
             continue
 
-        lines.append(f"User {user_id}")
+        lines.append(it("user_header", user=user_id))
         lines.append("-" * 40)
         lines.extend(_build_insight_lines(top1, top2, bottom))
         lines.append("")  # spacer between students
@@ -905,6 +1060,8 @@ def _display_insights(ax, summary_df):
         fig._insights_scroll = {"offset": 0, "slider_ax": None, "slider": None, "cid_scroll": None}
 
     state = fig._insights_scroll
+    state.setdefault("render_fn", None)
+
     state["offset"] = min(max(0, state["offset"]), scroll_max)
 
     # Create / reuse a vertical slider at the right side of the display panel
@@ -926,7 +1083,9 @@ def _display_insights(ax, summary_df):
 
         def _on_slider(val):
             state["offset"] = int(val)
-            _render()
+            if state.get("render_fn"):
+                state["render_fn"]()
+
 
         slider.on_changed(_on_slider)
     else:
@@ -940,24 +1099,29 @@ def _display_insights(ax, summary_df):
     # Mouse wheel scroll support
     if state.get("cid_scroll") is None:
         def _on_scroll(event):
-            # Only scroll when mouse is over the insights axes
             if event.inaxes != ax:
                 return
-            step = 3  # lines per wheel tick
+
+            step = 3
             if event.button == "up":
                 state["offset"] = max(0, state["offset"] - step)
             elif event.button == "down":
                 state["offset"] = min(scroll_max, state["offset"] + step)
-            # sync slider
+
+            # sync slider without breaking
             try:
                 state["slider"].set_val(state["offset"])
             except Exception:
                 pass
-            _render()
+
+            if state.get("render_fn"):
+                state["render_fn"]()
 
         state["cid_scroll"] = fig.canvas.mpl_connect("scroll_event", _on_scroll)
 
     def _render():
+        state["render_fn"] = _render
+
         ax.clear()
         ax.axis("off")
 
@@ -974,11 +1138,11 @@ def _display_insights(ax, summary_df):
         line_h = 0.032  # tighter for more content
 
         for L in view:
-            if L.startswith("User "):
+            if L.startswith("User ") or L.startswith("Gebruiker "):
                 ax.text(0.0, y, L, fontsize=11.5, fontweight="bold", transform=ax.transAxes)
             elif L.startswith("-" * 5):
                 ax.text(0.0, y, L, fontsize=9, color="gray", transform=ax.transAxes)
-            elif L.startswith("Try next lesson:"):
+            elif L.startswith(it("try_next_lesson")):
                 ax.text(0.02, y, L, fontsize=9.5, fontweight="bold", transform=ax.transAxes)
             elif L.startswith("• "):
                 ax.text(0.04, y, L, fontsize=9.2, color="dimgray", transform=ax.transAxes)
@@ -994,8 +1158,8 @@ def _display_insights(ax, summary_df):
 
         # Hint
         if scroll_max > 0:
-            ax.text(0.0, 0.02, "Scroll to see more students (mouse wheel or slider).", fontsize=9, color="dimgray",
-                    transform=ax.transAxes)
+            ax.text(0.0, 0.02, it("scroll_hint"), fontsize=9, color="dimgray", transform=ax.transAxes)
+
 
         fig.canvas.draw_idle()
 
