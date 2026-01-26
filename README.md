@@ -40,12 +40,12 @@ python run_all_pipeline.py --video path/to/video.mp4 --center-marker 5 --no-prev
 
 ## Step-by-Step Usage
 
-### 1. Extract speed from video
+### 1. Extract speed from video (might take a while, depending on the video size)
 ```bash
 python speed/interp.py path/to/video.mp4 --center-marker 5 --speed speed/speed.csv --no-preview
 ```
 
-### 2. Generate speed trends (might take a while, depending on the video size)
+### 2. Generate speed trends 
 ```bash
 python speed/plot_three_states.py --file speed/speed.csv --summary-csv speed/trends.csv --out graphs/three_states.png --no-show
 ```
