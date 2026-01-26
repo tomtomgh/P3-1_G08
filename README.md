@@ -1,96 +1,95 @@
 # Strategy Analysis Pipeline
 
-This repo turns robot video plus GUI logs into per-student strategy predictions and interactive plots.
+Analyzes robot video and GUI logs to generate per-student strategy predictions and visualizations.
 
-Pipeline overview:
-1) speed/interp.py: track robot markers in video and write a speed time series.
-2) speed/plot_three_states.py: convert speed series into trend segments (dull/increasing/decreasing) and save to speed/trends.csv.
-3) run_full_strategy_analysis.py: parse logs and assign strategies per segment.
-4) plot_strategy.py: final timeline GUI and dashboard plots for students.
-
-## Requirements
-- Python 3.10+ (tested)
-- Packages: opencv-python, numpy, pandas, matplotlib, scikit-learn
-
-Install example:
+## Project Structure
 ```
-pip install opencv-python numpy pandas matplotlib scikit-learn
+├── run_all_pipeline.py          # One-command full pipeline
+├── run_full_strategy_analysis.py # Strategy classification
+├── plot_strategy.py             # Timeline GUI and dashboard
+├── log_parser.py                # Log file parsing
+├── logs/                        # Input log files (User0.log, etc.)
+├── speed/                       # Video processing & speed analysis
+├── strategy_classifier/         # Strategy classification module
+├── scripts/                     # Utility/analysis scripts
+├── tests/                       # Evaluation tests
+├── outputs/                     # Generated CSV outputs
+└── graphs/                      # Generated plots
 ```
 
-## Inputs
-- Video file (MP4) with ArUco markers.
-- Logs in `logs/` (one or more .log files).
+## Installation
+```bash
+pip install -r requirements.txt
+```
 
-## Step-by-step run
-1) Generate speed CSV from video:
+## Quick Start (One Command)
+```bash
+python run_all_pipeline.py --video path/to/video.mp4 --center-marker 5 --no-preview
 ```
-python speed/interp.py path\to\video.mp4 --center-marker 5 --speed speed/speed.csv --no-preview
-```
-Optional flags for `interp.py`:
-- `--robot-ids 4 5 24 47` to track specific markers
-- `--mat-size 1100 1700` for mat dimensions (mm)
-- `--threads 8 --frame-skip 2` for faster processing
 
-2) Create speed trends (required by the classifier):
+## Step-by-Step Usage
+
+### 1. Extract speed from video
+```bash
+python speed/interp.py path/to/video.mp4 --center-marker 5 --speed speed/speed.csv --no-preview
 ```
+
+### 2. Generate speed trends
+```bash
 python speed/plot_three_states.py --file speed/speed.csv --summary-csv speed/trends.csv --out graphs/three_states.png --no-show
 ```
 
-3) Run the full strategy analysis:
-```
+### 3. Run strategy analysis
+```bash
 python run_full_strategy_analysis.py
 ```
 
-4) Show the final GUI for students 
-```
-python plot_strategy.py
-```
-- Use the Open Dashboard button inside the timeline GUI.
-- Or open the dashboard directly:
-```
-python plot_strategy.py --dashboard --show-dashboard
+### 4. View results
+```bash
+python plot_strategy.py              # Timeline GUI
+python plot_strategy.py --dashboard  # Dashboard view
 ```
 
-## One-command pipeline
-Use the helper script below to run all steps in one command:
-```
-python run_all_pipeline.py --video path\to\video.mp4 --center-marker 5 --no-preview
-```
-Common options:
-- `--robot-ids 4 5 24 47`
-- `--frame-skip 2 --threads 8`
-- `--dashboard` (open the dashboard instead of the timeline)
+## Inputs
+- Video file (MP4) with ArUco markers
+- Log files in `logs/` directory
 
 ## Outputs
-- `speed/speed.csv` (speed time series)
-- `speed/trends.csv` (trend segments for segmentation)
-- `segment_strategy_with_global_label.csv` (main predictions file)
-- `segment_strategy_predictions.json` (JSON export)
-- `graphs/strategy_usage_report.png` (bar plots)
-- `graphs/strategy_usage_radar.png` (radar plots)
-- `graphs/three_states.png` (speed trend visualization)
+- `segment_strategy_with_global_label.csv` - Main predictions (generated in root)
+- `graphs/` - Visualization plots
 
-## Troubleshooting
-- If `run_full_strategy_analysis.py` fails with "speed/trends.csv not found", run step 2 first.
-- If `plot_strategy.py` opens with no data, check that `segment_strategy_with_global_label.csv` exists and is non-empty.
-- If `interp.py` fails to detect markers, confirm marker IDs and lighting and try `--no-preview` for speed.
+## Adding New Data
 
-## Current dominance calculation (notes)
-- For shared parameters (like frequency), the system tracks which user "owns" each time point in user_at_time.
-- When a user changes the frequency, they become the owner from that moment until another user changes it.
-- Dominance is calculated by counting how many timeline points (at TIME_RESOLUTION = 0.1s intervals) belong to each user.
-- This is converted to seconds: time_controlled = control_points * TIME_RESOLUTION.
-
-## How to test classifier accuracy
-1) Evaluate existing labeled data:
+### 1. Add log files
+Place your log files (e.g., `User0.log`, `User1.log`, `User2.log`, `User3.log`) in the `logs/` folder:
 ```
+logs/
+├── User0.log
+├── User1.log
+├── User2.log
+└── User3.log
+```
+
+### 2. Process video (if you have one)
+Run video processing to generate speed data:
+```bash
+python speed/interp.py path/to/your_video.mp4 --center-marker 5 --speed speed/speed.csv --no-preview
+python speed/plot_three_states.py --file speed/speed.csv --summary-csv speed/trends.csv --no-show
+```
+
+### 3. Run analysis
+```bash
+python run_full_strategy_analysis.py
+```
+
+### 4. View results
+```bash
+python plot_strategy.py
+```
+Click "Open Dashboard" in the GUI for summary statistics.
+
+## Testing
+```bash
 python tests/evaluate_classifier.py --labeled-dir logs/Labelled
-```
-2) Run synthetic test:
-```
 python tests/evaluate_classifier.py --synthetic
-```
-3) Create labels for new data:
-```
-python tests/ground_truth_format.py --create-template path\to\ground_truth_labels.json
 ```

@@ -151,40 +151,9 @@ def main():
     print("[INFO] Loading speed CSV…")
     print(f"[DEBUG] Selected speed CSV: {speed_csv} (size={speed_csv.stat().st_size if speed_csv.exists() else 'n/a'})")
 
-    # --- DEBUG: show which speed CSV will be used and local files ---
-    speed_csv_arg = Path("speed.csv")  # ...existing code...
-    # If your script computes/reads a path variable, replace the above with that variable name.
-    # Below we try to detect sensible speed CSV files in the repo root.
-    print(f"[DEBUG] Working dir: {Path('.').resolve()}")
-    matches = sorted(Path('.').glob("*speed*.csv"))
-    if not matches:
-        matches = sorted(Path('.').glob("*.csv"))
-    print("[DEBUG] Candidate CSV files (name -> size):")
-    for p in matches:
-        try:
-            print(f"  - {p.name}  ({p.stat().st_size} bytes)")
-        except Exception:
-            print(f"  - {p.name}  (stat failed)")
-
-    # If you already have a variable holding the speed CSV path used below, print it:
-    try:
-        print(f"[DEBUG] speed_csv_arg resolved exists={speed_csv_arg.exists()} size={(speed_csv_arg.stat().st_size if speed_csv_arg.exists() else 'n/a')}")
-    except Exception:
-        print("[DEBUG] speed_csv_arg stat failed")
-
-    # If no reasonable CSVs are present, abort early with guidance
-    if not matches:
-        print("[ERROR] No CSV files found. Ensure the speed CSV is present in the working directory.")
-        sys.exit(1)
-
     # ---------------------------------------------
     # 4. Run full strategy pipeline
     # ---------------------------------------------
-    # use the speed_csv selected above (either speed/trends.csv or the auto-detected candidate)
-    if speed_csv is None:
-        print("[ERROR] No suitable speed CSV found. Place speed/trends.csv in the ./speed folder or a suitable CSV in the working dir.")
-        sys.exit(1)
-    print(f"[INFO] Loading speed CSV: {speed_csv} (size={speed_csv.stat().st_size if speed_csv.exists() else 'n/a'})")
 
     print("[INFO] Normalizing parsed events for pipeline...")
     events_norm = _normalize_events_for_pipeline(events)

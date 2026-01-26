@@ -1,5 +1,8 @@
-import pandas as pd
+import sys
 from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+import pandas as pd
 from strategy_classifier.segmentation import build_segments_from_speed_csv
 
 p = Path("segment_strategy_with_global_label.csv")
