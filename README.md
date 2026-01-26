@@ -22,6 +22,17 @@ Analyzes robot video and GUI logs to generate per-student strategy predictions a
 pip install -r requirements.txt
 ```
 
+### Run strategy analysis
+```bash
+python run_full_strategy_analysis.py
+```
+
+## Important - View analysis 
+```bash
+python plot_strategy.py
+```
+Click "Open Dashboard" in the GUI for summary statistics.
+
 ## Quick Start (One Command)
 ```bash
 python run_all_pipeline.py --video path/to/video.mp4 --center-marker 5 --no-preview
@@ -34,14 +45,9 @@ python run_all_pipeline.py --video path/to/video.mp4 --center-marker 5 --no-prev
 python speed/interp.py path/to/video.mp4 --center-marker 5 --speed speed/speed.csv --no-preview
 ```
 
-### 2. Generate speed trends
+### 2. Generate speed trends (might take a while, depending on the video size)
 ```bash
 python speed/plot_three_states.py --file speed/speed.csv --summary-csv speed/trends.csv --out graphs/three_states.png --no-show
-```
-
-### 3. Run strategy analysis
-```bash
-python run_full_strategy_analysis.py
 ```
 
 ### 4. View results
@@ -81,12 +87,6 @@ python speed/plot_three_states.py --file speed/speed.csv --summary-csv speed/tre
 ```bash
 python run_full_strategy_analysis.py
 ```
-
-### 4. View results
-```bash
-python plot_strategy.py
-```
-Click "Open Dashboard" in the GUI for summary statistics.
 
 ## Testing
 ```bash
