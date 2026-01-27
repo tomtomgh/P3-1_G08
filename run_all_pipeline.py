@@ -101,9 +101,9 @@ def main():
         run_cmd(cmd, repo_root)
 
     if not args.skip_analysis:
-        logs_dir = repo_root / "logs"
+        logs_dir = repo_root / "logdata"
         if not logs_dir.exists() or not list(logs_dir.glob("*.log")):
-            raise FileNotFoundError("No .log files found in logs/. Place logs before running analysis.")
+            raise FileNotFoundError("No .log files found in logdata/. Place logs before running analysis.")
         ensure_exists(trends_csv, "Trends CSV")
         run_cmd([sys.executable, str(repo_root / "run_full_strategy_analysis.py")], repo_root)
 

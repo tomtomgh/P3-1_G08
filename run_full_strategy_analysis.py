@@ -113,7 +113,7 @@ def _normalize_events_for_pipeline(raw_events: list) -> list:
 def main():
 
     base = Path(".")
-    logs_folder = base / "logs"
+    logs_folder = base / "logdata"
     speed_folder = base / "speed"
 
     # ---------------------------------------------
@@ -121,7 +121,7 @@ def main():
     # ---------------------------------------------
     log_paths = sorted(logs_folder.glob("*.log"))
     if len(log_paths) == 0:
-        raise FileNotFoundError("❌ No .log files found in /logs folder")
+        raise FileNotFoundError("❌ No .log files found in /logdata folder")
 
     print(f"[INFO] Found {len(log_paths)} logs")
 

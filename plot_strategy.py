@@ -2029,7 +2029,7 @@ def _print_pred_rows_for_window(preds_df, view_start, view_end):
 # view_start, view_end should be the current x-axis limits or the time window you inspect
 
 
-def _legacy_debug_snippet(log_dir="logs", t_start=155.0, t_end=205.0):
+def _legacy_debug_snippet(log_dir="logdata", t_start=155.0, t_end=205.0):
     """
     Legacy verbose diagnostics that previously ran unconditionally.
     Trigger with --debug-snippet if you still need that workflow.
@@ -2160,7 +2160,7 @@ def main():
                         help="Display the dashboard interactively when --dashboard is used.")
     parser.add_argument("--debug-snippet", action="store_true",
                         help="Run the legacy verbose debugging snippet after the main task.")
-    parser.add_argument("--debug-log-dir", default="logs", help="Log directory used by the debug snippet.")
+    parser.add_argument("--debug-log-dir", default="logdata", help="Log directory used by the debug snippet.")
     parser.add_argument("--debug-start", type=float, default=155.0, help="Start time for debug snippet window.")
     parser.add_argument("--debug-end", type=float, default=205.0, help="End time for debug snippet window.")
     parser.add_argument("--language", choices=list(TRANSLATIONS.keys()), default="EN",

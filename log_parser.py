@@ -121,11 +121,11 @@ def parse_session(log_paths: List[Path], session_id: str) -> List[Dict[str, Any]
 # ============================================================
 
 if __name__ == "__main__":
-    base = Path("logs")
+    base = Path("logdata")
     log_paths = list(base.glob("*.log"))
 
     if not log_paths:
-        print("No log files found in ./logs")
+        print("No log files found in ./logdata")
         exit()
 
     events = parse_session(log_paths, session_id="session_1")

@@ -540,10 +540,10 @@ def main():
 
     # 1. Parse logs
     print("\n[1/6] Parsing logs...")
-    logs_folder = Path("logs")
+    logs_folder = Path("logdata")
     log_paths = sorted(logs_folder.glob("*.log"))
     if not log_paths:
-        raise FileNotFoundError("No .log files found in logs/ folder")
+        raise FileNotFoundError("No .log files found in logdata/ folder")
 
     events = parse_session(log_paths, session_id="clustering_analysis")
     print(f"   ✓ Parsed {len(events)} events from {len(log_paths)} log files")

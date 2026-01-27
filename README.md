@@ -8,10 +8,10 @@ Analyzes robot video and GUI logs to generate per-student strategy predictions a
 ├── run_full_strategy_analysis.py # Strategy classification
 ├── plot_strategy.py             # Timeline GUI and dashboard
 ├── log_parser.py                # Log file parsing
-├── logs/                        # Input log files (User0.log, etc.)
+├── logdata/                     # Input log files (User0.log, etc.)
 ├── speed/                       # Video processing & speed analysis
 ├── strategy_classifier/         # Strategy classification module
-├── scripts/                     # Utility/analysis scripts
+├── src_scripts/                 # Utility/analysis scripts
 ├── tests/                       # Evaluation tests
 ├── outputs/                     # Generated CSV outputs
 └── graphs/                      # Generated plots
@@ -22,12 +22,12 @@ Analyzes robot video and GUI logs to generate per-student strategy predictions a
 pip install -r requirements.txt
 ```
 
-### Run strategy analysis
+### Run strategy analysis (Running the GUI)
 ```bash
 python run_full_strategy_analysis.py
 ```
 
-## Important - View analysis 
+## GUI - View analysis 
 ```bash
 python plot_strategy.py
 ```
@@ -58,7 +58,7 @@ python plot_strategy.py --dashboard  # Dashboard view
 
 ## Inputs
 - Video file (MP4) with ArUco markers
-- Log files in `logs/` directory
+- Log files in `logdata/` directory
 
 ## Outputs
 - `segment_strategy_with_global_label.csv` - Main predictions (generated in root)
@@ -67,9 +67,9 @@ python plot_strategy.py --dashboard  # Dashboard view
 ## Adding New Data
 
 ### 1. Add log files
-Place your log files (e.g., `User0.log`, `User1.log`, `User2.log`, `User3.log`) in the `logs/` folder:
+Place your log files (e.g., `User0.log`, `User1.log`, `User2.log`, `User3.log`) in the `logdata/` folder:
 ```
-logs/
+logdata/
 ├── User0.log
 ├── User1.log
 ├── User2.log
@@ -90,6 +90,6 @@ python run_full_strategy_analysis.py
 
 ## Testing
 ```bash
-python tests/evaluate_classifier.py --labeled-dir logs/Labelled
+python tests/evaluate_classifier.py --labeled-dir logdata/Labelled
 python tests/evaluate_classifier.py --synthetic
 ```

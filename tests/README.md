@@ -15,7 +15,7 @@ The testing framework provides:
 
 ```bash
 # From project root
-python tests/evaluate_classifier.py --labeled-dir logs/Labelled
+python tests/evaluate_classifier.py --labeled-dir logdata/Labelled
 ```
 
 ### 2. Run synthetic test
@@ -43,12 +43,12 @@ python tests/evaluate_classifier.py --all
 ### Step 1: Create a template
 
 ```bash
-python tests/ground_truth_format.py --create-template logs/Labelled/ground_truth_labels.json --log-file logs/Labelled/User0.log
+python tests/ground_truth_format.py --create-template logdata/Labelled/ground_truth_labels.json --log-file logdata/Labelled/User0.log
 ```
 
 ### Step 2: Edit the labels file
 
-Open `logs/Labelled/ground_truth_labels.json` and edit the labels:
+Open `logdata/Labelled/ground_truth_labels.json` and edit the labels:
 
 ```json
 [
@@ -72,7 +72,7 @@ Open `logs/Labelled/ground_truth_labels.json` and edit the labels:
 ### Step 3: Validate labels
 
 ```bash
-python tests/ground_truth_format.py --validate logs/Labelled/ground_truth_labels.json
+python tests/ground_truth_format.py --validate logdata/Labelled/ground_truth_labels.json
 ```
 
 ## Available Strategies
@@ -154,15 +154,15 @@ Based on evaluation results, you can:
 python tests/ground_truth_format.py --list-strategies
 
 # 2. Create template for labeling
-python tests/ground_truth_format.py --create-template logs/Labelled/ground_truth_labels.json
+python tests/ground_truth_format.py --create-template logdata/Labelled/ground_truth_labels.json
 
 # 3. Manually edit ground_truth_labels.json with your observations
 
 # 4. Validate your labels
-python tests/ground_truth_format.py --validate logs/Labelled/ground_truth_labels.json
+python tests/ground_truth_format.py --validate logdata/Labelled/ground_truth_labels.json
 
 # 5. Run evaluation
-python tests/evaluate_classifier.py --labeled-dir logs/Labelled
+python tests/evaluate_classifier.py --labeled-dir logdata/Labelled
 
-# 6. Review results in logs/Labelled/evaluation_results.json
+# 6. Review results in logdata/Labelled/evaluation_results.json
 ```

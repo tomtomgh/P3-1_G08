@@ -4,12 +4,12 @@ Strategy Classifier Evaluation Runner
 
 This script evaluates the strategy classifier against labeled ground truth data.
 It can work with:
-1. Manually labeled data (logs/Labelled/ with ground_truth_labels.json)
+1. Manually labeled data (logdata/Labelled/ with ground_truth_labels.json)
 2. Synthetically generated test data
 
 Usage:
     # Evaluate against manually labeled data
-    python evaluate_classifier.py --labeled-dir logs/Labelled
+    python evaluate_classifier.py --labeled-dir logdata/Labelled
     
     # Run synthetic test
     python evaluate_classifier.py --synthetic
@@ -469,7 +469,7 @@ class ClassifierEvaluator:
             Evaluation results dictionary
         """
         if labeled_dir is None:
-            labeled_dir = PROJECT_ROOT / "logs" / "Labelled"
+            labeled_dir = PROJECT_ROOT / "logdata" / "Labelled"
         
         labeled_dir = Path(labeled_dir)
         
@@ -570,7 +570,7 @@ def main():
         epilog="""
 Examples:
   # Evaluate against manually labeled data
-  python evaluate_classifier.py --labeled-dir logs/Labelled
+  python evaluate_classifier.py --labeled-dir logdata/Labelled
   
   # Run synthetic test only  
   python evaluate_classifier.py --synthetic
@@ -579,7 +579,7 @@ Examples:
   python evaluate_classifier.py --all
   
   # Create a ground truth labels template
-  python evaluate_classifier.py --create-template logs/Labelled
+  python evaluate_classifier.py --create-template logdata/Labelled
         """
     )
     
@@ -625,7 +625,7 @@ Examples:
     results = []
     
     if args.all or args.labeled_dir:
-        labeled_dir = args.labeled_dir or (PROJECT_ROOT / "logs" / "Labelled")
+        labeled_dir = args.labeled_dir or (PROJECT_ROOT / "logdata" / "Labelled")
         try:
             evaluator = ClassifierEvaluator(verbose=not args.quiet)
             metrics = evaluator.evaluate(

@@ -4,7 +4,7 @@ Ground Truth Label Format for Strategy Classifier Testing
 
 This file defines the format for manually labeling GUI interaction data
 with ground truth strategy labels. Use this format to create labeled test
-data in the logs/Labelled folder.
+data in the logdata/Labelled folder.
 
 LABEL FILE FORMAT (JSON):
 =========================
@@ -70,7 +70,7 @@ user_id,strategy,start_time,end_time,notes
 HOW TO CREATE LABELS:
 =====================
 
-1. Open the log file (e.g., logs/Labelled/User0.log)
+1. Open the log file (e.g., logdata/Labelled/User0.log)
 2. Identify time periods with distinct interaction patterns
 3. Note the timestamps (HH:MM:SS.SSSSSSS format -> convert to seconds)
 4. Match the pattern to one of the available strategies

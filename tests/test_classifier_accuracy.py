@@ -487,7 +487,7 @@ def run_classifier_test(
         Evaluation results dictionary
     """
     if output_base_dir is None:
-        output_base_dir = Path(__file__).parent.parent / "logs" / "Labelled" / "test_data"
+        output_base_dir = Path(__file__).parent.parent / "logdata" / "Labelled" / "test_data"
     
     if strategies_sequence is None:
         # Default test: one segment of each available strategy
